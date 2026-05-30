@@ -1,0 +1,10 @@
+dataset,model,oracle_acc,graca_acc,gap
+Cora,GCN,79.13,78.67,0.47
+Cora,GAT,82.33,82.07,0.27
+Cora,GraphSAGE,76.83,76.34,0.49
+CiteSeer,GCN,67.30,67.20,0.10
+CiteSeer,GAT,71.20,71.24,-0.04
+CiteSeer,GraphSAGE,64.94,65.42,-0.48
+PubMed,GCN,76.48,76.26,0.22
+PubMed,GAT,77.42,77.74,-0.32
+PubMed,GraphSAGE,75.36,75.16,0.20

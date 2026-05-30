@@ -1,0 +1,10 @@
+dataset,method,test_acc,bad_edge_f1
+Cora,Original+Noise,78.80 ± nan,nan
+Cora,GraCA-lite+Noise,78.10 ± nan,0.000
+Cora,Random+Noise,79.50 ± nan,0.000
+Cora,Original+Noise,78.80 ± nan,nan
+Cora,GraCA-lite+Noise,78.10 ± nan,0.000
+Cora,Random+Noise,79.50 ± nan,0.000
+Cora,Original+Noise,78.80 ± nan,nan
+Cora,GraCA-lite+Noise,78.10 ± nan,0.000
+Cora,Random+Noise,79.50 ± nan,0.000
