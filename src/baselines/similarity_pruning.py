@@ -1,16 +1,14 @@
 import torch
+import torch.nn.functional as F
 from src.training.train_downstream import train_downstream
 from src.utils.seed import set_seed
 from collections import defaultdict
 
 
-def run_random_pruning(data, config, num_features, num_classes, device, seed=42,
-                       prune_ratio=None, match_graca_ratio=None):
-    """Random pruning baseline.
-
-    Args:
-        prune_ratio: fixed ratio (default: config beta)
-        match_graca_ratio: if provided, use this ratio to match GraCA's actual pruning
+def run_jaccard_pruning(data, config, num_features, num_classes, device, seed=42,
+                        prune_ratio=None, match_graca_ratio=None):
+    """Jaccard similarity pruning: remove edges between nodes with low Jaccard similarity.
+    Suitable for bag-of-words features.
     """
     set_seed(seed)
 
@@ -20,15 +18,31 @@ def run_random_pruning(data, config, num_features, num_classes, device, seed=42,
         prune_ratio = config.get("pruning", {}).get("beta", 0.2)
 
     edge_index = data.edge_index.cpu()
+    x = data.x.cpu()
     E = edge_index.shape[1]
-    num_remove = int(E * prune_ratio)
 
-    perm = torch.randperm(E)
+    # Compute Jaccard similarity for each edge
+    src = edge_index[0]
+    dst = edge_index[1]
+
+    # Binarize features (positive = 1, else 0)
+    x_bin = (x > 0).float()
+
+    # Jaccard = |A ∩ B| / |A ∪ B|
+    intersection = (x_bin[src] * x_bin[dst]).sum(dim=1)
+    union = ((x_bin[src] + x_bin[dst]) > 0).float().sum(dim=1)
+    jaccard = intersection / union.clamp(min=1)
+
+    # Sort edges by Jaccard similarity (ascending) and remove lowest
+    num_remove = int(E * prune_ratio)
+    _, sorted_indices = torch.sort(jaccard)
+    to_remove = sorted_indices[:num_remove]
+
     keep_mask = torch.ones(E, dtype=torch.bool)
-    keep_mask[perm[:num_remove]] = False
+    keep_mask[to_remove] = False
 
     # Protect self-loops
-    self_loop_mask = edge_index[0] == edge_index[1]
+    self_loop_mask = src == dst
     keep_mask = keep_mask | self_loop_mask
 
     pruned_edge_index = edge_index[:, keep_mask]
@@ -54,9 +68,11 @@ def run_random_pruning(data, config, num_features, num_classes, device, seed=42,
     return results, graph_stats
 
 
-def run_degree_aware_random(data, config, num_features, num_classes, device, seed=42,
-                            prune_ratio=None, match_graca_ratio=None):
-    """Degree-aware random pruning: each node removes ~same number of edges as GraCA."""
+def run_cosine_pruning(data, config, num_features, num_classes, device, seed=42,
+                       prune_ratio=None, match_graca_ratio=None):
+    """Cosine similarity pruning: remove edges between nodes with low cosine similarity.
+    Suitable for continuous features.
+    """
     set_seed(seed)
 
     if match_graca_ratio is not None:
@@ -65,33 +81,26 @@ def run_degree_aware_random(data, config, num_features, num_classes, device, see
         prune_ratio = config.get("pruning", {}).get("beta", 0.2)
 
     edge_index = data.edge_index.cpu()
-    src = edge_index[0]
-    dst = edge_index[1]
+    x = data.x.cpu()
     E = edge_index.shape[1]
 
-    # Group edges by destination
-    edges_by_dst = defaultdict(list)
-    for i in range(E):
-        edges_by_dst[dst[i].item()].append(i)
+    src = edge_index[0]
+    dst = edge_index[1]
 
-    # Per-node budget: beta * degree
-    prune_mask = torch.zeros(E, dtype=torch.bool)
-    rng = torch.Generator()
-    rng.manual_seed(seed)
+    # Cosine similarity per edge
+    cosine_sim = F.cosine_similarity(x[src], x[dst], dim=1, eps=1e-8)
 
-    for v, indices in edges_by_dst.items():
-        bv = int(prune_ratio * len(indices))
-        if bv <= 0:
-            continue
-        indices_t = torch.tensor(indices)
-        perm = torch.randperm(len(indices_t), generator=rng)[:bv]
-        prune_mask[indices_t[perm]] = True
+    # Sort by cosine similarity (ascending) and remove lowest
+    num_remove = int(E * prune_ratio)
+    _, sorted_indices = torch.sort(cosine_sim)
+    to_remove = sorted_indices[:num_remove]
 
-    # Protect self-loops
+    keep_mask = torch.ones(E, dtype=torch.bool)
+    keep_mask[to_remove] = False
+
     self_loop_mask = src == dst
-    prune_mask = prune_mask & ~self_loop_mask
+    keep_mask = keep_mask | self_loop_mask
 
-    keep_mask = ~prune_mask
     pruned_edge_index = edge_index[:, keep_mask]
 
     results = {}
