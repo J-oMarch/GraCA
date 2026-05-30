@@ -25,7 +25,13 @@ def load_results():
         ("noisy", "results/noisy_edges/noisy_edge_results.csv"),
     ]:
         if os.path.exists(path):
-            results[name] = pd.read_csv(path)
+            try:
+                results[name] = pd.read_csv(path, on_bad_lines="skip")
+            except Exception:
+                try:
+                    results[name] = pd.read_csv(path, error_bad_lines=False)
+                except Exception as e:
+                    print(f"Warning: Failed to read {path}: {e}")
         else:
             print(f"Warning: {path} not found")
     return results

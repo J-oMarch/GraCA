@@ -85,9 +85,17 @@ def load_dataset(config: dict) -> tuple:
         data.test_mask[split_idx["test"]] = True
         data.y = data.y.squeeze()
 
-    # --- Heterophilic datasets from arXiv 2302.11275 ---
+    # --- Heterophilic datasets (PyG built-in) ---
     elif name in ("Roman-empire", "Amazon-ratings", "Minesweeper", "Tolokers", "Questions"):
-        data = load_heterophilic_dataset(name, root)
+        from torch_geometric.datasets import HeterophilousGraphDataset
+        dataset = HeterophilousGraphDataset(root=f"{root}Heterophilous", name=name)
+        data = dataset[0]
+        # These datasets have multi-split masks [N, 10]; select split 0
+        if data.train_mask.dim() == 2:
+            split_idx = ds_cfg.get("split_idx", 0)
+            data.train_mask = data.train_mask[:, split_idx]
+            data.val_mask = data.val_mask[:, split_idx]
+            data.test_mask = data.test_mask[:, split_idx]
 
     else:
         raise ValueError(f"Unknown dataset: {name}")
