@@ -8,8 +8,8 @@ dist/
 build/
 *.egg
 
-# Data
-data/
+# Data (only root data directory, not src/data)
+/data/
 *.pt
 *.pkl
 

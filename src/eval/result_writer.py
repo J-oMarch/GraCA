@@ -6,10 +6,14 @@ from datetime import datetime
 
 RESULT_FIELDS = [
     "run_id", "timestamp", "seed", "dataset", "method", "oracle_only",
-    "proxy_model", "downstream_model", "prune_ratio", "num_edges_before",
-    "num_edges_after", "isolated_nodes", "min_degree", "mean_degree",
-    "largest_connected_component_ratio", "val_acc", "test_acc", "test_f1",
-    "best_epoch", "runtime", "config_path", "graph_path", "checkpoint_path",
+    "proxy_model", "downstream_model", "actual_prune_ratio",
+    "num_edges_before", "num_edges_after", "isolated_nodes",
+    "min_degree", "mean_degree", "largest_connected_component_ratio",
+    "val_acc", "test_acc", "test_f1", "best_epoch", "runtime",
+    "config_path", "graph_path", "checkpoint_path",
+    # Noisy-edge specific fields
+    "bad_edge_precision", "bad_edge_recall", "bad_edge_f1",
+    "clean_edge_mistakenly_removed_ratio",
 ]
 
 
@@ -17,7 +21,6 @@ def write_result_row(result: dict, csv_path: str):
     """Append a single result row to CSV."""
     Path(csv_path).parent.mkdir(parents=True, exist_ok=True)
 
-    # Add timestamp
     result["timestamp"] = datetime.now().isoformat()
 
     file_exists = os.path.exists(csv_path)
