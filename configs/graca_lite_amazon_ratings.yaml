@@ -1,0 +1,58 @@
+dataset:
+  name: Amazon-ratings
+  root: data/
+  normalize_features: false
+  add_self_loops: false
+  undirected: true
+
+proxy_model:
+  name: GCN
+  hidden_dim: 64
+  num_layers: 2
+  dropout: 0.5
+
+downstream_model:
+  names: [GCN, GAT, GraphSAGE]
+  hidden_dim: 64
+  num_layers: 2
+  dropout: 0.5
+
+training:
+  epochs: 300
+  lr: 0.01
+  weight_decay: 0.0005
+  patience: 100
+  device: cuda
+
+teacher:
+  use_ema: true
+  ema_decay: 0.99
+  warmup_epochs: 50
+
+pseudo:
+  tau: 0.6
+  alpha: 1.0
+  epsilon_rho: 0.05
+  lambda_p: 1.0
+
+scoring:
+  lambda_s: 1.0
+  collect_layer: all
+  use_multi_checkpoint: false
+  eta: 1.0
+
+pruning:
+  beta: 0.2
+  min_degree: 1
+  lambda_theta: 0.0
+  protect_self_loops: true
+  protect_bridges: false
+
+experiment:
+  method: graca_lite
+  oracle_only: false
+  seeds: [0, 1, 2, 3, 4]
+
+logging:
+  result_dir: results/main/
+  graph_dir: sanitized_graphs/graca_lite/
