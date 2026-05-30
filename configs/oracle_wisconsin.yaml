@@ -1,0 +1,53 @@
+dataset:
+  name: Wisconsin
+  root: data/
+  normalize_features: false
+  add_self_loops: false
+  undirected: true
+  split_config:
+    num_train_per_class: 20
+    num_val: 500
+    num_test: 1000
+
+proxy_model:
+  name: GCN
+  hidden_dim: 64
+  num_layers: 2
+  dropout: 0.5
+  activation: relu
+
+downstream_model:
+  names: [GCN, GAT, GraphSAGE]
+  hidden_dim: 64
+  num_layers: 2
+  dropout: 0.5
+
+training:
+  epochs: 300
+  lr: 0.01
+  weight_decay: 0.0005
+  patience: 100
+  use_val_for_early_stopping: true
+  device: cuda
+
+scoring:
+  eta: 1.0
+  eps: 1.0e-12
+
+pruning:
+  beta: 0.2
+  min_degree: 1
+  lambda_theta: 0.0
+  protect_self_loops: true
+
+experiment:
+  method: oracle
+  oracle_only: true
+  run_id: oracle_wisconsin
+  seeds: [0, 1, 2, 3, 4]
+
+logging:
+  save_checkpoints: true
+  save_sanitized_graph: true
+  result_dir: results/oracle/
+  graph_dir: sanitized_graphs/oracle/

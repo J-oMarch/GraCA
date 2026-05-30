@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Data
+data/
+*.pt
+*.pkl
+
+# Logs
+logs/
+*.log
+
+# Checkpoints
+checkpoints/
+
+# Sanitized graphs (large files)
+sanitized_graphs/
+
+# Results (generated)
+results/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/
