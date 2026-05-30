@@ -13,11 +13,12 @@ def collect_hidden_gradients(
     unlabeled_mask: torch.Tensor,
     lambda_s: float,
     collect_layer: str = "all",
+    deterministic: bool = True,
 ) -> dict:
     """Collect hidden representation gradients via scoring loss.
 
     Args:
-        model: ProxyGNN (must be in train mode for dropout)
+        model: ProxyGNN
         x: node features
         edge_index: edge indices
         y: labels
@@ -27,12 +28,17 @@ def collect_hidden_gradients(
         unlabeled_mask: boolean mask
         lambda_s: soft pseudo loss weight
         collect_layer: 'first', 'last', or 'all' (average all layers)
+        deterministic: if True, use model.eval() to disable dropout during scoring
 
     Returns:
         dict with 'hidden', 'grad', 'logits', 'loss_score'
-        If collect_layer='all', hidden and grad are averaged across layers.
     """
-    model.train()
+    # Deterministic scoring: eval mode disables dropout
+    if deterministic:
+        model.eval()
+    else:
+        model.train()
+
     model.zero_grad(set_to_none=True)
 
     logits, hidden_list = model(
@@ -40,12 +46,14 @@ def collect_hidden_gradients(
     )
 
     # Select layers to collect
+    # 'last' = last hidden layer before output (not logits)
+    # 'first' = first hidden layer
+    # 'all' = all hidden layers except logits, averaged
     if collect_layer == "first":
         target_hidden = [hidden_list[0]]
     elif collect_layer == "last":
-        # Use the last hidden layer before output (not logits)
         target_hidden = [hidden_list[-2] if len(hidden_list) > 1 else hidden_list[-1]]
-    else:  # 'all' - collect all hidden layers except logits
+    else:  # 'all'
         target_hidden = hidden_list[:-1] if len(hidden_list) > 1 else hidden_list
 
     # Retain grad on all target layers
@@ -71,7 +79,6 @@ def collect_hidden_gradients(
         grads.append(h.grad.detach().clone())
         hiddens.append(h.detach().clone())
 
-    # Average across layers
     grad = torch.stack(grads, dim=0).mean(dim=0)
     hidden = torch.stack(hiddens, dim=0).mean(dim=0)
 
@@ -101,16 +108,11 @@ def collect_multi_checkpoint_gradients(
     unlabeled_mask: torch.Tensor,
     lambda_s: float,
     checkpoints: list,
+    deterministic: bool = True,
 ) -> dict:
     """Collect gradients at multiple checkpoints and average.
 
-    Args:
-        model: ProxyGNN at current checkpoint
-        other args: same as collect_hidden_gradients
-        checkpoints: list of model state dicts at different epochs
-
-    Returns:
-        dict with averaged 'hidden', 'grad' across checkpoints
+    Each checkpoint gets its own forward pass. teacher_probs is fixed across checkpoints.
     """
     all_grads = []
     all_hiddens = []
@@ -119,12 +121,12 @@ def collect_multi_checkpoint_gradients(
         model.load_state_dict(ckpt)
         result = collect_hidden_gradients(
             model, x, edge_index, y, teacher_probs, rho_train,
-            train_mask, unlabeled_mask, lambda_s, collect_layer="all"
+            train_mask, unlabeled_mask, lambda_s,
+            collect_layer="all", deterministic=deterministic,
         )
         all_grads.append(result["grad"])
         all_hiddens.append(result["hidden"])
 
-    # Average across checkpoints
     grad = torch.stack(all_grads, dim=0).mean(dim=0)
     hidden = torch.stack(all_hiddens, dim=0).mean(dim=0)
 
