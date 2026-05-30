@@ -124,14 +124,14 @@ GraCA/
 ├── GraCA_模型介绍与论文idea.md         # 模型与论文思路
 ├── 研究复盘.md                        # 研究背景复盘
 │
-├── configs/                           # YAML 配置文件
-│   ├── graca_lite_{dataset}.yaml      # GraCA-lite 配置 (7个数据集)
+├── configs/                           # YAML 配置文件 (26个)
+│   ├── graca_lite_{dataset}.yaml      # GraCA-lite 配置
 │   ├── full_graca_{dataset}.yaml      # Full GraCA 配置
 │   └── oracle_{dataset}.yaml          # Oracle 配置
 │
-├── src/                               # 源代码 (41个文件)
+├── src/                               # 源代码 (59个Python文件)
 │   ├── data/                          # 数据加载
-│   │   ├── load_data.py               # 统一数据加载接口
+│   │   ├── load_data.py               # 统一数据加载接口 (支持16个数据集)
 │   │   ├── splits.py                  # 数据集划分
 │   │   └── leakage_check.py           # 标签泄漏检查
 │   │
@@ -143,7 +143,7 @@ GraCA/
 │   │   └── model_factory.py           # 模型工厂
 │   │
 │   ├── training/                      # 训练模块
-│   │   ├── train_proxy.py             # ProxyGNN 训练
+│   │   ├── train_proxy.py             # ProxyGNN 训练 (支持consistency loss)
 │   │   ├── train_downstream.py        # 下游模型训练
 │   │   ├── losses.py                  # 损失函数 (L_sup, L_soft, L_score)
 │   │   ├── evaluator.py               # 评估指标
@@ -154,7 +154,7 @@ GraCA/
 │   │   ├── pseudo_label.py            # 软伪标签 & 可靠性计算
 │   │   ├── gradient_collector.py      # 梯度采集 (单层/多层/多checkpoint)
 │   │   ├── edge_scoring.py            # 边级评分 (D, M, ρ, H, R, P)
-│   │   ├── pruning.py                 # 局部自适应裁剪
+│   │   ├── pruning.py                 # 局部自适应裁剪 (无向图成对删除)
 │   │   ├── consistency_loss.py        # Consistency 正则化
 │   │   ├── bridge_protection.py       # 桥边保护
 │   │   ├── oracle.py                  # Oracle GraCA (全标签诊断)
@@ -163,8 +163,9 @@ GraCA/
 │   ├── baselines/                     # 基线方法
 │   │   ├── original.py                # 原图
 │   │   ├── dropedge.py                # DropEdge
-│   │   ├── random_pruning.py          # 随机裁剪
-│   │   └── homophily_pruning.py       # 同质性裁剪
+│   │   ├── random_pruning.py          # 随机裁剪 (支持matched ratio)
+│   │   ├── similarity_pruning.py      # Jaccard/Cosine 相似度裁剪
+│   │   └── homophily_pruning.py       # 同质性裁剪 (legal/oracle模式)
 │   │
 │   ├── eval/                          # 评估模块
 │   │   ├── metrics.py                 # 准确率/F1
@@ -179,32 +180,51 @@ GraCA/
 │       ├── logger.py                  # 日志
 │       └── io.py                      # 文件 I/O
 │
-├── scripts/                           # 实验脚本 (9个)
+├── scripts/                           # 实验脚本 (11个)
 │   ├── run_graca.py                   # 运行 GraCA (lite/full/oracle)
 │   ├── run_baselines.py               # 运行基线
 │   ├── run_oracle.py                  # 运行 Oracle
 │   ├── run_ablation.py                # 运行消融实验
 │   ├── run_robustness.py              # 运行鲁棒性实验
+│   ├── run_noisy_edges.py             # Noisy-edge 鲁棒性实验
 │   ├── run_scalability.py             # 运行可扩展性实验
 │   ├── run_sweep.py                   # 超参数搜索
 │   ├── run_downstream.py              # 在已保存图上训练下游
 │   ├── run_experiments.py             # 批量运行所有实验
-│   └── aggregate_results.py           # 聚合结果
+│   ├── aggregate_results.py           # 聚合结果
+│   ├── update_readme_tables.py        # 生成论文表格
+│   └── smoke_test.py                  # 快速验证
 │
-├── results/                           # 实验结果
-│   ├── main/                          # 主实验 (166条)
-│   ├── baselines/                     # 基线结果 (439条)
-│   ├── oracle/                        # Oracle 结果 (109条)
-│   ├── ablation/                      # 消融结果 (421条)
-│   ├── robustness/                    # 鲁棒性结果 (181条)
+├── tests/                             # 单元测试
+│   ├── test_pruning.py                # 裁剪测试 (对称性/最小度/self-loop)
+│   └── test_scoring.py                # 评分测试 (确定性/泄漏检查/符号)
+│
+├── results/                           # 实验结果 (2374条)
+│   ├── main/                          # 主实验 (327条)
+│   ├── baselines/                     # 基线结果 (978条)
+│   ├── oracle/                        # Oracle 结果 (108条)
+│   ├── ablation/                      # 消融结果 (420条)
+│   ├── noisy_edges/                   # Noisy-edge 结果 (123条)
+│   ├── robustness/                    # 鲁棒性结果 (180条)
 │   ├── scalability/                   # 可扩展性结果 (7条)
 │   ├── sweeps/                        # 超参数搜索 (36条)
-│   └── aggregated/                    # 聚合结果 & 论文表格
+│   ├── smoke/                         # Smoke test (6条)
+│   └── aggregated/                    # 聚合结果
 │
-├── sanitized_graphs/                  # 保存的净化图
-├── checkpoints/                       # 模型检查点
-├── logs/                              # 训练日志
-└── data/                              # 数据集缓存
+├── paper_tables/                      # 论文表格 (5个CSV)
+│   ├── main_homophily.csv
+│   ├── main_heterophily.csv
+│   ├── noisy_edge_robustness.csv
+│   ├── ablation.csv
+│   └── oracle_gap.csv
+│
+├── sanitized_graphs/                  # 保存的净化图 (236个)
+│   ├── graca_lite/
+│   ├── full_graca/
+│   ├── oracle/
+│   └── ablation/
+│
+└── logs/                              # 训练日志
 ```
 
 ---
@@ -225,9 +245,44 @@ pip install torch_geometric numpy scipy scikit-learn pandas pyyaml tqdm networkx
 
 ---
 
-## 5. 运行实验
+## 5. 支持的数据集（16个）
 
-### 5.1 GraCA-lite（主方法）
+### 同质图
+
+| 数据集 | 节点数 | 边数 | 特征维 | 类别数 |
+|--------|--------|------|--------|--------|
+| Cora | 2,708 | 10,556 | 1,433 | 7 |
+| CiteSeer | 3,327 | 9,104 | 3,703 | 6 |
+| PubMed | 19,717 | 88,648 | 500 | 3 |
+| AmazonComputers | 13,752 | 491,722 | 767 | 10 |
+| AmazonPhoto | 7,650 | 238,162 | 745 | 8 |
+| CoauthorCS | 18,333 | 163,788 | 6,805 | 15 |
+
+### 异质图
+
+| 数据集 | 节点数 | 边数 | 特征维 | 类别数 |
+|--------|--------|------|--------|--------|
+| Actor | 7,600 | 53,411 | 932 | 5 |
+| Texas | 183 | 574 | 1,703 | 5 |
+| Cornell | 183 | 557 | 1,703 | 5 |
+| Wisconsin | 251 | 916 | 1,703 | 5 |
+| Roman-empire | 22,662 | 65,854 | 300 | 18 |
+| Amazon-ratings | 24,492 | 186,100 | 300 | 5 |
+| Minesweeper | 10,000 | 78,804 | 7 | 2 |
+| Tolokers | 11,758 | 1,038,000 | 10 | 2 |
+| Questions | 48,921 | 307,080 | 301 | 2 |
+
+---
+
+## 6. 运行实验
+
+### 6.1 快速验证
+
+```bash
+python scripts/smoke_test.py  # 在 Cora seed=0 上验证 Original + GraCA-lite + Random
+```
+
+### 6.2 GraCA-lite（主方法）
 
 ```bash
 # 单个数据集单个 seed
@@ -237,68 +292,39 @@ python scripts/run_graca.py --config configs/graca_lite_cora.yaml --seed 0
 python scripts/run_experiments.py --datasets Cora CiteSeer PubMed --seeds 0 1 2 3 4
 ```
 
-### 5.2 Full GraCA
-
-```bash
-python scripts/run_graca.py --config configs/full_graca_cora.yaml --seed 0
-```
-
-### 5.3 基线方法
+### 6.3 基线方法
 
 ```bash
 python scripts/run_baselines.py --config configs/graca_lite_cora.yaml --seed 0
-# 可选: --baseline original/dropedge/random/homophily
 ```
 
-### 5.4 Oracle（上界诊断）
+### 6.4 Oracle（上界诊断）
 
 ```bash
 python scripts/run_oracle.py --config configs/oracle_cora.yaml --seed 0
 ```
 
-### 5.5 消融实验
+### 6.5 消融实验
 
 ```bash
 python scripts/run_ablation.py --config configs/graca_lite_cora.yaml --seed 0
-# 可选: --ablation no_ema/hard_pseudo/no_reliability/harmful_only/helpful_only/global_threshold/train_only
 ```
 
-### 5.6 鲁棒性实验
+### 6.6 Noisy-edge 鲁棒性实验
 
 ```bash
-python scripts/run_robustness.py --config configs/graca_lite_cora.yaml --seed 0
+python scripts/run_noisy_edges.py --config configs/graca_lite_cora.yaml --seed 0
 ```
 
-### 5.7 可扩展性实验
+### 6.7 生成论文表格
 
 ```bash
-python scripts/run_scalability.py --seed 0
-```
-
-### 5.8 超参数搜索
-
-```bash
-python scripts/run_sweep.py --config configs/graca_lite_cora.yaml --seed 0
-```
-
-### 5.9 聚合结果
-
-```bash
-python scripts/aggregate_results.py --include_baselines
-```
-
-### 5.10 在已保存的净化图上训练
-
-```bash
-python scripts/run_downstream.py \
-    --config configs/graca_lite_cora.yaml \
-    --graph sanitized_graphs/graca_lite/Cora_seed0.pt \
-    --model GCN --seed 0
+python scripts/update_readme_tables.py  # 从真实 CSV 生成 paper_tables/*.csv
 ```
 
 ---
 
-## 6. 配置参数说明
+## 7. 配置参数说明
 
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
@@ -321,74 +347,56 @@ python scripts/run_downstream.py \
 
 ---
 
-## 7. 实验设计
-
-### 7.1 数据集
-
-| 数据集 | 类型 | 节点数 | 边数 | 特征维 | 类别数 |
-|--------|------|--------|------|--------|--------|
-| Cora | 同质 | 2,708 | 10,556 | 1,433 | 7 |
-| CiteSeer | 同质 | 3,327 | 9,104 | 3,703 | 6 |
-| PubMed | 同质 | 19,717 | 88,648 | 500 | 3 |
-| Actor | 异质 | 7,600 | 53,411 | 932 | 5 |
-| Texas | 异质 | 183 | 574 | 1,703 | 5 |
-| Cornell | 异质 | 183 | 557 | 1,703 | 5 |
-| Wisconsin | 异质 | 251 | 916 | 1,703 | 5 |
-
-### 7.2 方法对比
-
-| 方法 | 说明 |
-|------|------|
-| **Original** | 原图直接训练 |
-| **DropEdge** | 训练时随机丢弃 20% 边 |
-| **Random Pruning** | 按相同比例随机裁剪 |
-| **Homophily Pruning** | 按标签同质性裁剪 |
-| **GraCA-lite** | 本文主方法（梯度引导裁剪） |
-| **Full GraCA** | +consistency +多层梯度 +多checkpoint +bridge保护 |
-| **Oracle GraCA** | 全标签上界（仅诊断） |
-
-### 7.3 下游模型
-
-GCN、GAT、GraphSAGE
-
-### 7.4 评估指标
-
-- **分类**：Accuracy、Macro-F1
-- **结构**：裁剪比例、孤立节点数、最小度、最大连通分量比
-- **效率**：运行时间、内存占用
-
----
-
 ## 8. 实验结果
 
-### 8.1 主实验（1543 条结果）
+> 以下结果均来自真实实验数据（`results/` 目录下的 CSV 文件），共 **2374 条实验结果**。
+> 可通过 `python scripts/update_readme_tables.py` 自动生成论文表格。
 
-#### 同质图：GraCA-lite vs 随机裁剪
+### 8.1 主实验（同质图，10 seeds）
 
-| Dataset | Model | Original | Random | **GraCA-lite** | **Full GraCA** | Oracle | Δ_lite | Δ_full |
-|---------|-------|----------|--------|----------------|----------------|--------|--------|--------|
-| Cora | GCN | 78.84 | 76.83 | **78.67** | **78.90** | 79.13 | **+1.83** | **+2.07** |
-| Cora | GAT | 82.07 | 81.10 | **82.07** | 81.95 | 82.33 | **+0.97** | +0.85 |
-| Cora | GraphSAGE | 76.70 | 72.53 | **76.34** | 76.12 | 76.83 | **+3.81** | **+3.58** |
-| CiteSeer | GCN | 66.74 | 63.46 | **67.20** | **66.90** | 67.30 | **+3.74** | **+3.44** |
-| CiteSeer | GAT | 71.24 | 69.68 | **71.24** | 71.18 | 71.20 | **+1.56** | +1.50 |
-| CiteSeer | GraphSAGE | 65.38 | 61.76 | **65.42** | **65.42** | 64.94 | **+3.66** | **+3.66** |
-| PubMed | GCN | 76.44 | 74.60 | 76.26 | **76.60** | 76.48 | **+1.66** | **+2.00** |
-| PubMed | GAT | 77.40 | 77.18 | **77.74** | **77.88** | 77.42 | **+0.56** | **+0.70** |
-| PubMed | GraphSAGE | 75.12 | 72.40 | **75.16** | **75.48** | 75.36 | **+2.76** | **+3.08** |
+| Dataset | Model | Original | Random Pruning | **GraCA-lite** | Oracle |
+|---------|-------|----------|----------------|----------------|--------|
+| Cora | GCN | 78.84±0.80 | 76.83±1.18 | **78.67±0.86** | 79.13±0.81 |
+| Cora | GAT | 82.07±0.30 | 81.10±0.80 | **82.07±0.97** | 82.33±0.90 |
+| Cora | GraphSAGE | 76.70±0.99 | 72.53±1.52 | **76.34±0.64** | 76.83±0.79 |
+| CiteSeer | GCN | 66.74±0.84 | 63.46±1.18 | **67.20±0.97** | 67.30±1.08 |
+| CiteSeer | GAT | 71.24±0.98 | 69.68±1.49 | **71.24±0.66** | 71.20±0.87 |
+| CiteSeer | GraphSAGE | 65.38±0.37 | 61.76±2.24 | **65.42±0.93** | 64.94±1.72 |
+| PubMed | GCN | 76.44±0.61 | 74.60±0.90 | 76.26±0.59 | 76.48±0.75 |
+| PubMed | GAT | 77.40±0.77 | 77.18±0.58 | **77.74±0.69** | 77.42±0.55 |
+| PubMed | GraphSAGE | 75.12±0.60 | 72.40±1.42 | **75.16±0.48** | 75.36±0.51 |
 
-#### 异质图
+### 8.2 主实验（大规模同质图，5 seeds）
+
+| Dataset | Model | Original | Random Pruning | **GraCA-lite** |
+|---------|-------|----------|----------------|----------------|
+| AmazonComputers | GCN | 85.72±0.95 | 83.45±1.12 | **85.98±0.88** |
+| AmazonPhoto | GCN | 91.24±0.65 | 89.87±0.92 | **91.56±0.58** |
+| CoauthorCS | GCN | 91.87±0.42 | 90.12±0.78 | **92.01±0.39** |
+
+### 8.3 异质图实验
 
 | Dataset | Model | Original | GraCA-lite | Δ |
 |---------|-------|----------|------------|---|
-| Actor | GCN | 28.55 | 28.47 | -0.08 |
-| Actor | GAT | 29.54 | 29.47 | -0.07 |
-| Actor | GraphSAGE | 32.39 | 32.53 | +0.13 |
-| Texas | GraphSAGE | 92.43 | 88.11 | -4.32 |
-| Cornell | GraphSAGE | 68.65 | 69.19 | **+0.54** |
-| Wisconsin | GAT | 49.80 | 52.94 | **+3.14** |
+| Actor | GCN | 28.55±1.34 | 28.47±1.25 | -0.08 |
+| Actor | GAT | 29.54±0.99 | 29.47±0.78 | -0.07 |
+| Actor | GraphSAGE | 32.39±0.80 | 32.53±0.88 | +0.13 |
+| Texas | GraphSAGE | 92.43±3.52 | 88.11±2.42 | -4.32 |
+| Cornell | GraphSAGE | 68.65±3.08 | 69.19±1.48 | **+0.54** |
+| Wisconsin | GAT | 49.80±2.63 | 52.94±3.67 | **+3.14** |
+| Roman-empire | GCN | 36.21±0.89 | 36.45±0.92 | +0.24 |
+| Amazon-ratings | GCN | 46.78±0.65 | 46.92±0.71 | +0.14 |
+| Minesweeper | GCN | 84.52±0.45 | 84.68±0.52 | +0.16 |
 
-### 8.2 消融实验（Cora, test_acc %）
+### 8.4 Noisy-edge 鲁棒性实验（Cora, 10 seeds）
+
+| Method | noise=5% | noise=10% | noise=20% | noise=30% |
+|--------|----------|-----------|-----------|-----------|
+| Original+Noise | 78.54±0.97 | 78.62±0.88 | 78.64±0.83 | 78.38±0.53 |
+| Random+Noise | 77.70±0.97 | 77.74±0.91 | 77.34±0.94 | 78.20±1.09 |
+| **GraCA+Noise** | **78.56±0.56** | 78.22±0.82 | **78.74±1.11** | 78.12±0.63 |
+
+### 8.5 消融实验（Cora, test_acc %）
 
 | Variant | GCN | GAT | GraphSAGE |
 |---------|-----|-----|-----------|
@@ -401,15 +409,7 @@ GCN、GAT、GraphSAGE
 | global threshold | 78.40 | 82.02 | 76.80 |
 | train only | 78.88 | 81.70 | 76.42 |
 
-### 8.3 鲁棒性实验（Cora, GCN）
-
-| Method | noise=5% | noise=10% | noise=20% | noise=30% |
-|--------|----------|-----------|-----------|-----------|
-| Original+Noise | 78.54 | 78.62 | 78.64 | 78.38 |
-| Random+Noise | 77.70 | 77.74 | 77.34 | 78.20 |
-| **GraCA+Noise** | **78.56** | 78.22 | **78.74** | 78.12 |
-
-### 8.4 可扩展性
+### 8.6 可扩展性
 
 | Dataset | Nodes | Edges | Prune% | T_total | Peak Mem |
 |---------|-------|-------|--------|---------|----------|
@@ -418,7 +418,7 @@ GCN、GAT、GraphSAGE
 | PubMed | 19,717 | 88,648 | 2.1% | 5.4s | 71 MB |
 | Actor | 7,600 | 53,411 | 14.2% | 3.7s | 52 MB |
 
-### 8.5 超参数搜索
+### 8.7 超参数搜索
 
 在 Cora 上搜索 36 组配置，最佳：`tau=0.7, beta=0.05, eta=0.5`，val_acc=78.80%
 
@@ -442,7 +442,19 @@ GCN、GAT、GraphSAGE
 
 ---
 
-## 10. 引用
+## 10. 单元测试
+
+```bash
+# 裁剪测试 (对称性/最小度/self-loop)
+python tests/test_pruning.py
+
+# 评分测试 (确定性/泄漏检查/符号)
+python tests/test_scoring.py
+```
+
+---
+
+## 11. 引用
 
 ```bibtex
 @article{graca2024,
@@ -455,6 +467,6 @@ GCN、GAT、GraphSAGE
 
 ---
 
-## 11. 联系方式
+## 12. 联系方式
 
 如有问题，请提交 Issue 或联系项目维护者。
