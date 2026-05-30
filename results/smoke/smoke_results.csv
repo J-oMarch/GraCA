@@ -1,0 +1,7 @@
+run_id,timestamp,seed,dataset,method,oracle_only,proxy_model,downstream_model,actual_prune_ratio,num_edges_before,num_edges_after,isolated_nodes,min_degree,mean_degree,largest_connected_component_ratio,val_acc,test_acc,test_f1,best_epoch,runtime,config_path,graph_path,checkpoint_path,bad_edge_precision,bad_edge_recall,bad_edge_f1,clean_edge_mistakenly_removed_ratio
+smoke_original,2026-05-30T19:59:58.172576,0,Cora,Original,False,-,GCN,0.0,10556,10556,0,0,0,,0.782,0.788,0.7828014922166319,110,0.8798434734344482,configs/graca_lite_cora.yaml,,,,,,
+smoke_graca,2026-05-30T19:59:59.971479,0,Cora,GraCA-lite,False,GCN,GCN,0.05342932929139821,10556,9992,0,1.0,3.689807891845703,,0.786,0.787,0.7830782992384993,107,0.578690767288208,configs/graca_lite_cora.yaml,,,,,,
+smoke_random,2026-05-30T20:00:01.469447,0,Cora,Random Pruning,False,-,GCN,0.053334596438044723,10556,9993,0,0,0,,0.776,0.786,0.7792252490054227,58,0.4512920379638672,configs/graca_lite_cora.yaml,,,,,,
+smoke_original,2026-05-30T20:17:21.644982,0,Cora,Original,False,-,GCN,0.0,10556,10556,0,0,0,,0.782,0.788,0.7828014922166319,110,0.8642914295196533,configs/graca_lite_cora.yaml,,,,,,
+smoke_graca,2026-05-30T20:17:23.397088,0,Cora,GraCA-lite,False,GCN,GCN,0.1028798787419477,10556,9470,0,1.0,3.4970457553863525,,0.778,0.77,0.7662524361946683,85,0.508040189743042,configs/graca_lite_cora.yaml,,,,,,
+smoke_random,2026-05-30T20:17:24.767210,0,Cora,Random Pruning,False,-,GCN,0.1028798787419477,10556,9470,0,0,0,,0.764,0.79,0.7834847825726283,55,0.4282951354980469,configs/graca_lite_cora.yaml,,,,,,

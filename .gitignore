@@ -10,21 +10,9 @@ build/
 
 # Data (only root data directory, not src/data)
 /data/
-*.pt
-*.pkl
 
 # Logs
-logs/
 *.log
-
-# Checkpoints
-checkpoints/
-
-# Sanitized graphs (large files)
-sanitized_graphs/
-
-# Results (generated)
-results/
 
 # IDE
 .vscode/

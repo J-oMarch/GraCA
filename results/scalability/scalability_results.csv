@@ -1,0 +1,8 @@
+run_id,timestamp,seed,dataset,method,oracle_only,proxy_model,downstream_model,prune_ratio,num_edges_before,num_edges_after,isolated_nodes,min_degree,mean_degree,largest_connected_component_ratio,val_acc,test_acc,test_f1,best_epoch,runtime,config_path,graph_path,checkpoint_path
+scalability_cora_seed0,2026-05-30T00:06:41.819097,0,cora,GraCA-lite,False,GCN,GCN,0.05655551345206522,10556,9959,0,,,,0,0.797,0,0,2.038820505142212,configs/graca_lite_cora.yaml,,
+scalability_citeseer_seed0,2026-05-30T00:06:43.444115,0,citeseer,GraCA-lite,False,GCN,GCN,0.028888400702987704,9104,8841,0,,,,0,0.662,0,0,1.5733721256256104,configs/graca_lite_citeseer.yaml,,
+scalability_pubmed_seed0,2026-05-30T00:06:49.077215,0,pubmed,GraCA-lite,False,GCN,GCN,0.020846493998736615,88648,86800,0,,,,0,0.765,0,0,5.39408016204834,configs/graca_lite_pubmed.yaml,,
+scalability_actor_seed0,2026-05-30T00:06:52.831366,0,actor,GraCA-lite,False,GCN,GCN,0.14150643125947837,53411,45853,0,,,,0,0.28157894736842104,0,0,3.731595039367676,configs/graca_lite_actor.yaml,,
+scalability_texas_seed0,2026-05-30T00:06:53.504390,0,texas,GraCA-lite,False,GCN,GCN,0.06968641114982577,574,534,0,,,,0,0.6486486486486487,0,0,0.6690266132354736,configs/graca_lite_texas.yaml,,
+scalability_cornell_seed0,2026-05-30T00:06:54.212022,0,cornell,GraCA-lite,False,GCN,GCN,0.06822262118491917,557,519,0,,,,0,0.43243243243243246,0,0,0.7040526866912842,configs/graca_lite_cornell.yaml,,
+scalability_wisconsin_seed0,2026-05-30T00:06:54.947699,0,wisconsin,GraCA-lite,False,GCN,GCN,0.09170305676855894,916,832,0,,,,0,0.5882352941176471,0,0,0.7319533824920654,configs/graca_lite_wisconsin.yaml,,
