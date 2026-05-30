@@ -1,472 +1,168 @@
-# GraCA: Gradient-Guided Graph Connection Assessment
+# GraCA: Gradient-guided Graph Connection Assessment
 
-## 1. 项目概述
+Official implementation of **GraCA**, a gradient-based framework for identifying and pruning task-harmful edges in graphs for GNN training.
 
-### 1.1 研究问题
+## Overview
 
-图神经网络（GNN）的性能高度依赖图结构质量。然而真实图中存在大量**对当前任务优化有害的边**——它们可能真实存在，但持续向目标节点传播与任务优化方向冲突的信息。
+GraCA leverages hidden-layer gradient behavior during GNN training to compute edge-level risk scores. It identifies edges that are harmful to task optimization and prunes them before downstream training, improving graph quality for semi-supervised learning.
 
-**核心问题**：能否利用 GNN 训练过程中产生的梯度行为，自动识别并裁剪这些 task-optimization harmful edges？
+Key components:
+- **Direction Consistency (D)**: Measures whether gradient updates from an edge align with the optimization direction
+- **Relative Strength (M)**: Captures the relative gradient contribution of each edge
+- **Uncertainty Weighting (ρ)**: Down-weights edges where pseudo-labels are unreliable
+- **Per-node Adaptive Pruning**: Local threshold and budget per node, preserving minimum degree
 
-### 1.2 核心思想
+## Quick Start
 
-GraCA 不问"这条边是否正确"，而问"这条边是否帮助任务优化"。
+```bash
+# Install dependencies
+pip install -r requirements.txt
 
-通过分析隐藏表示梯度的**方向一致性**（D_vu）、**相对强度**（M_vu）和**预测不确定性**（ρ_vu），计算每条边的 helpful score（H_vu）、harmful score（R_vu）和 risk score（P_vu），然后执行局部自适应裁剪。
+# Run smoke test (Cora, seed=0)
+python scripts/smoke_test.py
 
-### 1.3 方法定位
+# Run full clean experiment on Cora
+python scripts/run_graca.py --config configs/graca_lite_cora.yaml --seed 0
 
-- **GraCA-lite / Practical GraCA**：合法半监督主方法，不使用测试标签
-- **Oracle GraCA**：使用全标签的上界分析，仅用于诊断，不进入主表
-- **Full GraCA**：在 GraCA-lite 基础上加入 consistency loss、多层梯度、多 checkpoint 时序稳定性、bridge protection
-
----
-
-## 2. 模型架构
-
-### 2.1 整体流程
-
-```
-原图 G(V, E, X)
-    │
-    ▼
-┌─────────────────────────────────────┐
-│  1. 训练 ProxyGNN (GCN/GAT/GraphSAGE) │
-│     - 使用 train labels (L_sup)       │
-│     - EMA Teacher 生成 soft pseudo    │
-│     - 可选: Consistency Loss          │
-└─────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────┐
-│  2. 梯度采集                         │
-│     - 计算 L_score 对 hidden 的梯度   │
-│     - 支持单层/多层/多 checkpoint     │
-└─────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────┐
-│  3. 边级评分                         │
-│     D_vu = cos(g_v, g_u)  方向一致性 │
-│     M_vu = ||g_u|| / mean  相对强度  │
-│     ρ_vu = ρ_v × clip(ρ_u) 可靠性   │
-│     H_vu = ρ_vu × max(D,0) × M     │
-│     R_vu = ρ_vu × max(-D,0) × M    │
-│     P_vu = R_vu - η × H_vu  风险    │
-└─────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────┐
-│  4. 局部自适应裁剪                    │
-│     - Per-node threshold: mean + λσ  │
-│     - Top-budget: min(β×deg, deg-d) │
-│     - 最小度保护 (d_min ≥ 1)         │
-│     - Self-loop 保护                 │
-│     - Bridge 保护 (可选)             │
-└─────────────────────────────────────┘
-    │
-    ▼
-  净化图 G' → 下游 GNN 从零训练
+# Run noisy-edge experiment
+python scripts/run_noisy_edge_experiment.py \
+    --config configs/graca_lite_cora.yaml --seed 0 \
+    --noise_type low_feature_similarity --noise_ratio 0.10
 ```
 
-### 2.2 关键数学公式
-
-**节点可靠性**（uncertainty-aware）：
-
-```
-ρ_v^train = { 1,                          v ∈ V_L (labeled)
-            { c_v^α × (1 - H(q_v)/logC), v ∈ V_U, c_v ≥ τ
-            { 0,                          v ∈ V_U, c_v < τ
-
-ρ_v^score = { 1,                          v ∈ V_L
-            { c_v^α × (1 - H(q_v)/logC), v ∈ V_U, c_v ≥ τ
-            { ε_ρ,                        v ∈ V_U, c_v < τ
-```
-
-**边可靠性**（target-centered）：
-
-```
-ρ_vu = ρ_v^score × clip(ρ_u^score, ε_ρ, 1)
-```
-
-**训练损失**：
-
-```
-L_proxy = L_sup + λ_p × L_soft + λ_c × L_cons
-L_score = L_sup^det + λ_s × L_soft^det
-```
-
-**风险分数**：
-
-```
-P_vu = R_vu - η × H_vu
-```
-
-### 2.3 与现有方法的区别
-
-| 方法 | 边判断信号 | Task-Aware | 使用梯度 | 输出 |
-|------|-----------|-----------|---------|------|
-| DropEdge | 随机 | ❌ | ❌ | 训练策略 |
-| GNNGuard | 特征相似性 | 部分 | ❌ | 加权模型 |
-| GNNExplainer | 学习mask | ✅ | 部分 | 解释子图 |
-| Homophily Pruning | 标签同质性 | ❌ | ❌ | 净化图 |
-| **GraCA** | **梯度行为** | **✅** | **✅** | **净化图** |
-
----
-
-## 3. 项目结构
+## Project Structure
 
 ```
 GraCA/
-├── README.md                          # 本文件
-├── requirements.txt                   # Python 依赖
-├── ClaudeCode_实现与实验指南.md         # 详细实现指南
-├── GraCA_模型介绍与论文idea.md         # 模型与论文思路
-├── 研究复盘.md                        # 研究背景复盘
-│
-├── configs/                           # YAML 配置文件 (26个)
-│   ├── graca_lite_{dataset}.yaml      # GraCA-lite 配置
-│   ├── full_graca_{dataset}.yaml      # Full GraCA 配置
-│   └── oracle_{dataset}.yaml          # Oracle 配置
-│
-├── src/                               # 源代码 (59个Python文件)
-│   ├── data/                          # 数据加载
-│   │   ├── load_data.py               # 统一数据加载接口 (支持16个数据集)
-│   │   ├── splits.py                  # 数据集划分
-│   │   └── leakage_check.py           # 标签泄漏检查
-│   │
-│   ├── models/                        # GNN 模型
-│   │   ├── base.py                    # 基类 (统一 forward 接口)
-│   │   ├── gcn.py                     # GCN 实现
-│   │   ├── gat.py                     # GAT 实现
-│   │   ├── sage.py                    # GraphSAGE 实现
-│   │   └── model_factory.py           # 模型工厂
-│   │
-│   ├── training/                      # 训练模块
-│   │   ├── train_proxy.py             # ProxyGNN 训练 (支持consistency loss)
-│   │   ├── train_downstream.py        # 下游模型训练
-│   │   ├── losses.py                  # 损失函数 (L_sup, L_soft, L_score)
-│   │   ├── evaluator.py               # 评估指标
-│   │   └── early_stopping.py          # 早停
-│   │
-│   ├── graca/                         # GraCA 核心模块
-│   │   ├── ema_teacher.py             # EMA 教师模型
-│   │   ├── pseudo_label.py            # 软伪标签 & 可靠性计算
-│   │   ├── gradient_collector.py      # 梯度采集 (单层/多层/多checkpoint)
-│   │   ├── edge_scoring.py            # 边级评分 (D, M, ρ, H, R, P)
-│   │   ├── pruning.py                 # 局部自适应裁剪 (无向图成对删除)
-│   │   ├── consistency_loss.py        # Consistency 正则化
-│   │   ├── bridge_protection.py       # 桥边保护
-│   │   ├── oracle.py                  # Oracle GraCA (全标签诊断)
-│   │   └── save_graph.py              # 净化图保存/加载
-│   │
-│   ├── baselines/                     # 基线方法
-│   │   ├── original.py                # 原图
-│   │   ├── dropedge.py                # DropEdge
-│   │   ├── random_pruning.py          # 随机裁剪 (支持matched ratio)
-│   │   ├── similarity_pruning.py      # Jaccard/Cosine 相似度裁剪
-│   │   └── homophily_pruning.py       # 同质性裁剪 (legal/oracle模式)
-│   │
-│   ├── eval/                          # 评估模块
-│   │   ├── metrics.py                 # 准确率/F1
-│   │   ├── graph_stats.py             # 图统计
-│   │   ├── result_writer.py           # CSV 结果写入
-│   │   └── aggregate.py               # 结果聚合
-│   │
-│   └── utils/                         # 工具模块
-│       ├── seed.py                    # 随机种子
-│       ├── device.py                  # 设备管理
-│       ├── config.py                  # 配置加载
-│       ├── logger.py                  # 日志
-│       └── io.py                      # 文件 I/O
-│
-├── scripts/                           # 实验脚本 (11个)
-│   ├── run_graca.py                   # 运行 GraCA (lite/full/oracle)
-│   ├── run_baselines.py               # 运行基线
-│   ├── run_oracle.py                  # 运行 Oracle
-│   ├── run_ablation.py                # 运行消融实验
-│   ├── run_robustness.py              # 运行鲁棒性实验
-│   ├── run_noisy_edges.py             # Noisy-edge 鲁棒性实验
-│   ├── run_scalability.py             # 运行可扩展性实验
-│   ├── run_sweep.py                   # 超参数搜索
-│   ├── run_downstream.py              # 在已保存图上训练下游
-│   ├── run_experiments.py             # 批量运行所有实验
-│   ├── aggregate_results.py           # 聚合结果
-│   ├── update_readme_tables.py        # 生成论文表格
-│   └── smoke_test.py                  # 快速验证
-│
-├── tests/                             # 单元测试
-│   ├── test_pruning.py                # 裁剪测试 (对称性/最小度/self-loop)
-│   └── test_scoring.py                # 评分测试 (确定性/泄漏检查/符号)
-│
-├── results/                           # 实验结果 (2374条)
-│   ├── main/                          # 主实验 (327条)
-│   ├── baselines/                     # 基线结果 (978条)
-│   ├── oracle/                        # Oracle 结果 (108条)
-│   ├── ablation/                      # 消融结果 (420条)
-│   ├── noisy_edges/                   # Noisy-edge 结果 (123条)
-│   ├── robustness/                    # 鲁棒性结果 (180条)
-│   ├── scalability/                   # 可扩展性结果 (7条)
-│   ├── sweeps/                        # 超参数搜索 (36条)
-│   ├── smoke/                         # Smoke test (6条)
-│   └── aggregated/                    # 聚合结果
-│
-├── paper_tables/                      # 论文表格 (5个CSV)
-│   ├── main_homophily.csv
-│   ├── main_heterophily.csv
-│   ├── noisy_edge_robustness.csv
-│   ├── ablation.csv
-│   └── oracle_gap.csv
-│
-├── sanitized_graphs/                  # 保存的净化图 (236个)
-│   ├── graca_lite/
-│   ├── full_graca/
-│   ├── oracle/
-│   └── ablation/
-│
-└── logs/                              # 训练日志
+├── src/
+│   ├── graca/              # Core GraCA module
+│   │   ├── gradient_collector.py  # Gradient collection from hidden layers
+│   │   ├── edge_scoring.py        # D, M, rho, H, R, P computation
+│   │   ├── pruning.py             # Per-node adaptive pruning
+│   │   ├── ema_teacher.py         # EMA teacher for stable pseudo labels
+│   │   ├── pseudo_label.py        # Soft pseudo labels with confidence
+│   │   └── consistency_loss.py    # Consistency regularization (Full GraCA)
+│   ├── models/             # GNN architectures (GCN, GAT, GraphSAGE)
+│   ├── training/           # Training loops, losses, evaluation
+│   ├── baselines/          # Baseline methods
+│   ├── eval/               # Evaluation metrics and noise injection
+│   └── utils/              # Config, seed, device utilities
+├── configs/                # YAML configs per dataset
+├── scripts/                # Experiment runners
+├── tests/                  # Unit tests
+├── results_clean/          # New experiment results (unified schema)
+├── paper_tables_clean/     # Auto-generated paper tables
+└── sanitized_graphs_clean/ # Saved pruned graphs
 ```
 
----
+## Running Experiments
 
-## 4. 环境配置
+### Core Experiment Matrix
 
 ```bash
-# 创建 conda 环境
-conda create -n graca python=3.11 -y
-conda activate graca
+# Run all clean experiments (6 datasets, 10 seeds, all methods)
+python scripts/run_core_matrix.py --phase clean --seeds 0-9
 
-# 安装 PyTorch (CUDA 12.8)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+# Run all noisy experiments (4 datasets, 4 noise types, 4 ratios, 10 seeds)
+python scripts/run_core_matrix.py --phase noisy --seeds 0-9
 
-# 安装 PyG 和依赖
-pip install torch_geometric numpy scipy scikit-learn pandas pyyaml tqdm networkx matplotlib ogb
+# Run ablation experiments (Cora/CiteSeer/PubMed, noisy 10%)
+python scripts/run_core_matrix.py --phase ablation --seeds 0-9
+
+# Run oracle experiments
+python scripts/run_core_matrix.py --phase oracle --seeds 0-9
+
+# Dry run (show commands without executing)
+python scripts/run_core_matrix.py --phase all --seeds 0-9 --dry_run
 ```
 
----
-
-## 5. 支持的数据集（16个）
-
-### 同质图
-
-| 数据集 | 节点数 | 边数 | 特征维 | 类别数 |
-|--------|--------|------|--------|--------|
-| Cora | 2,708 | 10,556 | 1,433 | 7 |
-| CiteSeer | 3,327 | 9,104 | 3,703 | 6 |
-| PubMed | 19,717 | 88,648 | 500 | 3 |
-| AmazonComputers | 13,752 | 491,722 | 767 | 10 |
-| AmazonPhoto | 7,650 | 238,162 | 745 | 8 |
-| CoauthorCS | 18,333 | 163,788 | 6,805 | 15 |
-
-### 异质图
-
-| 数据集 | 节点数 | 边数 | 特征维 | 类别数 |
-|--------|--------|------|--------|--------|
-| Actor | 7,600 | 53,411 | 932 | 5 |
-| Texas | 183 | 574 | 1,703 | 5 |
-| Cornell | 183 | 557 | 1,703 | 5 |
-| Wisconsin | 251 | 916 | 1,703 | 5 |
-| Roman-empire | 22,662 | 65,854 | 300 | 18 |
-| Amazon-ratings | 24,492 | 186,100 | 300 | 5 |
-| Minesweeper | 10,000 | 78,804 | 7 | 2 |
-| Tolokers | 11,758 | 1,038,000 | 10 | 2 |
-| Questions | 48,921 | 307,080 | 301 | 2 |
-
----
-
-## 6. 运行实验
-
-### 6.1 快速验证
+### Individual Experiments
 
 ```bash
-python scripts/smoke_test.py  # 在 Cora seed=0 上验证 Original + GraCA-lite + Random
-```
-
-### 6.2 GraCA-lite（主方法）
-
-```bash
-# 单个数据集单个 seed
+# GraCA-lite on a specific dataset
 python scripts/run_graca.py --config configs/graca_lite_cora.yaml --seed 0
 
-# 所有数据集所有 seed
-python scripts/run_experiments.py --datasets Cora CiteSeer PubMed --seeds 0 1 2 3 4
-```
-
-### 6.3 基线方法
-
-```bash
+# Baselines (Original, Random, Homophily)
 python scripts/run_baselines.py --config configs/graca_lite_cora.yaml --seed 0
-```
 
-### 6.4 Oracle（上界诊断）
-
-```bash
+# Oracle GraCA (uses all labels - diagnostic only)
 python scripts/run_oracle.py --config configs/oracle_cora.yaml --seed 0
+
+# Noisy-edge experiment with specific noise type
+python scripts/run_noisy_edge_experiment.py \
+    --config configs/graca_lite_cora.yaml --seed 0 \
+    --noise_type cross_class_oracle --noise_ratio 0.20
+
+# Ablation experiment
+python scripts/run_ablation_noisy.py \
+    --config configs/graca_lite_cora.yaml --seed 0 \
+    --variant direction_only
+
+# Edge score diagnostics
+python scripts/analyze_edge_scores.py \
+    --config configs/graca_lite_cora.yaml --seed 0 \
+    --noise_type low_feature_similarity --noise_ratio 0.10
 ```
 
-### 6.5 消融实验
+### Noise Types
+
+| Type | Labels Used | Description |
+|------|-------------|-------------|
+| `low_feature_similarity` | None | Connects nodes with lowest feature cosine similarity |
+| `cross_class_train_safe` | Train + high-confidence pseudo | Cross-class edges using only safe labels |
+| `random_inter_community` | None (feature clustering) | Cross-cluster edges via k-means on features |
+| `cross_class_oracle` | ALL labels | Cross-class using full labels (oracle/diagnostic only) |
+
+### Generating Paper Tables
 
 ```bash
-python scripts/run_ablation.py --config configs/graca_lite_cora.yaml --seed 0
+# Validate results first
+python scripts/validate_results.py --dir results_clean/
+
+# Build all paper tables
+python scripts/build_final_tables.py --results_dir results_clean/ --output_dir paper_tables_clean/
 ```
 
-### 6.6 Noisy-edge 鲁棒性实验
+This generates:
+- `table1_clean_accuracy.csv` - Clean graph accuracy with paired t-tests
+- `table2_noisy_accuracy.csv` - Noisy graph accuracy
+- `table3_bad_edge_detection.csv` - Bad-edge detection precision/recall/F1
+- `table4_ablation_noisy.csv` - Ablation results on noisy graphs
+- `table5_oracle_gap.csv` - Oracle vs practical gap analysis
+- `table6_scalability.csv` - Runtime comparison
+- `statistical_tests.csv` - All pairwise paired t-tests
+
+## Result Schema
+
+All results in `results_clean/` use a unified CSV schema with fields:
+- `experiment_type`: clean | noisy_edge | oracle | ablation | scalability
+- `method`: Original | DropEdge | Random-Matched | DegreeAwareRandom-Matched | Similarity-Pruning | Homophily-TrainOnly | GraCA-lite | GraCA-Oracle
+- `actual_prune_ratio`: Real fraction of edges removed
+- `edge_homophily_before/after`: Graph homophily before/after pruning
+- `bad_edge_precision/recall/f1`: For noisy-edge experiments only
+
+## Running Tests
 
 ```bash
-python scripts/run_noisy_edges.py --config configs/graca_lite_cora.yaml --seed 0
-```
-
-### 6.7 生成论文表格
-
-```bash
-python scripts/update_readme_tables.py  # 从真实 CSV 生成 paper_tables/*.csv
-```
-
----
-
-## 7. 配置参数说明
-
-| 参数 | 说明 | 默认值 |
-|------|------|--------|
-| `pseudo.tau` | 伪标签置信度阈值 | 0.6 |
-| `pseudo.alpha` | 可靠性指数 | 1.0 |
-| `pseudo.epsilon_rho` | 低置信节点可靠性下界 | 0.05 |
-| `pseudo.lambda_p` | 软伪标签损失权重 | 1.0 |
-| `scoring.eta` | 有害/有益平衡系数 | 1.0 |
-| `scoring.lambda_s` | Scoring loss 中软伪标签权重 | 1.0 |
-| `scoring.collect_layer` | 梯度采集层: first/last/all | all |
-| `scoring.use_multi_checkpoint` | 是否多 checkpoint 平均 | true |
-| `pruning.beta` | 每节点最大裁剪比例 | 0.2 |
-| `pruning.min_degree` | 最小度保护 | 1 |
-| `pruning.lambda_theta` | 局部阈值 = mean + λ×std | 0.0 |
-| `pruning.protect_bridges` | 是否保护桥边 | true |
-| `teacher.ema_decay` | EMA 衰减系数 | 0.99 |
-| `teacher.warmup_epochs` | 初始化 EMA 教师的预热轮数 | 50 |
-| `consistency.use_consistency` | 是否使用一致性损失 | true |
-| `consistency.lambda_c` | 一致性损失权重 | 0.1 |
-
----
-
-## 8. 实验结果
-
-> 以下结果均来自真实实验数据（`results/` 目录下的 CSV 文件），共 **2374 条实验结果**。
-> 可通过 `python scripts/update_readme_tables.py` 自动生成论文表格。
-
-### 8.1 主实验（同质图，10 seeds）
-
-| Dataset | Model | Original | Random Pruning | **GraCA-lite** | Oracle |
-|---------|-------|----------|----------------|----------------|--------|
-| Cora | GCN | 78.84±0.80 | 76.83±1.18 | **78.67±0.86** | 79.13±0.81 |
-| Cora | GAT | 82.07±0.30 | 81.10±0.80 | **82.07±0.97** | 82.33±0.90 |
-| Cora | GraphSAGE | 76.70±0.99 | 72.53±1.52 | **76.34±0.64** | 76.83±0.79 |
-| CiteSeer | GCN | 66.74±0.84 | 63.46±1.18 | **67.20±0.97** | 67.30±1.08 |
-| CiteSeer | GAT | 71.24±0.98 | 69.68±1.49 | **71.24±0.66** | 71.20±0.87 |
-| CiteSeer | GraphSAGE | 65.38±0.37 | 61.76±2.24 | **65.42±0.93** | 64.94±1.72 |
-| PubMed | GCN | 76.44±0.61 | 74.60±0.90 | 76.26±0.59 | 76.48±0.75 |
-| PubMed | GAT | 77.40±0.77 | 77.18±0.58 | **77.74±0.69** | 77.42±0.55 |
-| PubMed | GraphSAGE | 75.12±0.60 | 72.40±1.42 | **75.16±0.48** | 75.36±0.51 |
-
-### 8.2 主实验（大规模同质图，5 seeds）
-
-| Dataset | Model | Original | Random Pruning | **GraCA-lite** |
-|---------|-------|----------|----------------|----------------|
-| AmazonComputers | GCN | 85.72±0.95 | 83.45±1.12 | **85.98±0.88** |
-| AmazonPhoto | GCN | 91.24±0.65 | 89.87±0.92 | **91.56±0.58** |
-| CoauthorCS | GCN | 91.87±0.42 | 90.12±0.78 | **92.01±0.39** |
-
-### 8.3 异质图实验
-
-| Dataset | Model | Original | GraCA-lite | Δ |
-|---------|-------|----------|------------|---|
-| Actor | GCN | 28.55±1.34 | 28.47±1.25 | -0.08 |
-| Actor | GAT | 29.54±0.99 | 29.47±0.78 | -0.07 |
-| Actor | GraphSAGE | 32.39±0.80 | 32.53±0.88 | +0.13 |
-| Texas | GraphSAGE | 92.43±3.52 | 88.11±2.42 | -4.32 |
-| Cornell | GraphSAGE | 68.65±3.08 | 69.19±1.48 | **+0.54** |
-| Wisconsin | GAT | 49.80±2.63 | 52.94±3.67 | **+3.14** |
-| Roman-empire | GCN | 36.21±0.89 | 36.45±0.92 | +0.24 |
-| Amazon-ratings | GCN | 46.78±0.65 | 46.92±0.71 | +0.14 |
-| Minesweeper | GCN | 84.52±0.45 | 84.68±0.52 | +0.16 |
-
-### 8.4 Noisy-edge 鲁棒性实验（Cora, 10 seeds）
-
-| Method | noise=5% | noise=10% | noise=20% | noise=30% |
-|--------|----------|-----------|-----------|-----------|
-| Original+Noise | 78.54±0.97 | 78.62±0.88 | 78.64±0.83 | 78.38±0.53 |
-| Random+Noise | 77.70±0.97 | 77.74±0.91 | 77.34±0.94 | 78.20±1.09 |
-| **GraCA+Noise** | **78.56±0.56** | 78.22±0.82 | **78.74±1.11** | 78.12±0.63 |
-
-### 8.5 消融实验（Cora, test_acc %）
-
-| Variant | GCN | GAT | GraphSAGE |
-|---------|-----|-----|-----------|
-| **GraCA-lite (full)** | 78.67 | 82.07 | 76.34 |
-| w/o EMA | 78.28 | 81.08 | 76.60 |
-| hard pseudo | 78.20 | 81.92 | 76.28 |
-| w/o reliability | 78.38 | 81.66 | 76.60 |
-| harmful only | 78.34 | 81.86 | 76.54 |
-| **helpful only** | **79.12** | **82.22** | 76.58 |
-| global threshold | 78.40 | 82.02 | 76.80 |
-| train only | 78.88 | 81.70 | 76.42 |
-
-### 8.6 可扩展性
-
-| Dataset | Nodes | Edges | Prune% | T_total | Peak Mem |
-|---------|-------|-------|--------|---------|----------|
-| Cora | 2,708 | 10,556 | 5.7% | 2.0s | 34 MB |
-| CiteSeer | 3,327 | 9,104 | 2.9% | 1.6s | 67 MB |
-| PubMed | 19,717 | 88,648 | 2.1% | 5.4s | 71 MB |
-| Actor | 7,600 | 53,411 | 14.2% | 3.7s | 52 MB |
-
-### 8.7 超参数搜索
-
-在 Cora 上搜索 36 组配置，最佳：`tau=0.7, beta=0.05, eta=0.5`，val_acc=78.80%
-
----
-
-## 9. 核心发现
-
-1. **梯度方向信号有效**：最后一层梯度余弦对同类/异类边区分极强（同类 0.97 vs 异类 -0.48）
-
-2. **GraCA-lite 稳定优于随机裁剪**：同质图上平均提升 +1.5% ~ +3.8%
-
-3. **与原图持平或略优**：裁剪 3-5% 的边后性能不掉，说明确实删掉了噪声边
-
-4. **Oracle 上界有效**：全标签版本表现最好，验证梯度边信号的上限存在
-
-5. **Full GraCA 进一步提升**：consistency loss + 多层梯度 + 多 checkpoint 带来额外收益
-
-6. **可扩展性好**：PubMed (19K nodes, 88K edges) 仅需 5.4 秒完成全流程
-
-7. **异质图效果不稳定**：在 Texas/Wisconsin 上有时掉点，需进一步研究
-
----
-
-## 10. 单元测试
-
-```bash
-# 裁剪测试 (对称性/最小度/self-loop)
 python tests/test_pruning.py
-
-# 评分测试 (确定性/泄漏检查/符号)
 python tests/test_scoring.py
+python tests/test_result_schema.py
 ```
 
----
+## Datasets
 
-## 11. 引用
+### Homophilic
+Cora, CiteSeer, PubMed, AmazonComputers, AmazonPhoto, CoauthorCS, CoauthorPhysics
+
+### Heterophilic
+Actor, Texas, Cornell, Wisconsin, Roman-empire, Amazon-ratings, Minesweeper, Tolokers, Questions
+
+## Citation
 
 ```bibtex
 @article{graca2024,
-  title={GraCA: Gradient-Guided Graph Sanitization for Semi-Supervised Node Classification},
+  title={GraCA: Gradient-guided Graph Connection Assessment for Graph Neural Networks},
   author={},
-  journal={},
   year={2024}
 }
 ```
-
----
-
-## 12. 联系方式
-
-如有问题，请提交 Issue 或联系项目维护者。

@@ -12,9 +12,11 @@ def compute_graph_statistics(
     E_after = edge_index_after.shape[1]
 
     # Degree distribution of pruned graph
+    # Count both endpoints for undirected graphs stored with both directions
     degree = torch.zeros(num_nodes)
     if E_after > 0:
         for i in range(E_after):
+            degree[edge_index_after[0, i]] += 1
             degree[edge_index_after[1, i]] += 1
 
     isolated = (degree == 0).sum().item()

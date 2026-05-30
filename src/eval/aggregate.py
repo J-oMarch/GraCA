@@ -42,7 +42,7 @@ def aggregate_results(
     else:
         group_cols_proxy = group_cols
 
-    numeric_cols = ["val_acc", "test_acc", "test_f1", "prune_ratio", "runtime"]
+    numeric_cols = ["val_acc", "test_acc", "test_f1", "actual_prune_ratio", "runtime"]
     numeric_cols = [c for c in numeric_cols if c in all_df.columns]
 
     summary = all_df.groupby(group_cols_proxy)[numeric_cols].agg(["mean", "std"]).reset_index()

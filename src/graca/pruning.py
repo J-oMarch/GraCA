@@ -204,11 +204,13 @@ def compute_graph_stats(edge_index: torch.Tensor, num_nodes: int, num_edges_befo
         }
 
     # Compute degree from final edge_index
+    # For undirected graphs stored with both directions, count ALL endpoints
     degree = torch.zeros(num_nodes)
     src = edge_index[0].cpu()
     dst = edge_index[1].cpu()
 
     for i in range(E_after):
+        degree[src[i]] += 1
         degree[dst[i]] += 1
 
     isolated = (degree == 0).sum().item()

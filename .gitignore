@@ -26,3 +26,13 @@ Thumbs.db
 
 # Claude
 .claude/
+
+# Archived results (too large for git)
+archived_results/
+
+# Sanitized graphs (*.pt files)
+sanitized_graphs/
+sanitized_graphs_clean/
+
+# Checkpoints
+checkpoints/

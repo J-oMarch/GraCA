@@ -1,0 +1,11 @@
+{
+  "noise_type": "low_feature_similarity",
+  "noise_ratio": 0.1,
+  "num_edges_original": 10556,
+  "num_injected_pairs": 527,
+  "num_injected_directed": 1054,
+  "num_edges_noisy": 11610,
+  "actual_injection_ratio": 0.09984842743463433,
+  "seed": 0,
+  "dataset": "Cora"
+}

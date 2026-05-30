@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.utils.config import load_config
 from src.utils.seed import set_seed
 from src.utils.device import get_device
-from src.data.load_data import load_dataset
+from src.data.load_data import load_dataset, compute_edge_homophily
 from src.training.train_proxy import train_proxy
 from src.graca.gradient_collector import collect_hidden_gradients, collect_multi_checkpoint_gradients
 from src.graca.edge_scoring import compute_edge_scores, average_undirected_scores, compute_rho_score
@@ -41,9 +41,11 @@ def main():
     device = get_device(config)
     ds_name = config["dataset"]["name"]
     proxy_name = config["proxy_model"]["name"]
-    result_dir = config.get("logging", {}).get("result_dir", "results/main/")
-    graph_dir = config.get("logging", {}).get("graph_dir", "sanitized_graphs/graca_lite/")
+    result_dir = config.get("logging", {}).get("result_dir", "results_clean/main/")
+    graph_dir = config.get("logging", {}).get("graph_dir", "sanitized_graphs_clean/graca_lite/")
     method = config.get("experiment", {}).get("method", "graca_lite")
+    experiment_type = config.get("experiment", {}).get("experiment_type", "clean")
+    undirected = config.get("dataset", {}).get("undirected", True)
 
     for seed in seeds:
         set_seed(seed)
@@ -54,6 +56,10 @@ def main():
         data = data.to(device)
         logger.info(f"Data: {data.num_nodes} nodes, {data.edge_index.shape[1]} edges, "
                      f"{num_features} features, {num_classes} classes")
+
+        # Compute homophily before pruning
+        y_for_homo = data.y.cpu()
+        homo_before = compute_edge_homophily(data.edge_index.cpu(), y_for_homo)
 
         # 2. Train ProxyGNN
         logger.info("Training ProxyGNN...")
@@ -82,6 +88,8 @@ def main():
 
         scoring_cfg = config.get("scoring", {})
         use_multi_checkpoint = scoring_cfg.get("use_multi_checkpoint", False)
+        # Read deterministic flag from config
+        deterministic = scoring_cfg.get("deterministic", True)
 
         if use_multi_checkpoint and len(saved_checkpoints) > 1:
             logger.info(f"Using {len(saved_checkpoints)} checkpoints for gradient averaging")
@@ -99,6 +107,7 @@ def main():
                 train_mask=train_mask, unlabeled_mask=unlabeled_mask,
                 lambda_s=scoring_cfg.get("lambda_s", 1.0),
                 collect_layer=scoring_cfg.get("collect_layer", "all"),
+                deterministic=deterministic,
             )
 
         grad = grad_result["grad"]
@@ -117,7 +126,7 @@ def main():
         )
 
         P = edge_scores["P"]
-        if config.get("dataset", {}).get("undirected", True):
+        if undirected:
             P = average_undirected_scores(edge_index, P)
 
         D = edge_scores["D"]
@@ -131,13 +140,17 @@ def main():
             beta=pruning_cfg.get("beta", 0.2),
             min_degree=pruning_cfg.get("min_degree", 1),
             lambda_theta=pruning_cfg.get("lambda_theta", 0.0),
-            undirected=config.get("dataset", {}).get("undirected", True),
+            undirected=undirected,
             protect_self_loops=pruning_cfg.get("protect_self_loops", True),
             protect_bridges=pruning_cfg.get("protect_bridges", False),
         )
 
+        # Compute homophily after pruning
+        homo_after = compute_edge_homophily(pruned_edge_index.cpu(), y_for_homo)
+
         logger.info(f"Pruning: {graph_stats['num_edges_before']} -> {graph_stats['num_edges_after']} edges "
                      f"(ratio={graph_stats['prune_ratio']:.3f}), isolated={graph_stats['isolated_nodes']}")
+        logger.info(f"Homophily: {homo_before:.4f} -> {homo_after:.4f}")
 
         # 7. Save sanitized graph
         run_id = config.get("experiment", {}).get("run_id", f"{method}_{ds_name}_seed{seed}")
@@ -160,21 +173,25 @@ def main():
 
             write_result_row({
                 "run_id": run_id, "seed": seed, "dataset": ds_name,
+                "experiment_type": experiment_type,
                 "method": method, "oracle_only": False,
                 "proxy_model": proxy_name, "downstream_model": ds_model_name,
-                "prune_ratio": graph_stats["prune_ratio"],
+                "prune_ratio_target": pruning_cfg.get("beta", 0.2),
+                "actual_prune_ratio": graph_stats["prune_ratio"],
                 "num_edges_before": graph_stats["num_edges_before"],
                 "num_edges_after": graph_stats["num_edges_after"],
                 "isolated_nodes": graph_stats["isolated_nodes"],
                 "min_degree": graph_stats.get("min_degree", 0),
                 "mean_degree": graph_stats.get("mean_degree", 0),
                 "largest_connected_component_ratio": graph_stats.get("largest_connected_component_ratio", 0),
+                "edge_homophily_before": homo_before,
+                "edge_homophily_after": homo_after,
                 "val_acc": ds_result["val_acc"],
                 "test_acc": ds_result["test_acc"],
                 "test_f1": ds_result["test_f1"],
                 "best_epoch": ds_result["best_epoch"],
                 "runtime": ds_result["runtime"],
-                "config_path": args.config, "graph_path": graph_path, "checkpoint_path": "",
+                "config_path": args.config, "graph_path": graph_path,
             }, f"{result_dir}/results.csv")
 
     logger.info(f"{method} pipeline complete!")
