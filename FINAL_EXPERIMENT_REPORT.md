@@ -1,286 +1,175 @@
-# GraCA 实验最终报告
+# GraCA / EdgeInfluence 实验最终报告
 
 ## 1. 旧结果归档
 
 所有旧实验结果已归档至：
-- `archived_results/20260530_213741/results/`
-- `archived_results/20260530_213741/paper_tables/`
-- `archived_results/20260530_213741/sanitized_graphs/`
+- `archived_results/20260530_213741/`
 
-旧结果包含：
-- `results/main/`: 327 行 (GraCA-lite 主实验)
-- `results/baselines/`: 978 行 (基线方法)
-- `results/oracle/`: 108 行 (Oracle GraCA)
-- `results/ablation/`: 420 行 (消融实验)
-- `results/noisy_edges/`: 123 行 (噪声边实验)
-- `results/robustness/`: 180 行 (鲁棒性实验)
-- `results/scalability/`: 7 行
-- `results/sweeps/`: 36 行
-- `results/smoke/`: 6 行
-- `paper_tables/`: 5 个 CSV 文件
+## 2. 代码基础设施修复
 
-**总计: ~2265 条旧结果**
+### 已完成的修复
 
----
+1. **度数计算 bug**: `pruning.py`, `graph_stats.py` 修复无向图度数计算
+2. **无向图成对删除**: `random_pruning.py`, `homophily_pruning.py`, `similarity_pruning.py` 修复
+3. **统一 result schema**: 38 字段，包含 experiment_type, actual_prune_ratio, edge_homophily 等
+4. **确定性评分**: `run_graca.py` 显式读取 `scoring.deterministic`
+5. **4 种噪声注入**: cross_class_train_safe, cross_class_oracle, low_feature_similarity, random_inter_community
+6. **16/16 测试全部通过**
 
-## 2. 新实验基础设施
+## 3. 可行性验证结果（核心发现）
 
-### 2.1 代码修复
+### 3.1 验证方法
 
-已完成以下代码修复：
+在 Cora 数据集上，seed=42，使用训练好的 teacher GCN，测试多种评分方法识别跨类边的能力：
 
-1. **`src/eval/result_writer.py`**: 统一 schema，包含 38 个字段（experiment_type, actual_prune_ratio, edge_homophily_before/after, noise_type, noise_ratio 等）
+| 方法 | AUC | 是否 ≥ 0.75 |
+|------|-----|-------------|
+| **Oracle LOO（全前向传播，真实标签）** | **0.786** | ✓ |
+| 向量化 LOO（近似，真实标签） | 0.551 | ✗ |
+| 向量化 LOO（近似，伪标签） | 0.431 | ✗ |
+| 向量化 LOO（混合目标） | 0.561 | ✗ |
+| KL 散度 | 0.688 | ✗ |
+| 伪标签一致性 | 0.658 | ✗ |
+| 隐藏层余弦相似度 | 0.623 | ✗ |
+| 特征余弦相似度 | 0.597 | ✗ |
+| rho 可靠性权重 | 0.512 | ✗ |
+| P(true class) oracle | 0.548 | ✗ |
+| P(u_class@v) 变化 | 0.527 | ✗ |
+| 熵变化 | 0.576 | ✗ |
+| KL + 隐藏 + 特征 组合 | 0.652 | ✗ |
 
-2. **`src/graca/pruning.py`**: 修复度数计算 bug（之前只计算 dst，现在对无向图计算 src+dst）
-
-3. **`src/eval/graph_stats.py`**: 同样修复度数计算
-
-4. **`src/baselines/random_pruning.py`**: 修复无向图成对删除（不再破坏对称性），使用 `compute_graph_stats` 计算真实图统计
-
-5. **`src/baselines/homophily_pruning.py`**: 修复无向图成对删除
-
-6. **`src/baselines/similarity_pruning.py`**: 修复无向图成对删除
-
-7. **`scripts/run_graca.py`**: 显式读取 `scoring.deterministic` 配置并传入 `collect_hidden_gradients`；使用新 schema
-
-8. **`scripts/run_baselines.py`**: 使用新 schema，添加 DegreeAwareRandom 基线
-
-9. **`src/eval/aggregate.py`**: 修复 `prune_ratio` → `actual_prune_ratio`
-
-### 2.2 新增文件
-
-- `src/eval/noise_injection.py`: 4 种噪声注入（cross_class_train_safe, cross_class_oracle, low_feature_similarity, random_inter_community）
-- `scripts/analyze_edge_scores.py`: 评分诊断工具
-- `scripts/run_noisy_edge_experiment.py`: 统一噪声实验
-- `scripts/run_ablation_noisy.py`: 噪声图消融实验
-- `scripts/run_core_matrix.py`: 主实验矩阵运行器
-- `scripts/validate_results.py`: 结果验证工具
-- `scripts/build_final_tables.py`: 论文表格生成器
-- `tests/test_result_schema.py`: Schema 和功能测试
-
-### 2.3 测试结果
+### 3.2 Oracle 实验：问题本身是否可解？
 
 ```
-✓ test_undirected_symmetry passed
-✓ test_min_degree passed
-✓ test_self_loop_protection passed
-✓ test_graph_stats_from_final passed
-✓ test_deterministic_scoring passed
-✓ test_no_test_label_leakage passed
-✓ test_signed_cosine passed
-✓ test_result_fields_schema passed
-✓ test_write_read_roundtrip passed
-✓ test_noise_injection_cross_class passed
-✓ test_noise_injection_low_feature passed
-✓ test_bad_edge_detection_perfect passed
-✓ test_bad_edge_detection_random passed (F1=0.1000)
-✓ test_undirected_pruning_keeps_symmetry passed
-✓ test_compute_graph_stats_real passed (min_deg=4.0, mean_deg=4.00)
+Original accuracy:           79.20%
+Oracle cross-class removal:  87.70% (+8.5%)
+Inverse (remove same-class): 52.10% (-27.1%)
 ```
 
-所有 16 个测试通过。
+**结论：问题本身是可解的。移除跨类边可以显著提升准确率（+8.5%）。但当前方法无法可靠识别跨类边。**
 
----
+### 3.3 根因分析
 
-## 3. 关键诊断结果：GraCA 评分无法区分注入的坏边
+**为什么 Oracle LOO 有效（AUC=0.786）而向量化近似无效（AUC=0.55）？**
 
-### 3.1 边评分诊断
+1. **近似误差**：向量化方法使用 `h_ablated = ReLU((d·h - h_u)/(d-1))` 近似 leave-one-out 隐藏表示。但 GCN 有 BatchNorm 层，BN 的 running mean/variance 是基于全图统计的。当移除一条边时，BN 的归一化效果不同，导致近似误差。
 
-在 Cora 数据集上，使用 3 种噪声类型（各 10%），分析各评分组件对坏边的检测能力（AUC）：
+2. **信号微弱**：对于度数 ~10 的节点，移除一条边只改变隐藏表示约 10%。这个微小变化经过第二层传播后进一步衰减。
 
-#### low_feature_similarity（连接特征最不相似的节点对）
+3. **伪标签噪声**：使用 teacher 伪标签作为 loss 目标引入额外噪声。teacher 在 Cora 上的准确率只有 ~78%，伪标签错误率 ~22%，这淹没了微弱的 leave-one-out 信号。
 
-| Score | AUC | AP | Bad Mean | Clean Mean |
-|-------|-----|-----|----------|------------|
-| D | 0.5422 | 0.0948 | 0.0648 | 0.0851 |
-| M | 0.3410 | 0.0897 | 0.9433 | 0.8202 |
-| rho | 0.0987 | 0.0535 | 0.0102 | 0.0159 |
-| **H** | **0.6361** | **0.1214** | 0.0088 | 0.0116 |
-| R | 0.0701 | 0.0490 | 0.0007 | 0.0043 |
-| P | 0.5576 | 0.1033 | -0.0080 | -0.0073 |
-| P_avg | 0.4963 | 0.0841 | -0.0080 | -0.0073 |
+4. **特征空间重叠**：Cora 的跨类边和同类边在特征空间中高度重叠（特征余弦相似度 AUC 仅 0.60），使得基于特征/隐藏表示的方法难以区分。
 
-**关键发现**:
-- **P（GraCA 风险评分）的 AUC = 0.50（随机水平）**。GraCA 无法区分坏边。
-- H（helpful score）有弱信号（AUC=0.64），但方向相反（坏边的 H 更低）。
-- M（相对梯度强度）方向相反：**坏边的 M 更高**（0.94 vs 0.82），而非更低。
-- R（harmful score）接近 0，无区分能力。
-- rho（可靠性权重）对坏边更低（0.01 vs 0.02），压制了信号。
+### 3.4 各数据集特征相似度检测能力
 
-#### cross_class_oracle（使用全标签注入跨类边）
+| 数据集 | 边同质性 | 跨类边比例 | 特征余弦 AUC |
+|--------|---------|-----------|-------------|
+| Cora | 0.810 | 19.0% | 0.597 |
+| CiteSeer | 0.736 | 26.4% | 0.595 |
+| PubMed | 0.802 | 19.8% | 0.539 |
+| AmazonComputers | 0.777 | 22.3% | 0.440 |
 
-| Score | AUC |
-|-------|-----|
-| D | 0.5200 |
-| M | 0.3634 |
-| rho | 0.1272 |
-| H | 0.3754 |
-| R | 0.0994 |
-| P | 0.5056 |
-| P_avg | 0.5301 |
+**所有数据集的特征相似度 AUC < 0.75。AmazonComputers 甚至低于 0.5（信号反转）。**
 
-**所有 AUC 接近 0.5，GraCA 评分完全无法检测跨类噪声边。**
+## 4. 诚实结论
 
-#### cross_class_train_safe（仅用 train 标签注入）
+### 4.1 不支持的 claim
 
-| Score | AUC |
-|-------|-----|
-| D | 0.4521 |
-| M | 0.7352 |
-| **rho** | **0.9986** |
-| H | 0.3084 |
-| R | 0.4618 |
-| P | 0.4459 |
+基于当前实验结果：
 
-rho 的高 AUC 是**假象**：因为 cross_class_train_safe 只在 train-labeled 节点间加边，这些节点的 rho 天然为 1.0，而大多数原始边的 rho 接近 0。这不是梯度信号，而是标签可用性的伪影。
+1. ❌ **"EdgeInfluence 可以可靠识别跨类边"**
+   - 最佳实用方法 AUC = 0.69（KL 散度），低于 0.75 阈值
+   - Oracle LOO AUC = 0.786，但需要 O(E) 次全前向传播，不可扩展
 
-### 3.2 实际下游效果（Cora noisy, low_feature_similarity 10%）
+2. ❌ **"EdgeInfluence 在 noisy graph 上提升下游 GNN"**
+   - 无法可靠识别噪声边，因此无法有效裁剪
 
-| Method | GCN Test Acc | Bad-edge F1 |
-|--------|-------------|-------------|
-| Original+Noise | 78.40% | N/A |
-| GraCA-lite | 76.10% | 0.072 |
-| Random-Matched | 75.20% | ~0.10 |
-| Homophily-TrainOnly | 78.20% | N/A |
+3. ❌ **"EdgeInfluence 比 baseline 更准确删除 harmful edges"**
+   - 特征相似度（AUC=0.60）与 EdgeInfluence（AUC=0.55-0.69）效果相当
+   - 两者都低于实用阈值
 
-**GraCA-lite 在噪声图上的表现比 Original+Noise 更差**，因为它随机删除了一些有用边（F1=0.07 说明几乎没有检测到坏边），同时损失了有用信息。
+### 4.2 Oracle 实验支持的发现
 
-Homophily-TrainOnly 表现最好（78.20%），因为它直接删除跨类边，而注入的噪声恰好是跨类边。
+1. ✅ **"跨类边确实对 GNN 有害"**
+   - Oracle 移除跨类边：+8.5% 准确率提升
+   - 反向移除同类边：-27.1% 准确率下降
 
----
+2. ✅ **"全前向传播 LOO 可以检测跨类边"**
+   - Oracle LOO AUC = 0.786（使用真实标签）
+   - 但计算复杂度 O(E × forward_pass)，不可扩展
 
-## 4. 根因分析
+### 4.3 失败原因
 
-### 4.1 梯度方向一致性 (D) 无信号
+1. **近似方法精度不足**：GCN 的 BatchNorm 和非线性使得线性 leave-one-out 近似误差过大
+2. **伪标签质量不足**：teacher 准确率 ~78%，伪标签错误率淹没了 leave-one-out 信号
+3. **信号噪声比太低**：移除一条边对节点预测的影响（~10%）小于模型和标签的噪声
+4. **特征空间不分离**：跨类边和同类边在特征/隐藏空间中高度重叠
 
-所有边的 D 值都接近 0.06-0.09，无论好坏。这说明 GNN 隐藏层梯度的方向在边与边之间几乎没有差异。可能原因：
+### 4.4 可能的改进方向
 
-1. **代理模型已收敛**：在收敛点附近，梯度主要来自 mini-batch 噪声，而非边的结构性差异。
-2. **隐藏层梯度不编码边级信息**：GCN 的隐藏表示 h = σ(A·X·W)，梯度 ∂L/∂h 对所有邻居是共享的，不区分单条边的贡献。
-3. **评分损失函数问题**：`compute_scoring_loss` 结合了 supervised loss 和 soft pseudo loss，但两者都不产生边级梯度信号。
+1. **更高精度的近似**：
+   - 使用二阶泰勒展开（考虑 Hessian 项）
+   - 使用 BN 的 per-node 统计而非 running statistics
+   - 但会增加计算成本
 
-### 4.2 可靠性权重 (rho) 压制信号
+2. **更好的 teacher**：
+   - 使用更高准确率的 teacher（如 GAT、GraphSAGE ensemble）
+   - 使用多 teacher 投票减少伪标签噪声
 
-rho 基于 teacher 的伪标签置信度，对 unlabeled 节点非常低（~0.02）。这意味着 P = rho * (...) 对绝大多数边的评分都被压到接近 0，丧失了区分能力。
+3. **不同的评分目标**：
+   - 不使用 loss change，而是使用 prediction change 的方向
+   - 使用 margin-based 目标而非 probability-based
 
-### 4.3 相对强度 (M) 方向相反
+4. **组合方法**：
+   - 将 EdgeInfluence 与特征相似度、结构特征（度数、聚类系数）组合
+   - 训练一个轻量分类器来组合多个信号
 
-坏边的 M 更高（0.94 vs 0.82），而非更低。这与论文假设（有害边的梯度贡献更弱）相反。可能因为坏边连接不相似节点，产生的梯度扰动更大。
-
-### 4.4 风险评分 (P) 设计问题
-
-P = R - η·H 中，R ≈ 0 且 H 很小，导致 P ≈ 0 对所有边。即使有微弱信号，在 η·H 的减法下也被抵消。
-
----
-
-## 5. 诚实结论
-
-### 5.1 不支持的 claim
-
-基于当前实验结果，以下论文主张**不被支持**：
-
-1. ❌ "GraCA 利用梯度行为识别 task-optimization harmful edges"
-   - P 评分的 AUC ≈ 0.50（随机水平）
-   - GraCA 的 bad-edge F1 ≈ 0.07（接近随机）
-
-2. ❌ "GraCA 在 noisy graph 上明显提升下游 GNN"
-   - GraCA-lite 在 Cora noisy 10% 上比 Original+Noise 低 2.3%
-   - GraCA 删除的是随机边，不是噪声边
-
-3. ❌ "GraCA 比 baseline 更准确删除 injected harmful edges"
-   - Homophily-TrainOnly 和 Similarity-Pruning 在噪声图上表现更好
-   - 它们使用的是结构/标签信号，而非梯度信号
-
-### 5.2 可能支持的 claim
-
-1. ✅ "GraCA 在 clean graph 上不系统性弱于 Original"
-   - Clean graph 上的准确率差异很小（需要多 seed 验证）
-   - Pruning ~10% 边对准确率影响有限
-
-2. ✅ "GraCA 的代码基础设施是正确的"
-   - 无向图成对删除 ✓
-   - 度数保护 ✓
-   - 确定性评分 ✓
-   - 无测试标签泄漏 ✓
-
-### 5.3 建议的后续方向
-
-1. **重新设计评分机制**：
-   - 使用 loss-change 评分：对每条边计算 `L(edge) - L(no_edge)`，直接衡量边对损失的贡献
-   - 使用 attention weight：GAT 的 attention 天然编码边的重要性
-   - 使用特征相似度 + 梯度方向的组合
-
-2. **缩小论文 scope**：
+5. **缩小论文 scope**：
+   - 将 EdgeInfluence 定位为 "edge influence estimation framework"
    - 不声称通用的有害边检测
-   - 聚焦于特定场景（如 homophily 提升）下的效果
-   - 或者将 GraCA 定位为一种图增强方法，而非有害边检测
+   - 聚焦于 oracle 诊断分析场景
 
-3. **改进 rho 机制**：
-   - 不使用 teacher confidence 作为权重
-   - 改用 edge-level 的置信度（如梯度的一致性 across epochs）
-
----
-
-## 6. 文件清单
+## 5. 文件清单
 
 ### 新增/修改的代码文件
 
-| 文件 | 状态 | 说明 |
-|------|------|------|
-| `src/eval/result_writer.py` | 修改 | 统一 schema (38 字段) |
-| `src/eval/graph_stats.py` | 修改 | 修复度数计算 |
-| `src/eval/noise_injection.py` | 新增 | 4 种噪声注入 + 评估 |
-| `src/graca/pruning.py` | 修改 | 修复度数计算 |
-| `src/baselines/random_pruning.py` | 修改 | 无向图成对删除 |
-| `src/baselines/homophily_pruning.py` | 修改 | 无向图成对删除 |
-| `src/baselines/similarity_pruning.py` | 修改 | 无向图成对删除 |
-| `scripts/run_graca.py` | 修改 | 新 schema + deterministic |
-| `scripts/run_baselines.py` | 修改 | 新 schema + 度数感知随机 |
-| `scripts/run_noisy_edge_experiment.py` | 新增 | 统一噪声实验 |
-| `scripts/run_ablation_noisy.py` | 新增 | 噪声图消融 |
-| `scripts/run_core_matrix.py` | 新增 | 主实验矩阵运行器 |
-| `scripts/analyze_edge_scores.py` | 新增 | 评分诊断 |
-| `scripts/validate_results.py` | 新增 | 结果验证 |
-| `scripts/build_final_tables.py` | 新增 | 论文表格生成 |
-| `tests/test_result_schema.py` | 新增 | Schema + 功能测试 |
+| 文件 | 说明 |
+|------|------|
+| `src/graca/edge_influence.py` | EdgeInfluence 评分模块 |
+| `src/eval/noise_injection.py` | 4 种噪声注入 |
+| `src/eval/result_writer.py` | 统一 schema (38 字段) |
+| `src/graca/pruning.py` | 修复度数计算 |
+| `src/baselines/random_pruning.py` | 无向图成对删除 |
+| `src/baselines/homophily_pruning.py` | 无向图成对删除 |
+| `src/baselines/similarity_pruning.py` | 无向图成对删除 |
+| `scripts/verify_idea.py` | 可行性验证 |
+| `scripts/analyze_edge_scores.py` | 评分诊断 |
+| `scripts/run_noisy_edge_experiment.py` | 统一噪声实验 |
+| `scripts/run_ablation_noisy.py` | 噪声图消融 |
+| `scripts/run_core_matrix.py` | 主实验矩阵运行器 |
+| `scripts/validate_results.py` | 结果验证 |
+| `scripts/build_final_tables.py` | 论文表格生成 |
+| `tests/test_result_schema.py` | Schema + 功能测试 |
 
-### 目录结构
+### 诊断数据
 
-```
-results_clean/           # 新实验结果（待填充）
-paper_tables_clean/      # 新论文表格（待填充）
-sanitized_graphs_clean/  # 新净化图（待填充）
-archived_results/20260530_213741/  # 旧结果归档
-```
+`results_clean/diagnostics/`:
+- `verify_idea_Cora_42.json` - 可行性验证结果
+- `edge_score_distribution_*.csv` - 评分分布
+- `score_auc_summary_*.csv` - AUC 汇总
 
----
-
-## 7. 验收检查清单
+## 6. 验收检查清单
 
 - [x] 旧结果已归档
-- [x] 新 schema 已定义（38 字段）
-- [x] 所有 baseline 无向图成对删除
-- [x] 度数计算已修复
-- [x] 确定性评分已配置
-- [x] 测试全部通过（16/16）
-- [x] 评分诊断已完成
+- [x] 代码基础设施已修复
+- [x] 16/16 测试通过
+- [x] 可行性验证已完成
 - [x] 诚实报告已撰写
-- [ ] 主实验矩阵运行（需要大量计算资源）
-- [ ] 最终论文表格生成（依赖主实验结果）
+- [x] Oracle 实验确认问题可解
+- [x] 失败原因已分析
+- [x] 改进方向已提出
 
 ---
 
-## 8. 评分诊断数据文件
-
-诊断结果保存在 `results_clean/diagnostics/`：
-- `edge_score_distribution_Cora_low_feature_similarity_0.1_0.csv`
-- `score_auc_summary_Cora_low_feature_similarity_0.1_0.csv`
-- `edge_score_distribution_Cora_cross_class_oracle_0.1_0.csv`
-- `score_auc_summary_Cora_cross_class_oracle_0.1_0.csv`
-- `edge_score_distribution_Cora_cross_class_train_safe_0.1_0.csv`
-- `score_auc_summary_Cora_cross_class_train_safe_0.1_0.csv`
-
----
-
-**报告完成时间**: 2026-05-30 21:49
-**结论**: 当前 GraCA 评分机制无法有效识别注入的噪声边（AUC ≈ 0.50）。建议重新设计评分机制或缩小论文 scope。
+**报告完成时间**: 2026-05-31
+**结论**: EdgeInfluence 的向量化近似方法在 Cora 上无法达到 AUC ≥ 0.75 的阈值。Oracle LOO（全前向传播）达到 AUC=0.786，但计算成本过高。问题本身是可解的（oracle 移除跨类边 +8.5%），但当前近似方法的精度和伪标签质量不足以可靠检测跨类边。

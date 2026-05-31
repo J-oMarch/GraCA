@@ -1,0 +1,24 @@
+{
+  "dataset": "Cora",
+  "seed": 42,
+  "method": "EdgeInfluence",
+  "feasible": false,
+  "threshold": 0.75,
+  "best_auc_practical": 0.688,
+  "best_auc_oracle": 0.786,
+  "oracle_loo_auc": 0.786,
+  "oracle_loo_note": "Full forward pass per edge, uses true labels. AUC=0.786 with -L (cross-class edges have negative L).",
+  "vectorized_loo_auc_oracle_labels": 0.551,
+  "vectorized_loo_auc_pseudo_labels": 0.431,
+  "kl_divergence_auc": 0.688,
+  "pseudo_label_agreement_auc": 0.658,
+  "hidden_cosine_auc": 0.623,
+  "feature_cosine_auc": 0.597,
+  "oracle_accuracy_gain": 0.085,
+  "failure_reasons": [
+    "GCN BatchNorm makes linear LOO approximation inaccurate",
+    "Pseudo labels from teacher (~78% acc) add noise that overwhelms LOO signal",
+    "Removing one edge from degree-10 node changes hidden by ~10%, too small",
+    "Cross-class and same-class edges overlap heavily in feature space"
+  ]
+}
