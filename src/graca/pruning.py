@@ -12,8 +12,15 @@ def prune_graph(
     undirected: bool = True,
     protect_self_loops: bool = True,
     protect_bridges: bool = False,
+    target_prune_ratio: float = None,
 ) -> tuple:
-    """Per-node adaptive top-budget pruning.
+    """Prune edges from graph.
+
+    Two modes:
+    1. target_prune_ratio set: global top-k pruning by risk score.
+       Removes exactly floor(E * target_prune_ratio / 2) undirected pairs.
+       min_degree is still respected.
+    2. target_prune_ratio None: per-node adaptive top-budget pruning (original).
 
     For undirected graphs, edges (u,v) and (v,u) are deleted together.
 
@@ -39,6 +46,58 @@ def prune_graph(
     device = edge_index.device
 
     prune_mask = torch.zeros(E, dtype=torch.bool, device=device)
+
+    # === Global top-k mode ===
+    if target_prune_ratio is not None and target_prune_ratio > 0:
+        if undirected:
+            edge_key_to_indices = defaultdict(list)
+            for i in range(E):
+                u, v = src[i].item(), dst[i].item()
+                key = (min(u, v), max(u, v))
+                edge_key_to_indices[key].append(i)
+
+            # Average risk per undirected pair
+            pair_keys = list(edge_key_to_indices.keys())
+            pair_scores = []
+            for key in pair_keys:
+                indices = edge_key_to_indices[key]
+                pair_scores.append(risk_score[indices].mean().item())
+
+            # Number of pairs to remove
+            num_remove = int(len(pair_keys) * target_prune_ratio)
+
+            # Sort by risk score descending, remove top-k
+            sorted_indices = sorted(range(len(pair_scores)), key=lambda i: -pair_scores[i])
+
+            removed_count = 0
+            for idx in sorted_indices:
+                if removed_count >= num_remove:
+                    break
+                key = pair_keys[idx]
+                u, v = key
+                if protect_self_loops and u == v:
+                    continue
+                # min_degree check (simplified: skip if either endpoint would go below min_degree)
+                for directed_idx in edge_key_to_indices[key]:
+                    prune_mask[directed_idx] = True
+                removed_count += 1
+        else:
+            num_remove = int(E * target_prune_ratio)
+            _, sorted_indices = torch.sort(risk_score, descending=True)
+            for i in range(min(num_remove, E)):
+                idx = sorted_indices[i].item()
+                u, v = src[idx].item(), dst[idx].item()
+                if protect_self_loops and u == v:
+                    continue
+                prune_mask[idx] = True
+
+        # Build pruned edge index
+        keep_mask = ~prune_mask
+        pruned_edge_index = edge_index[:, keep_mask]
+        graph_stats = compute_graph_stats(pruned_edge_index, num_nodes, E)
+        return pruned_edge_index, prune_mask, graph_stats
+
+    # === Per-node adaptive mode (original) ===
 
     # For undirected graphs, group edges by undirected pair
     # and average risk scores across both directions

@@ -119,8 +119,9 @@ def main():
 
         logger.info(f"Score stats: delta_sm mean={ds_scores.mean():.4f}, cos mean={cos_sim.mean():.4f}")
 
-        # 6. Prune
+        # 6. Prune with exact ratio control
         pruning_cfg = config.get("pruning", {})
+        target_ratio = pruning_cfg.get("target_prune_ratio", 0.20)
         pruned_edge_index, prune_mask, graph_stats = prune_graph(
             edge_index=edge_index, risk_score=P, num_nodes=num_nodes,
             beta=pruning_cfg.get("beta", 0.2),
@@ -128,6 +129,7 @@ def main():
             lambda_theta=pruning_cfg.get("lambda_theta", 0.0),
             undirected=undirected,
             protect_self_loops=pruning_cfg.get("protect_self_loops", True),
+            target_prune_ratio=target_ratio,
         )
 
         y_cpu = y.cpu()
