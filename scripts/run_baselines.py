@@ -206,10 +206,8 @@ def main():
 
 def _get_stats_edge_index(data, graph_stats, device):
     """Reconstruct edge_index from data and graph_stats for homophily computation."""
-    import torch
-    # For random pruning, we need the actual pruned edge_index
-    # This is a helper - in practice the baselines should return the pruned edge_index
-    return data.edge_index
+    # Always return CPU edge_index for homophily computation
+    return data.edge_index.cpu()
 
 
 if __name__ == "__main__":

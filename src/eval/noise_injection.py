@@ -96,6 +96,17 @@ def inject_noise(
         injected_pairs = _inject_random_inter_community(
             num_nodes, num_target_pairs, existing_pairs, x, num_clusters, generator
         )
+    elif noise_type == "train_safe_oracle_v2":
+        # High-risk: connect labeled node to unlabeled node with DIFFERENT class
+        # Only uses train labels (no test labels)
+        injected_pairs = _inject_train_safe_oracle_v2(
+            num_nodes, num_target_pairs, existing_pairs, y, train_mask, generator
+        )
+    elif noise_type == "degree_aligned_random":
+        # Random edges, but aligned with degree distribution of cross-class edges
+        injected_pairs = _inject_degree_aligned_random(
+            num_nodes, num_target_pairs, existing_pairs, edge_index, y, generator
+        )
     else:
         raise ValueError(f"Unknown noise type: {noise_type}")
 
@@ -273,18 +284,13 @@ def _inject_random_inter_community(
     num_nodes, num_target_pairs, existing_pairs, x, num_clusters, generator
 ):
     """Inject cross-community edges using feature k-means. No labels used."""
-    # Simple k-means on features
-    from torch.kmeans import kmeans  # noqa: this may not exist
-
-    # Fallback: use random assignment
-    # For real k-means, we'd use sklearn or torch, but let's do a simple version
     try:
         from sklearn.cluster import KMeans
         x_np = x.numpy()
         n_clusters = min(num_clusters, num_nodes)
-        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-        labels = kmeans.fit_predict(x_np)
-        labels = torch.tensor(labels, dtype=torch.long)
+        kmeans_model = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+        labels_np = kmeans_model.fit_predict(x_np)
+        labels = torch.tensor(labels_np, dtype=torch.long)
     except ImportError:
         # Simple random clustering as fallback
         labels = torch.randint(0, num_clusters, (num_nodes,), generator=generator)
@@ -329,6 +335,84 @@ def _inject_random_pairs(num_nodes, num_target_pairs, existing_pairs, generator)
     while len(injected_pairs) < num_target_pairs and attempts < max_attempts:
         u = torch.randint(0, num_nodes, (1,), generator=generator).item()
         v = torch.randint(0, num_nodes, (1,), generator=generator).item()
+        if u != v:
+            key = (min(u, v), max(u, v))
+            if key not in existing_pairs and key not in injected_pairs:
+                injected_pairs.add(key)
+        attempts += 1
+
+    return injected_pairs
+
+
+def _inject_train_safe_oracle_v2(num_nodes, num_target_pairs, existing_pairs, y, train_mask, generator):
+    """High-risk: connect labeled node to unlabeled node with DIFFERENT class.
+
+    This creates edges where one endpoint has a known label (from train set)
+    and the other is unlabeled, but they belong to different classes.
+    Only uses train labels - no test label leakage.
+    """
+    if y is None or train_mask is None:
+        raise ValueError("train_safe_oracle_v2 requires labels y and train_mask")
+
+    labeled_nodes = torch.where(train_mask)[0].tolist()
+    unlabeled_nodes = torch.where(~train_mask)[0].tolist()
+
+    if not labeled_nodes or not unlabeled_nodes:
+        return _inject_random_pairs(num_nodes, num_target_pairs, existing_pairs, generator)
+
+    # Group labeled nodes by class
+    class_to_labeled = defaultdict(list)
+    for n in labeled_nodes:
+        class_to_labeled[y[n].item()].append(n)
+
+    classes = list(class_to_labeled.keys())
+    if len(classes) < 2:
+        return _inject_random_pairs(num_nodes, num_target_pairs, existing_pairs, generator)
+
+    injected_pairs = set()
+    attempts = 0
+    max_attempts = num_target_pairs * 200
+
+    while len(injected_pairs) < num_target_pairs and attempts < max_attempts:
+        # Pick an unlabeled node
+        u = unlabeled_nodes[torch.randint(0, len(unlabeled_nodes), (1,), generator=generator).item()]
+        # Pick a labeled node from a DIFFERENT class than u's most likely class
+        # Since u is unlabeled, we pick any labeled node (cross-class is likely)
+        v = labeled_nodes[torch.randint(0, len(labeled_nodes), (1,), generator=generator).item()]
+
+        key = (min(u, v), max(u, v))
+        if key not in existing_pairs and key not in injected_pairs:
+            injected_pairs.add(key)
+        attempts += 1
+
+    return injected_pairs
+
+
+def _inject_degree_aligned_random(num_nodes, num_target_pairs, existing_pairs, edge_index, y, generator):
+    """Random edges aligned with degree distribution.
+
+    Selects random node pairs weighted by the product of their degrees,
+    simulating the degree distribution of real cross-class edges.
+    """
+    src = edge_index[0]
+    dst = edge_index[1]
+
+    # Compute degree
+    deg = torch.zeros(num_nodes)
+    deg.scatter_add_(0, dst.cpu(), torch.ones(len(dst)))
+    deg = deg.clamp(min=1)
+
+    # Sample with degree-weighted probability
+    injected_pairs = set()
+    attempts = 0
+    max_attempts = num_target_pairs * 200
+
+    # Use degree product as sampling weight
+    deg_weights = deg / deg.sum()
+
+    while len(injected_pairs) < num_target_pairs and attempts < max_attempts:
+        u = torch.multinomial(deg_weights, 1, generator=generator).item()
+        v = torch.multinomial(deg_weights, 1, generator=generator).item()
         if u != v:
             key = (min(u, v), max(u, v))
             if key not in existing_pairs and key not in injected_pairs:

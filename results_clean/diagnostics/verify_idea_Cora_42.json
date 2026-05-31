@@ -1,24 +1,118 @@
 {
+  "stage1": {
+    "L_weighted": {
+      "auc": 0.5880444308049058,
+      "pearson_r": -0.04305058206361798,
+      "pearson_p": 1.2545336362468295e-06
+    },
+    "L_raw": {
+      "auc": 0.5927382231087971,
+      "pearson_r": -0.1429314621057866,
+      "pearson_p": 8.554612714613994e-59
+    },
+    "L_oracle": {
+      "auc": 0.5855244119368752,
+      "pearson_r": -0.02090495472315486,
+      "pearson_p": 0.01863575978570798
+    },
+    "delta_softmax": {
+      "auc": 0.701488414914836,
+      "pearson_r": 0.3005262611229715,
+      "pearson_p": 1.1676670087404773e-262
+    },
+    "feature_cosine": {
+      "auc": 0.7132518370756867,
+      "pearson_r": 0.30963395186345316,
+      "pearson_p": 1.5985311215874302e-279
+    },
+    "combined_delta_cos": {
+      "auc": 0.7886105285890477,
+      "pearson_r": 0.4306409896119247,
+      "pearson_p": 0.0
+    }
+  },
+  "stage1_best_auc": 0.7886105285890477,
+  "stage2": {
+    "oracle_loo": {
+      "auc": 0.784591163634187,
+      "n_samples": 500
+    },
+    "loss_gradient": {
+      "auc": 0.5721704772134355
+    },
+    "feature_cosine": {
+      "auc": 0.7132518370756867
+    },
+    "kl_divergence": {
+      "auc": 0.704700214254462
+    }
+  },
+  "stage2_best_auc": 0.784591163634187,
+  "stage3": {
+    "top_20_pct_cross_ratio": 0.25424397947098304,
+    "random_cross_ratio": 0.324964471814306,
+    "effectiveness_ratio": 0.7823746948443808,
+    "L_cross_mean": 0.0003106663061771542,
+    "L_same_mean": 0.0010683052241802216,
+    "cohens_d": -0.10046396404504776,
+    "bad_edge_detection": {
+      "bad_edge_precision": 0.050513022888713496,
+      "bad_edge_recall": 0.06066350710900474,
+      "bad_edge_f1": 0.05512489233419466,
+      "clean_edge_mistakenly_removed_ratio": 0.22792724516862448,
+      "num_bad_pairs": 1055,
+      "num_pruned_pairs": 1267,
+      "tp": 64,
+      "fp": 1203,
+      "fn": 991,
+      "tn": 4075
+    }
+  },
+  "stage4": {
+    "cross_class_oracle": {
+      "L_weighted": 0.5880442887263534,
+      "L_raw": 0.5927381378616657,
+      "L_oracle": 0.5855241846111914,
+      "delta_softmax": 0.701488414914836,
+      "feature_cosine": 0.7132518370756867,
+      "combined_delta_cos": 0.7886105285890477
+    },
+    "train_safe_oracle_v2": {
+      "L_weighted": 0.5356451805239144,
+      "L_raw": 0.5435290239433508,
+      "L_oracle": 0.5168931812223706,
+      "delta_softmax": 0.6668057502278533,
+      "feature_cosine": 0.697293265122056,
+      "combined_delta_cos": 0.7645841358143284
+    },
+    "low_feature_similarity": {
+      "L_weighted": 0.5633756074820733,
+      "L_raw": 0.5642726703351799,
+      "L_oracle": 0.5542767508590989,
+      "delta_softmax": 0.6993593933304778,
+      "feature_cosine": 0.7452420675919862,
+      "combined_delta_cos": 0.8040239422368732
+    },
+    "random_inter_community": {
+      "L_weighted": 0.5298412592067365,
+      "L_raw": 0.5302839129263253,
+      "L_oracle": 0.5278067511349802,
+      "delta_softmax": 0.6618932926785194,
+      "feature_cosine": 0.7004614636408136,
+      "combined_delta_cos": 0.7569289435644614
+    },
+    "degree_aligned_random": {
+      "L_weighted": 0.5284497254394745,
+      "L_raw": 0.5291618622960107,
+      "L_oracle": 0.525510670126613,
+      "delta_softmax": 0.7328847434071455,
+      "feature_cosine": 0.684040763460918,
+      "combined_delta_cos": 0.7911901751237868
+    }
+  },
+  "all_above_070": true,
+  "feasible": true,
   "dataset": "Cora",
   "seed": 42,
-  "method": "EdgeInfluence",
-  "feasible": false,
-  "threshold": 0.75,
-  "best_auc_practical": 0.688,
-  "best_auc_oracle": 0.786,
-  "oracle_loo_auc": 0.786,
-  "oracle_loo_note": "Full forward pass per edge, uses true labels. AUC=0.786 with -L (cross-class edges have negative L).",
-  "vectorized_loo_auc_oracle_labels": 0.551,
-  "vectorized_loo_auc_pseudo_labels": 0.431,
-  "kl_divergence_auc": 0.688,
-  "pseudo_label_agreement_auc": 0.658,
-  "hidden_cosine_auc": 0.623,
-  "feature_cosine_auc": 0.597,
-  "oracle_accuracy_gain": 0.085,
-  "failure_reasons": [
-    "GCN BatchNorm makes linear LOO approximation inaccurate",
-    "Pseudo labels from teacher (~78% acc) add noise that overwhelms LOO signal",
-    "Removing one edge from degree-10 node changes hidden by ~10%, too small",
-    "Cross-class and same-class edges overlap heavily in feature space"
-  ]
+  "loo_samples": 500
 }
