@@ -161,7 +161,8 @@ def main():
         L_ud = ei_result["L_undirected"].cpu().numpy()
         L_raw_ud = ei_result["L_raw_undirected"].cpu().numpy()
         L_oracle_ud = ei_result["L_oracle_undirected"].cpu().numpy()
-        ds_ud = ei_result["delta_softmax_undirected"].cpu().numpy()
+        ds_oracle_ud = ei_result["delta_softmax_oracle_undirected"].cpu().numpy()
+        ds_pseudo_ud = ei_result["delta_softmax_pseudo_undirected"].cpu().numpy()
 
         # Cross-class on noisy graph
         src_n, dst_n = noisy_ei[0].cpu(), noisy_ei[1].cpu()
@@ -171,17 +172,19 @@ def main():
         import torch.nn.functional as F
         cos_sim = F.cosine_similarity(x[src_n].cpu(), x[dst_n].cpu(), dim=1).numpy()
 
-        # Combined score: delta_softmax + feature_cosine
+        # Combined scores: delta_softmax + feature_cosine
         from scipy.stats import zscore as sp_zscore
-        combined = sp_zscore(ds_ud) + sp_zscore(-cos_sim)
-        combined_a = compute_auc(cross_noisy, combined)
-        combined_a_inv = compute_auc(cross_noisy, -combined)
+        combined_oracle = sp_zscore(ds_oracle_ud) + sp_zscore(-cos_sim)
+        combined_pseudo = sp_zscore(ds_pseudo_ud) + sp_zscore(-cos_sim)
 
         stage1_results = {}
         for name, scores in [("L_weighted", L_ud), ("L_raw", L_raw_ud),
-                              ("L_oracle", L_oracle_ud), ("delta_softmax", ds_ud),
+                              ("L_oracle", L_oracle_ud),
+                              ("delta_softmax_oracle", ds_oracle_ud),
+                              ("delta_softmax_pseudo", ds_pseudo_ud),
                               ("feature_cosine", -cos_sim),
-                              ("combined_delta_cos", combined)]:
+                              ("combined_oracle", combined_oracle),
+                              ("combined_pseudo", combined_pseudo)]:
             auc_val = compute_auc(cross_noisy, scores)
             auc_inv = compute_auc(cross_noisy, -scores)
             best_auc = max(auc_val, auc_inv)
@@ -382,19 +385,21 @@ def main():
                     x[src_nt].cpu(), x[dst_nt].cpu(), dim=1
                 ).numpy()
 
-                # Combined score
+                # Combined scores
                 from scipy.stats import zscore as sp_zscore2
-                ds_nt = ei_nt["delta_softmax_undirected"].cpu().numpy()
-                combined_nt = sp_zscore2(ds_nt) + sp_zscore2(-cos_nt)
+                ds_oracle_nt = ei_nt["delta_softmax_oracle_undirected"].cpu().numpy()
+                ds_pseudo_nt = ei_nt["delta_softmax_pseudo_undirected"].cpu().numpy()
+                combined_oracle_nt = sp_zscore2(ds_oracle_nt) + sp_zscore2(-cos_nt)
+                combined_pseudo_nt = sp_zscore2(ds_pseudo_nt) + sp_zscore2(-cos_nt)
 
                 results_nt = {}
                 for name, scores in [
                     ("L_weighted", ei_nt["L_undirected"].cpu().numpy()),
-                    ("L_raw", ei_nt["L_raw_undirected"].cpu().numpy()),
-                    ("L_oracle", ei_nt["L_oracle_undirected"].cpu().numpy()),
-                    ("delta_softmax", ds_nt),
+                    ("delta_softmax_oracle", ds_oracle_nt),
+                    ("delta_softmax_pseudo", ds_pseudo_nt),
                     ("feature_cosine", -cos_nt),
-                    ("combined_delta_cos", combined_nt),
+                    ("combined_oracle", combined_oracle_nt),
+                    ("combined_pseudo", combined_pseudo_nt),
                 ]:
                     auc_val = compute_auc(cross_nt, scores)
                     auc_inv = compute_auc(cross_nt, -scores)

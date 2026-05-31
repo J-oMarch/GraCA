@@ -88,11 +88,20 @@ def compute_edge_influence_scores(
         loss_ablated_oracle = -(target_oracle[dst] * log_ablated).sum(dim=-1)
         L_oracle = loss_ablated_oracle - loss_full_oracle[dst]
 
-        # === Score Variant 3: delta_softmax (P(u_class@v) change) ===
-        # For each edge (u,v), compute how much P(u's class) at v changes
-        p_uc_full = probs_full[dst].gather(1, y[src].unsqueeze(1)).squeeze(1)  # [E]
-        p_uc_ablated = probs_ablated.gather(1, y[src].unsqueeze(1)).squeeze(1)  # [E]
-        delta_softmax = p_uc_full - p_uc_ablated  # positive = removing edge decreases P(u_class)
+        # === Score Variant 3a: delta_softmax ORACLE (uses true labels y[src]) ===
+        # DIAGNOSTIC ONLY - uses all labels including test labels
+        p_uc_full_oracle = probs_full[dst].gather(1, y[src].unsqueeze(1)).squeeze(1)  # [E]
+        p_uc_ablated_oracle = probs_ablated.gather(1, y[src].unsqueeze(1)).squeeze(1)  # [E]
+        delta_softmax_oracle = p_uc_full_oracle - p_uc_ablated_oracle
+
+        # === Score Variant 3b: delta_softmax PRACTICAL (uses pseudo labels) ===
+        # For labeled nodes: use true labels (train_mask only)
+        # For unlabeled nodes: use teacher's argmax prediction
+        node_label = teacher_probs.argmax(dim=1)  # [N]
+        node_label[train_mask] = y[train_mask]  # override with true labels for train nodes
+        p_uc_full_pseudo = probs_full[dst].gather(1, node_label[src].unsqueeze(1)).squeeze(1)  # [E]
+        p_uc_ablated_pseudo = probs_ablated.gather(1, node_label[src].unsqueeze(1)).squeeze(1)  # [E]
+        delta_softmax_pseudo = p_uc_full_pseudo - p_uc_ablated_pseudo
 
         # === Score Variant 4: delta_entropy ===
         ent_full = -(probs_full[dst] * probs_full[dst].clamp(min=eps).log()).sum(-1)
@@ -120,13 +129,15 @@ def compute_edge_influence_scores(
     L_undirected = _average_undirected(edge_index, L_weighted, num_nodes) if undirected else L_weighted
     L_raw_undirected = _average_undirected(edge_index, L, num_nodes) if undirected else L
     L_oracle_undirected = _average_undirected(edge_index, L_oracle_weighted, num_nodes) if undirected else L_oracle_weighted
-    delta_softmax_undirected = _average_undirected(edge_index, delta_softmax, num_nodes) if undirected else delta_softmax
+    delta_softmax_oracle_undirected = _average_undirected(edge_index, delta_softmax_oracle, num_nodes) if undirected else delta_softmax_oracle
+    delta_softmax_pseudo_undirected = _average_undirected(edge_index, delta_softmax_pseudo, num_nodes) if undirected else delta_softmax_pseudo
 
     diagnostics = {
         "L_mean": float(L.mean()),
         "L_std": float(L.std()),
         "L_oracle_mean": float(L_oracle.mean()),
-        "delta_softmax_mean": float(delta_softmax.mean()),
+        "delta_softmax_oracle_mean": float(delta_softmax_oracle.mean()),
+        "delta_softmax_pseudo_mean": float(delta_softmax_pseudo.mean()),
         "pred_change_frac": float(pred_changed.mean()),
         "rho_vu_mean": float(rho_vu.mean()),
         "deg_mean": float(d_v.float().mean()),
@@ -137,14 +148,16 @@ def compute_edge_influence_scores(
         "L_raw": L,
         "L_oracle": L_oracle,
         "L_weighted": L_weighted,
-        "delta_softmax": delta_softmax,
+        "delta_softmax_oracle": delta_softmax_oracle,
+        "delta_softmax_pseudo": delta_softmax_pseudo,
         "delta_entropy": delta_entropy,
         "delta_conf": delta_conf,
         "pred_changed": pred_changed,
         "L_undirected": L_undirected,
         "L_raw_undirected": L_raw_undirected,
         "L_oracle_undirected": L_oracle_undirected,
-        "delta_softmax_undirected": delta_softmax_undirected,
+        "delta_softmax_oracle_undirected": delta_softmax_oracle_undirected,
+        "delta_softmax_pseudo_undirected": delta_softmax_pseudo_undirected,
         "rho_vu": rho_vu,
         "diagnostics": diagnostics,
     }
