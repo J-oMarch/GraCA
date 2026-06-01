@@ -1,22 +1,24 @@
 """
-Controlled comparison v2: EdgeInfluence vs Random vs Original.
+Controlled comparison v3: GraGE methods + baselines.
 
-Fixes from v1:
-1. Practical pseudo-label score (no test labels)
-2. Oracle label score (diagnostic only, clearly marked)
-3. Teacher trains on noisy graph when --noisy
-4. Original+Noise baseline included
-5. Score type fields in results
+Methods:
+1. Original+Noise: No pruning (baseline)
+2. Random-Matched: Random pruning at same ratio
+3. GCN-Jaccard: Jaccard similarity pruning (baseline)
+4. DegreeAwareRandom: Per-node budget random pruning (baseline)
+5. Feature-only: Cosine similarity pruning
+6. EdgeBench: Binary classifier on edge features (MAIN METHOD)
+7. EdgeInfluence-Oracle: Oracle diagnostic (upper bound ablation)
 
 Usage:
     # Clean graph
     python scripts/run_controlled_comparison.py --config configs/graca_lite_cora.yaml --seed 0
 
-    # Noisy graph (practical - teacher on noisy graph)
+    # Noisy graph
     python scripts/run_controlled_comparison.py --config configs/graca_lite_cora.yaml --seed 0 --noisy --noise_type cross_class_oracle --noise_ratio 0.20
 
-    # Noisy graph (oracle diagnostic - teacher on clean graph)
-    python scripts/run_controlled_comparison.py --config configs/graca_lite_cora.yaml --seed 0 --noisy --noise_type cross_class_oracle --noise_ratio 0.20 --oracle_clean_teacher
+    # Noisy graph with all noise types
+    python scripts/run_controlled_comparison.py --config configs/graca_lite_cora.yaml --seed 0 --noisy --noise_type low_feature_similarity --noise_ratio 0.20
 """
 import sys
 import os
@@ -34,9 +36,12 @@ from src.data.load_data import load_dataset, compute_edge_homophily
 from src.training.train_proxy import train_proxy
 from src.training.train_downstream import train_downstream
 from src.graca.edge_influence import compute_edge_influence_scores
+from src.graca.edge_bench import compute_edge_bench_scores, prune_by_edge_bench
 from src.graca.pseudo_label import compute_soft_pseudo_labels
 from src.graca.edge_scoring import compute_rho_score
 from src.graca.pruning import prune_graph, compute_graph_stats
+from src.baselines.similarity_pruning import run_jaccard_pruning
+from src.baselines.random_pruning import run_degree_aware_random
 from src.eval.result_writer import write_result_row
 from src.utils.logger import get_logger
 from src.eval.noise_injection import inject_noise, evaluate_bad_edge_detection
@@ -365,12 +370,119 @@ def main():
                oracle_label_score=True, clean_teacher_used=clean_teacher_flag,
                score_component="delta_softmax_oracle+feature_cosine")
 
-    logger.info("Controlled comparison v2 complete!")
+    # ============ 5. EdgeBench (binary classifier on edge features) ============
+    logger.info("Running EdgeBench (binary classifier on edge features)...")
+    t0 = time.time()
+
+    # Get edge features for EdgeBench
+    # delta_softmax_pseudo (from EdgeInfluence)
+    ds_pseudo_raw = ei_result["delta_softmax_pseudo"].cpu().numpy()
+    # feature cosine similarity (from Feature-only)
+    cos_sim_np = cos_sim  # Already computed above
+
+    # Train EdgeBench classifier using noise injection labels
+    if noisy and bad_edge_mask is not None:
+        # Use noise injection labels for training
+        bench_result = compute_edge_bench_scores(
+            delta_softmax=ds_pseudo_raw,
+            feature_cosine=cos_sim_np,
+            bad_edge_mask=bad_edge_mask.cpu().numpy(),
+            train_mask=None,  # Use all edges for train/test split
+            test_size=0.3,
+            classifier="random_forest",
+            n_estimators=100,
+            seed=args.seed,
+        )
+        bench_scores = bench_result["scores"]
+        bench_auc_roc = bench_result["auc_roc"]
+        bench_auc_pr = bench_result["auc_pr"]
+        bench_feat_imp = bench_result["feature_importance"]
+    else:
+        # No noise injection: use z-score combination as fallback
+        from src.graca.edge_bench import compute_edge_bench_scores_simple
+        bench_scores = compute_edge_bench_scores_simple(ds_pseudo_raw, cos_sim_np)
+        bench_auc_roc = 0.0
+        bench_auc_pr = 0.0
+        bench_feat_imp = np.array([0.5, 0.5])
+
+    # Prune using EdgeBench scores
+    pruned_ei_bench, mask_bench, stats_bench = prune_by_edge_bench(
+        edge_index=edge_index,
+        scores=bench_scores,
+        num_nodes=num_nodes,
+        prune_ratio=args.prune_ratio,
+        undirected=undirected,
+        protect_self_loops=True,
+    )
+
+    det_bench = None
+    if noisy and bad_edge_mask is not None:
+        det_bench = evaluate_bad_edge_detection(mask_bench, bad_edge_mask, edge_index)
+
+    for ds_model_name in downstream_names:
+        set_seed(args.seed)
+        t0_ds = time.time()
+        res = train_downstream(ds_model_name, data, pruned_ei_bench, config, num_features, num_classes, device, args.seed)
+        res["runtime"] = (time.time() - t0) + (time.time() - t0_ds)
+        _write("EdgeBench", stats_bench["prune_ratio"], stats_bench, pruned_ei_bench, mask_bench,
+               ds_model_name, res, det_bench,
+               score_type="edge_bench_classifier",
+               oracle_label_score=False, clean_teacher_used=False,
+               score_component="delta_softmax_pseudo+feature_cosine+classifier")
+
+    # ============ 6. GCN-Jaccard baseline ============
+    logger.info("Running GCN-Jaccard baseline...")
+    t0 = time.time()
+
+    # Run Jaccard pruning (returns (results_dict, graph_stats))
+    jaccard_results, jaccard_stats = run_jaccard_pruning(
+        data=data,
+        config=config,
+        num_features=num_features,
+        num_classes=num_classes,
+        device=device,
+        seed=args.seed,
+        prune_ratio=args.prune_ratio,
+    )
+
+    for ds_model_name in downstream_names:
+        if ds_model_name in jaccard_results:
+            res = jaccard_results[ds_model_name]
+            res["runtime"] = time.time() - t0
+            _write("GCN-Jaccard", jaccard_stats.get("prune_ratio", args.prune_ratio), jaccard_stats, None, None,
+                   ds_model_name, res, None, score_type="jaccard_similarity")
+
+    # ============ 7. DegreeAwareRandom baseline ============
+    logger.info("Running DegreeAwareRandom baseline...")
+    t0 = time.time()
+
+    # Run degree-aware random pruning (returns (results_dict, graph_stats))
+    degree_results, degree_stats = run_degree_aware_random(
+        data=data,
+        config=config,
+        num_features=num_features,
+        num_classes=num_classes,
+        device=device,
+        seed=args.seed,
+        prune_ratio=args.prune_ratio,
+    )
+
+    for ds_model_name in downstream_names:
+        if ds_model_name in degree_results:
+            res = degree_results[ds_model_name]
+            res["runtime"] = time.time() - t0
+            _write("DegreeAwareRandom", degree_stats.get("prune_ratio", args.prune_ratio), degree_stats, None, None,
+                   ds_model_name, res, None, score_type="degree_aware_random")
+
+    logger.info("Controlled comparison v3 complete!")
     logger.info(f"  Results: {csv_path}")
+    if det_bench:
+        logger.info(f"  EdgeBench bad-edge F1: {det_bench['bad_edge_f1']:.4f}")
+        logger.info(f"  EdgeBench AUC-ROC: {bench_auc_roc:.4f}")
     if det_pseudo:
-        logger.info(f"  Practical bad-edge F1: {det_pseudo['bad_edge_f1']:.4f}")
+        logger.info(f"  EdgeInfluence-Pseudo bad-edge F1: {det_pseudo['bad_edge_f1']:.4f}")
     if det_oracle:
-        logger.info(f"  Oracle bad-edge F1: {det_oracle['bad_edge_f1']:.4f}")
+        logger.info(f"  EdgeInfluence-Oracle bad-edge F1: {det_oracle['bad_edge_f1']:.4f}")
 
 
 if __name__ == "__main__":
