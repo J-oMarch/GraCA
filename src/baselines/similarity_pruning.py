@@ -7,11 +7,16 @@ from collections import defaultdict
 
 
 def run_jaccard_pruning(data, config, num_features, num_classes, device, seed=42,
-                        prune_ratio=None, match_graca_ratio=None):
+                        prune_ratio=None, match_graca_ratio=None,
+                        edge_index_override=None):
     """Jaccard similarity pruning: remove edges between nodes with low Jaccard similarity.
     Suitable for bag-of-words features.
 
     For undirected graphs, edges are deleted in pairs.
+
+    Args:
+        edge_index_override: If provided, use this edge_index instead of data.edge_index.
+            Required for noisy experiments to ensure all methods use the same noisy graph.
     """
     set_seed(seed)
 
@@ -21,7 +26,7 @@ def run_jaccard_pruning(data, config, num_features, num_classes, device, seed=42
         prune_ratio = config.get("pruning", {}).get("beta", 0.2)
 
     undirected = config.get("dataset", {}).get("undirected", True)
-    edge_index = data.edge_index.cpu()
+    edge_index = edge_index_override.cpu() if edge_index_override is not None else data.edge_index.cpu()
     x = data.x.cpu()
     E = edge_index.shape[1]
     num_nodes = data.num_nodes
@@ -88,11 +93,15 @@ def run_jaccard_pruning(data, config, num_features, num_classes, device, seed=42
 
 
 def run_cosine_pruning(data, config, num_features, num_classes, device, seed=42,
-                       prune_ratio=None, match_graca_ratio=None):
+                       prune_ratio=None, match_graca_ratio=None,
+                       edge_index_override=None):
     """Cosine similarity pruning: remove edges between nodes with low cosine similarity.
     Suitable for continuous features.
 
     For undirected graphs, edges are deleted in pairs.
+
+    Args:
+        edge_index_override: If provided, use this edge_index instead of data.edge_index.
     """
     set_seed(seed)
 
@@ -102,7 +111,7 @@ def run_cosine_pruning(data, config, num_features, num_classes, device, seed=42,
         prune_ratio = config.get("pruning", {}).get("beta", 0.2)
 
     undirected = config.get("dataset", {}).get("undirected", True)
-    edge_index = data.edge_index.cpu()
+    edge_index = edge_index_override.cpu() if edge_index_override is not None else data.edge_index.cpu()
     x = data.x.cpu()
     E = edge_index.shape[1]
     num_nodes = data.num_nodes

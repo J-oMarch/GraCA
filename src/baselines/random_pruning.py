@@ -6,7 +6,8 @@ from collections import defaultdict
 
 
 def run_random_pruning(data, config, num_features, num_classes, device, seed=42,
-                       prune_ratio=None, match_graca_ratio=None):
+                       prune_ratio=None, match_graca_ratio=None,
+                       edge_index_override=None):
     """Random pruning baseline.
 
     For undirected graphs, edges are deleted in pairs (both directions together).
@@ -14,6 +15,7 @@ def run_random_pruning(data, config, num_features, num_classes, device, seed=42,
     Args:
         prune_ratio: fixed ratio (default: config beta)
         match_graca_ratio: if provided, use this ratio to match GraCA's actual pruning
+        edge_index_override: If provided, use this edge_index instead of data.edge_index.
     """
     set_seed(seed)
 
@@ -23,7 +25,7 @@ def run_random_pruning(data, config, num_features, num_classes, device, seed=42,
         prune_ratio = config.get("pruning", {}).get("beta", 0.2)
 
     undirected = config.get("dataset", {}).get("undirected", True)
-    edge_index = data.edge_index.cpu()
+    edge_index = edge_index_override.cpu() if edge_index_override is not None else data.edge_index.cpu()
     E = edge_index.shape[1]
     num_nodes = data.num_nodes
 
@@ -83,10 +85,14 @@ def run_random_pruning(data, config, num_features, num_classes, device, seed=42,
 
 
 def run_degree_aware_random(data, config, num_features, num_classes, device, seed=42,
-                            prune_ratio=None, match_graca_ratio=None):
+                            prune_ratio=None, match_graca_ratio=None,
+                            edge_index_override=None):
     """Degree-aware random pruning: each node removes ~same number of edges as GraCA.
 
     For undirected graphs, edges are deleted in pairs.
+
+    Args:
+        edge_index_override: If provided, use this edge_index instead of data.edge_index.
     """
     set_seed(seed)
 
@@ -96,7 +102,7 @@ def run_degree_aware_random(data, config, num_features, num_classes, device, see
         prune_ratio = config.get("pruning", {}).get("beta", 0.2)
 
     undirected = config.get("dataset", {}).get("undirected", True)
-    edge_index = data.edge_index.cpu()
+    edge_index = edge_index_override.cpu() if edge_index_override is not None else data.edge_index.cpu()
     src = edge_index[0]
     dst = edge_index[1]
     E = edge_index.shape[1]

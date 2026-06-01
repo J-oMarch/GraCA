@@ -1,0 +1,40 @@
+Check,Dataset,NoiseType,Seed,Status,Details,Method
+num_edges_before_consistency,Cora,cross_class_oracle,0.0,PASS,Value: 12666,
+num_edges_before_consistency,Cora,cross_class_oracle,1.0,PASS,Value: 12666,
+num_edges_before_consistency,Cora,cross_class_oracle,2.0,PASS,Value: 12666,
+num_edges_before_consistency,Cora,low_feature_similarity,0.0,PASS,Value: 12666,
+num_edges_before_consistency,Cora,low_feature_similarity,1.0,PASS,Value: 12666,
+num_edges_before_consistency,Cora,low_feature_similarity,2.0,PASS,Value: 12666,
+num_edges_before_consistency,Cora,degree_aligned_random,0.0,PASS,Value: 12666,
+num_edges_before_consistency,Cora,degree_aligned_random,1.0,PASS,Value: 12666,
+num_edges_before_consistency,Cora,degree_aligned_random,2.0,PASS,Value: 12666,
+num_edges_before_consistency,CiteSeer,cross_class_oracle,0.0,PASS,Value: 10924,
+num_edges_before_consistency,CiteSeer,cross_class_oracle,1.0,PASS,Value: 10924,
+num_edges_before_consistency,CiteSeer,cross_class_oracle,2.0,PASS,Value: 10924,
+num_edges_before_consistency,CiteSeer,low_feature_similarity,0.0,PASS,Value: 10924,
+num_edges_before_consistency,CiteSeer,low_feature_similarity,1.0,PASS,Value: 10924,
+num_edges_before_consistency,CiteSeer,low_feature_similarity,2.0,PASS,Value: 10924,
+num_edges_before_consistency,CiteSeer,degree_aligned_random,0.0,PASS,Value: 10924,
+num_edges_before_consistency,CiteSeer,degree_aligned_random,1.0,PASS,Value: 10924,
+num_edges_before_consistency,CiteSeer,degree_aligned_random,2.0,PASS,Value: 10924,
+num_edges_before_consistency,PubMed,cross_class_oracle,0.0,PASS,Value: 106376,
+num_edges_before_consistency,PubMed,cross_class_oracle,1.0,PASS,Value: 106376,
+num_edges_before_consistency,PubMed,cross_class_oracle,2.0,PASS,Value: 106376,
+num_edges_before_consistency,PubMed,low_feature_similarity,0.0,PASS,Value: 106376,
+num_edges_before_consistency,PubMed,low_feature_similarity,1.0,PASS,Value: 106376,
+num_edges_before_consistency,PubMed,low_feature_similarity,2.0,PASS,Value: 106376,
+num_edges_before_consistency,PubMed,degree_aligned_random,0.0,PASS,Value: 106376,
+num_edges_before_consistency,PubMed,degree_aligned_random,1.0,PASS,Value: 106376,
+num_edges_before_consistency,PubMed,degree_aligned_random,2.0,PASS,Value: 106376,
+no_val_test_labels_in_scoring,,,,PASS,Protocol: none,Original+Noise
+no_val_test_labels_in_scoring,,,,PASS,Protocol: none,Random-Matched
+no_val_test_labels_in_scoring,,,,PASS,Protocol: none,Feature-only
+no_val_test_labels_in_scoring,,,,PASS,Protocol: none,GCN-Jaccard
+no_val_test_labels_in_scoring,,,,PASS,Protocol: none,DegreeAwareRandom
+no_val_test_labels_in_scoring,,,,PASS,Protocol: first_order,GraGE-FO
+no_val_test_labels_in_scoring,,,,PASS,Protocol: unrolled_k1,GraGE-Unrolled-K1
+no_val_test_labels_in_scoring,,,,PASS,Protocol: unrolled_k3,GraGE-Unrolled-K3
+no_val_test_labels_in_scoring,,,,PASS,Protocol: transfer_seed,EdgeBench-Transfer
+no_val_test_labels_in_scoring,,,,PASS,Protocol: in_graph_supervised,EdgeBench-InGraphSupervised
+no_val_test_labels_in_scoring,,,,N/A (diagnostic),"Protocol: oracle, oracle_only=True",EdgeInfluence-Oracle
+edgebench_igs_oracle_only,,,,PASS,oracle_only=True,EdgeBench-InGraphSupervised

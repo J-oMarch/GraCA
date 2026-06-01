@@ -1,31 +1,17 @@
 """
 EdgeBench: Binary classifier for harmful edge detection.
 
-Uses edge features (delta_softmax + feature_cosine) to train a classifier
-that detects harmful edges. The training signal comes from injected noise
-edges (from noise_injection.py), not from teacher pseudo labels.
-
-Key insight: EdgeBench uses the noise injection mechanism itself as the
-training signal, making it more practical than EdgeInfluence-Pseudo.
+Two protocols:
+1. EdgeBench-InGraphSupervised: Uses target graph's bad_edge_mask for training.
+   DIAGNOSTIC ONLY - oracle_only=True, not for practical claims.
+2. EdgeBench-Transfer: Trains on source graph units, evaluates on target graph.
+   PRACTICAL - no target label leakage.
 
 Usage:
-    from src.graca.edge_bench import compute_edge_bench_scores, prune_by_edge_bench
-
-    # After injecting noise and computing edge features:
-    scores = compute_edge_bench_scores(
-        delta_softmax=delta_softmax,
-        feature_cosine=feature_cosine,
-        bad_edge_mask=bad_edge_mask,
-        train_mask=train_mask,
-        seed=42
-    )
-
-    pruned_ei, mask, stats = prune_by_edge_bench(
-        edge_index=edge_index,
-        scores=scores,
-        num_nodes=num_nodes,
-        prune_ratio=0.20,
-        undirected=True
+    from src.graca.edge_bench import (
+        compute_edge_bench_in_graph,
+        compute_edge_bench_transfer,
+        prune_by_edge_bench,
     )
 """
 import torch
@@ -34,103 +20,53 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-def compute_edge_bench_scores(
+def compute_edge_bench_in_graph(
     delta_softmax: np.ndarray,
     feature_cosine: np.ndarray,
     bad_edge_mask: np.ndarray,
-    train_mask: Optional[np.ndarray] = None,
     test_size: float = 0.3,
     classifier: str = "random_forest",
     n_estimators: int = 100,
     seed: int = 42,
 ) -> Dict:
-    """Compute EdgeBench scores using binary classifier.
+    """EdgeBench-InGraphSupervised: Train on target graph's bad_edge_mask.
+
+    DIAGNOSTIC ONLY - uses target graph labels. oracle_only=True.
+    Not for practical claims.
 
     Args:
-        delta_softmax: [E] delta_softmax scores (higher = more harmful)
-        feature_cosine: [E] feature cosine similarity (lower = more harmful)
+        delta_softmax: [E] delta_softmax scores
+        feature_cosine: [E] feature cosine similarity
         bad_edge_mask: [E] boolean mask, True for injected bad edges
-        train_mask: [E] optional boolean mask for training subset
-        test_size: fraction of data for testing (if train_mask is None)
+        test_size: fraction for test split
         classifier: "random_forest" or "logistic_regression"
-        n_estimators: number of trees for RandomForest
+        n_estimators: number of trees
         seed: random seed
 
     Returns:
-        dict with keys:
-            scores: [E] EdgeBench probability scores (higher = more harmful)
-            auc_roc: ROC-AUC on test set
-            auc_pr: PR-AUC on test set
-            classifier: trained classifier object
-            feature_importance: [2] feature importance (delta_softmax, cosine)
-            diagnostics: dict with training statistics
+        dict with scores, auc_roc, auc_pr, classifier, diagnostics
     """
-    # Build feature matrix: [E, 2]
-    # Feature 1: delta_softmax (higher = more harmful)
-    # Feature 2: -feature_cosine (higher = more harmful, i.e., lower cosine)
     X = np.column_stack([delta_softmax, -feature_cosine])
     y = bad_edge_mask.astype(int)
 
-    # Split into train/test
-    if train_mask is not None:
-        X_train, y_train = X[train_mask], y[train_mask]
-        X_test, y_test = X[~train_mask], y[~train_mask]
-    else:
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, random_state=seed, stratify=y
-        )
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, random_state=seed, stratify=y
+    )
 
-    # Train classifier
-    if classifier == "random_forest":
-        clf = RandomForestClassifier(
-            n_estimators=n_estimators,
-            max_depth=5,
-            min_samples_leaf=5,
-            random_state=seed,
-            class_weight="balanced"
-        )
-    elif classifier == "logistic_regression":
-        clf = LogisticRegression(
-            max_iter=1000,
-            random_state=seed,
-            class_weight="balanced"
-        )
-    else:
-        raise ValueError(f"Unknown classifier: {classifier}")
-
+    clf = _train_classifier(classifier, n_estimators, seed)
     clf.fit(X_train, y_train)
 
-    # Predict probabilities for all edges
-    proba = clf.predict_proba(X)[:, 1]  # P(bad_edge)
-
-    # Evaluate on test set
-    test_proba = clf.predict_proba(X_test)[:, 1]
-    try:
-        auc_roc = roc_auc_score(y_test, test_proba)
-    except ValueError:
-        auc_roc = 0.5  # Only one class present
-
-    try:
-        precision, recall, _ = precision_recall_curve(y_test, test_proba)
-        auc_pr = auc(recall, precision)
-    except ValueError:
-        auc_pr = 0.0
-
-    # Feature importance
-    if hasattr(clf, 'feature_importances_'):
-        feat_imp = clf.feature_importances_
-    elif hasattr(clf, 'coef_'):
-        feat_imp = np.abs(clf.coef_[0])
-    else:
-        feat_imp = np.array([0.5, 0.5])
+    proba = clf.predict_proba(X)[:, 1]
+    auc_roc, auc_pr = _evaluate(clf, X_test, y_test)
 
     diagnostics = {
+        "protocol": "in_graph_supervised",
         "train_size": len(X_train),
         "test_size": len(X_test),
         "train_pos_frac": float(y_train.mean()),
@@ -140,17 +76,145 @@ def compute_edge_bench_scores(
         "classifier_type": classifier,
     }
 
-    logger.info(f"EdgeBench: AUC-ROC={auc_roc:.4f}, AUC-PR={auc_pr:.4f}")
-    logger.info(f"  Feature importance: delta_softmax={feat_imp[0]:.3f}, cosine={feat_imp[1]:.3f}")
+    logger.info(f"EdgeBench-InGraphSupervised: AUC-ROC={auc_roc:.4f}")
 
     return {
         "scores": proba,
         "auc_roc": auc_roc,
         "auc_pr": auc_pr,
         "classifier": clf,
-        "feature_importance": feat_imp,
         "diagnostics": diagnostics,
     }
+
+
+def compute_edge_bench_transfer(
+    target_delta_softmax: np.ndarray,
+    target_feature_cosine: np.ndarray,
+    source_features_list: List[Dict],
+    classifier: str = "random_forest",
+    n_estimators: int = 100,
+    seed: int = 42,
+) -> Dict:
+    """EdgeBench-Transfer: Train on source graph units, predict on target.
+
+    PRACTICAL - no target label leakage.
+
+    Args:
+        target_delta_softmax: [E_target] target graph delta_softmax scores
+        target_feature_cosine: [E_target] target graph feature cosine
+        source_features_list: List of source graph feature dicts, each with:
+            - delta_softmax: [E_source]
+            - feature_cosine: [E_source]
+            - bad_edge_mask: [E_source]
+        classifier: classifier type
+        n_estimators: number of trees
+        seed: random seed
+
+    Returns:
+        dict with scores, diagnostics
+    """
+    # Aggregate source training data
+    X_sources = []
+    y_sources = []
+    for src in source_features_list:
+        X_src = np.column_stack([src["delta_softmax"], -src["feature_cosine"]])
+        y_src = src["bad_edge_mask"].astype(int)
+        X_sources.append(X_src)
+        y_sources.append(y_src)
+
+    X_train = np.concatenate(X_sources, axis=0)
+    y_train = np.concatenate(y_sources, axis=0)
+
+    # Train on source data
+    clf = _train_classifier(classifier, n_estimators, seed)
+    clf.fit(X_train, y_train)
+
+    # Predict on target
+    X_target = np.column_stack([target_delta_softmax, -target_feature_cosine])
+    proba = clf.predict_proba(X_target)[:, 1]
+
+    diagnostics = {
+        "protocol": "transfer",
+        "train_size": len(X_train),
+        "train_pos_frac": float(y_train.mean()),
+        "n_sources": len(source_features_list),
+        "classifier_type": classifier,
+    }
+
+    logger.info(f"EdgeBench-Transfer: trained on {len(source_features_list)} sources, "
+                f"{len(X_train)} edges")
+
+    return {
+        "scores": proba,
+        "classifier": clf,
+        "diagnostics": diagnostics,
+    }
+
+
+def compute_edge_bench_transfer_leave_one_out(
+    experiments_data: Dict[str, Dict],
+    target_key: str,
+    leave_out: str = "seed",
+    classifier: str = "random_forest",
+    n_estimators: int = 100,
+    seed: int = 42,
+) -> Dict:
+    """EdgeBench-Transfer with leave-one-out protocol.
+
+    Args:
+        experiments_data: Dict mapping (dataset, noise_type, seed) -> feature dict
+            Each feature dict has: delta_softmax, feature_cosine, bad_edge_mask
+        target_key: key of target experiment (e.g., "Cora_cross_class_oracle_0")
+        leave_out: "seed" (leave-one-seed-out) or "dataset" (leave-one-dataset-out)
+        classifier: classifier type
+        n_estimators: number of trees
+        seed: random seed
+
+    Returns:
+        dict with scores, diagnostics
+    """
+    # Parse target key: dataset_noise_type_seed
+    parts = target_key.rsplit("_", 2)
+    target_dataset = parts[0]
+    target_noise = parts[1]
+    target_seed = parts[2]
+
+    # Select source experiments
+    source_features = []
+    for key, data in experiments_data.items():
+        if key == target_key:
+            continue
+
+        k_parts = key.rsplit("_", 2)
+        k_dataset = k_parts[0]
+        k_noise = k_parts[1]
+        k_seed = k_parts[2]
+
+        if leave_out == "seed":
+            # Same dataset and noise, different seed
+            if k_dataset == target_dataset and k_noise == target_noise and k_seed != target_seed:
+                source_features.append(data)
+        elif leave_out == "dataset":
+            # Different dataset, any noise/seed
+            if k_dataset != target_dataset:
+                source_features.append(data)
+
+    if not source_features:
+        logger.warning(f"No source experiments found for {target_key} with leave_out={leave_out}")
+        # Fallback: use all other experiments
+        for key, data in experiments_data.items():
+            if key != target_key:
+                source_features.append(data)
+
+    target_data = experiments_data[target_key]
+    return compute_edge_bench_transfer(
+        target_delta_softmax=target_data["delta_softmax"],
+        target_feature_cosine=target_data["feature_cosine"],
+        source_features_list=source_features,
+        classifier=classifier,
+        n_estimators=n_estimators,
+        seed=seed,
+    )
 
 
 def prune_by_edge_bench(
@@ -161,32 +225,16 @@ def prune_by_edge_bench(
     undirected: bool = True,
     protect_self_loops: bool = True,
 ) -> Tuple[torch.Tensor, torch.Tensor, Dict]:
-    """Prune graph using EdgeBench scores.
-
-    Args:
-        edge_index: [2, E] edge index
-        scores: [E] EdgeBench probability scores (higher = more harmful)
-        num_nodes: number of nodes
-        prune_ratio: fraction of edges to remove
-        undirected: whether graph is undirected
-        protect_self_loops: whether to protect self-loops
-
-    Returns:
-        pruned_edge_index: [2, E'] pruned edge index
-        prune_mask: [E] boolean mask, True for pruned edges
-        stats: dict with pruning statistics
-    """
+    """Prune graph using EdgeBench scores."""
     from src.graca.pruning import prune_graph
 
-    # Convert scores to risk_score tensor
     risk_score = torch.from_numpy(scores).float()
 
-    # Use existing prune_graph with target_prune_ratio
     pruned_ei, prune_mask, stats = prune_graph(
         edge_index=edge_index,
         risk_score=risk_score,
         num_nodes=num_nodes,
-        beta=0.2,  # Not used when target_prune_ratio is set
+        beta=0.2,
         min_degree=1,
         undirected=undirected,
         protect_self_loops=protect_self_loops,
@@ -200,25 +248,46 @@ def compute_edge_bench_scores_simple(
     delta_softmax: np.ndarray,
     feature_cosine: np.ndarray,
 ) -> np.ndarray:
-    """Simple EdgeBench score without training (z-score combination).
-
-    This is the fallback when no noise injection labels are available.
-    Uses z-score normalization: zscore(delta_softmax) + zscore(-cosine).
-
-    Args:
-        delta_softmax: [E] delta_softmax scores
-        feature_cosine: [E] feature cosine similarity
-
-    Returns:
-        scores: [E] combined risk scores (higher = more harmful)
-    """
+    """Simple z-score combination fallback."""
     from scipy.stats import zscore as sp_zscore
 
     z_ds = sp_zscore(delta_softmax)
     z_cos = sp_zscore(-feature_cosine)
-
-    # Handle NaN from constant arrays
     z_ds = np.nan_to_num(z_ds, nan=0.0)
     z_cos = np.nan_to_num(z_cos, nan=0.0)
-
     return z_ds + z_cos
+
+
+def _train_classifier(classifier: str, n_estimators: int, seed: int):
+    """Train a classifier."""
+    if classifier == "random_forest":
+        return RandomForestClassifier(
+            n_estimators=n_estimators,
+            max_depth=5,
+            min_samples_leaf=5,
+            random_state=seed,
+            class_weight="balanced"
+        )
+    elif classifier == "logistic_regression":
+        return LogisticRegression(
+            max_iter=1000,
+            random_state=seed,
+            class_weight="balanced"
+        )
+    else:
+        raise ValueError(f"Unknown classifier: {classifier}")
+
+
+def _evaluate(clf, X_test, y_test):
+    """Evaluate classifier on test set."""
+    test_proba = clf.predict_proba(X_test)[:, 1]
+    try:
+        auc_roc = roc_auc_score(y_test, test_proba)
+    except ValueError:
+        auc_roc = 0.5
+    try:
+        precision, recall, _ = precision_recall_curve(y_test, test_proba)
+        auc_pr = auc(recall, precision)
+    except ValueError:
+        auc_pr = 0.0
+    return auc_roc, auc_pr
