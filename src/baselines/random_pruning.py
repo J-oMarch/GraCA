@@ -81,7 +81,7 @@ def run_random_pruning(data, config, num_features, num_classes, device, seed=42,
             device=device, seed=seed,
         )
 
-    return results, graph_stats
+    return results, graph_stats, prune_mask  # return prune_mask (True = removed)
 
 
 def run_degree_aware_random(data, config, num_features, num_classes, device, seed=42,
@@ -177,4 +177,4 @@ def run_degree_aware_random(data, config, num_features, num_classes, device, see
             device=device, seed=seed,
         )
 
-    return results, graph_stats
+    return results, graph_stats, prune_mask  # return prune_mask (True = removed)

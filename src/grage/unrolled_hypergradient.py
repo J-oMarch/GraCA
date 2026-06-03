@@ -1,11 +1,13 @@
 """
-GraGE Unrolled Hypergradient.
+GraGE Unrolled Hypergradient (Functional Version).
 
 Approximates d L_score(theta_K(m), m) / d m_e by differentiating
-through K inner training steps on support_mask.
+through K inner training steps on support_mask using functional_call
+to preserve the computation graph.
 
-This is a more principled approach than first-order: it accounts for
-how the edge gate affects the model parameters through training.
+Key fix: Uses torch.func.functional_call to keep theta_K(m) differentiable
+w.r.t. edge_gate m_e. Previous version used .data assignment which broke
+the computation graph.
 
 Usage:
     from src.grage.unrolled_hypergradient import compute_edge_gate_influence_unrolled
@@ -34,6 +36,22 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _functional_forward(model, params_dict, x, edge_index, edge_gate):
+    """Functional forward pass using torch.func.functional_call.
+
+    This preserves the computation graph through params_dict, so gradients
+    can flow back through the parameter updates.
+    """
+    # functional_call replaces model parameters with the provided dict
+    # and runs forward without modifying the model's actual parameters
+    return torch.func.functional_call(
+        model,
+        params_dict,
+        args=(x, edge_index),
+        kwargs={"edge_gate": edge_gate},
+    )
+
+
 def compute_edge_gate_influence_unrolled(
     model_ctor: Callable[[], nn.Module],
     init_state_dict: Dict,
@@ -51,7 +69,7 @@ def compute_edge_gate_influence_unrolled(
     """Compute unrolled hypergradient for edge gates.
 
     Approximates d L_score(theta_K(m), m) / d m_e by differentiating
-    through K inner training steps.
+    through K inner training steps using functional parameter updates.
 
     Args:
         model_ctor: function that creates a fresh model instance
@@ -79,44 +97,58 @@ def compute_edge_gate_influence_unrolled(
     # Create edge gate with gradient
     edge_gate = torch.ones(E, device=device, requires_grad=True)
 
-    # Create fresh model with initial parameters
+    # Create fresh model for functional_call
     model = model_ctor()
     model.load_state_dict(init_state_dict)
     model.train()
 
-    # Inner loop: K training steps on support_mask
-    # We need to track the computational graph through these steps
-    theta = list(model.parameters())
+    # Extract parameters as a dict of tensors (not nn.Parameters)
+    # Each tensor must have requires_grad=True for the gradient to flow
+    params = {}
+    for name, param in model.named_parameters():
+        # Clone to detach from model's actual parameters
+        # but keep requires_grad=True for gradient flow
+        params[name] = param.detach().clone().requires_grad_(True)
 
+    # Inner loop: K training steps on support_mask
+    # Each step: theta_{k+1} = theta_k - alpha * grad_theta L_support(theta_k, m)
+    # We use functional_call to preserve the computation graph
     for step in range(inner_steps):
-        # Forward with current edge gate
-        logits = model(x, edge_index, edge_gate=edge_gate)
+        # Forward pass using functional_call with current params
+        logits = _functional_forward(model, params, x, edge_index, edge_gate)
+
+        # Support loss
         L_support = F.cross_entropy(logits[support_mask], y[support_mask])
 
         # Add weight decay
         if weight_decay > 0:
-            for p in theta:
+            for p in params.values():
                 L_support = L_support + weight_decay * (p ** 2).sum() / 2
 
-        # Compute gradients w.r.t. parameters
-        grads = torch.autograd.grad(L_support, theta, create_graph=True)
+        # Compute gradients w.r.t. all parameters
+        # retain_graph=False is fine since we're building a new graph each step
+        grads = torch.autograd.grad(
+            L_support,
+            list(params.values()),
+            create_graph=True,  # MUST be True to allow second-order gradients
+        )
 
-        # Update parameters (gradient descent)
-        with torch.no_grad():
-            for p, g in zip(theta, grads):
-                p.data = p.data - inner_lr * g.data
+        # Update parameters: theta_{k+1} = theta_k - alpha * grad
+        # This is a tensor operation that PRESERVES the computation graph
+        new_params = {}
+        for (name, p), g in zip(params.items(), grads):
+            new_params[name] = p - inner_lr * g
 
-        # Re-enable gradients for next iteration
-        # Note: we need to be careful here - after .data assignment,
-        # the parameters still require_grad but the graph is broken
-        # We need to use functional approach for proper unrolling
+        params = new_params
 
     # Outer loss: L_score on score_mask
-    logits_final = model(x, edge_index, edge_gate=edge_gate)
+    # Use the final params after K inner steps
+    logits_final = _functional_forward(model, params, x, edge_index, edge_gate)
     L_score = F.cross_entropy(logits_final[score_mask], y[score_mask])
 
     # Compute gradient: d L_score / d edge_gate
-    # This gradient flows through the entire unrolled computation
+    # This gradient flows through the entire unrolled computation:
+    # d L_score / d m_e = d L_score / d theta_K * d theta_K / d m_e + d L_score / d m_e (direct)
     grad = torch.autograd.grad(L_score, edge_gate, create_graph=False)[0]
 
     raw_grad = grad.detach()

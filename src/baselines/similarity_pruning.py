@@ -89,7 +89,7 @@ def run_jaccard_pruning(data, config, num_features, num_classes, device, seed=42
             device=device, seed=seed,
         )
 
-    return results, graph_stats
+    return results, graph_stats, ~keep_mask  # return prune_mask (True = removed)
 
 
 def run_cosine_pruning(data, config, num_features, num_classes, device, seed=42,
@@ -167,4 +167,4 @@ def run_cosine_pruning(data, config, num_features, num_classes, device, seed=42,
             device=device, seed=seed,
         )
 
-    return results, graph_stats
+    return results, graph_stats, ~keep_mask  # return prune_mask (True = removed)

@@ -107,6 +107,14 @@ def inject_noise(
         injected_pairs = _inject_degree_aligned_random(
             num_nodes, num_target_pairs, existing_pairs, edge_index, y, generator
         )
+    elif noise_type == "feature_similar_cross_class":
+        # Key experiment: high feature similarity but cross-class conflict
+        # Feature-only methods struggle here because features suggest the edge is safe
+        if x is None or y is None:
+            raise ValueError("feature_similar_cross_class requires features x and labels y")
+        injected_pairs = _inject_feature_similar_cross_class(
+            num_nodes, num_target_pairs, existing_pairs, x, y, generator
+        )
     else:
         raise ValueError(f"Unknown noise type: {noise_type}")
 
@@ -418,6 +426,77 @@ def _inject_degree_aligned_random(num_nodes, num_target_pairs, existing_pairs, e
             if key not in existing_pairs and key not in injected_pairs:
                 injected_pairs.add(key)
         attempts += 1
+
+    return injected_pairs
+
+
+def _inject_feature_similar_cross_class(
+    num_nodes, num_target_pairs, existing_pairs, x, y, generator,
+    similarity_quantile=0.7
+):
+    """Inject edges between nodes with HIGH feature similarity but DIFFERENT classes.
+
+    This is the key experiment: Feature-only methods struggle here because
+    features suggest the edge is safe (high similarity), but the edge is
+    actually harmful (cross-class conflict).
+
+    Args:
+        num_nodes: number of nodes
+        num_target_pairs: number of undirected pairs to inject
+        existing_pairs: set of existing edge pairs
+        x: [N, F] node features
+        y: [N] node labels
+        generator: torch generator
+        similarity_quantile: only consider pairs above this quantile (default 0.7 = top 30%)
+
+    Returns:
+        set of (u, v) pairs to inject
+    """
+    # Step 1: Find all cross-class node pairs (candidates)
+    # We sample candidates rather than enumerate all N*(N-1)/2 pairs
+    max_candidates = min(num_nodes * (num_nodes - 1) // 2, 200000)
+
+    # Sample random cross-class pairs
+    candidate_pairs = []
+    attempts = 0
+    max_attempts = max_candidates * 5
+
+    while len(candidate_pairs) < max_candidates and attempts < max_attempts:
+        u = torch.randint(0, num_nodes, (1,), generator=generator).item()
+        v = torch.randint(0, num_nodes, (1,), generator=generator).item()
+        if u != v and y[u].item() != y[v].item():
+            key = (min(u, v), max(u, v))
+            if key not in existing_pairs and key not in candidate_pairs:
+                candidate_pairs.append(key)
+        attempts += 1
+
+    if len(candidate_pairs) == 0:
+        return set()
+
+    # Step 2: Compute cosine similarity for all candidates
+    pairs_tensor = torch.tensor(candidate_pairs, dtype=torch.long)
+    u_idx = pairs_tensor[:, 0]
+    v_idx = pairs_tensor[:, 1]
+
+    cosine_sim = F.cosine_similarity(x[u_idx], x[v_idx], dim=1, eps=1e-8)
+
+    # Step 3: Select pairs with similarity above quantile threshold
+    threshold = torch.quantile(cosine_sim, similarity_quantile)
+    high_sim_mask = cosine_sim >= threshold
+    high_sim_indices = torch.where(high_sim_mask)[0]
+
+    # Step 4: Randomly select num_target_pairs from high-similarity candidates
+    if len(high_sim_indices) == 0:
+        return set()
+
+    # Shuffle and pick
+    perm = torch.randperm(len(high_sim_indices), generator=generator)
+    num_select = min(num_target_pairs, len(high_sim_indices))
+
+    injected_pairs = set()
+    for i in range(num_select):
+        idx = high_sim_indices[perm[i]].item()
+        injected_pairs.add(candidate_pairs[idx])
 
     return injected_pairs
 
