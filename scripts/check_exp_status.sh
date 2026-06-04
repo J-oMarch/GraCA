@@ -35,7 +35,7 @@ set -e
 if [ "${TMUX_STATUS}" -eq 0 ]; then
   set +e
   ssh -p "${REMOTE_PORT}" "${REMOTE}" \
-    "pgrep -af \"bash scripts/run_exp.sh ${EXP_ID}|scripts/run_exp.sh ${EXP_ID}\" >/dev/null"
+    "ps -eo args= | awk '\$0 ~ /(^|[[:space:]])bash scripts\\/run_exp\\.sh ${EXP_ID}([[:space:]]|\$)/ && \$0 !~ /bash -c cd .*scripts\\/run_exp\\.sh/ { found=1 } END { exit found ? 0 : 1 }'"
   RUN_STATUS=$?
   set -e
 
