@@ -65,7 +65,7 @@ if tmux has-session -t "${TMUX_SESSION}" 2>/dev/null && \
   exit 1
 fi
 
-RUN_CMD="cd '${REMOTE_DIR}' && CLAUDE_ARGS='${REMOTE_CLAUDE_ARGS}' bash scripts/run_exp.sh '${EXP_ID}'; status=\\\$?; echo; echo '[tmux] experiment ${EXP_ID} finished with status '\${status}; exec bash"
+RUN_CMD="cd '${REMOTE_DIR}' && CLAUDE_ARGS='${REMOTE_CLAUDE_ARGS}' bash scripts/run_exp.sh '${EXP_ID}'; echo; echo '[tmux] experiment ${EXP_ID} finished'; exec bash"
 
 if tmux has-session -t "${TMUX_SESSION}" 2>/dev/null; then
   tmux new-window -t "${TMUX_SESSION}" -n "${TMUX_WINDOW}" "\${RUN_CMD}"
