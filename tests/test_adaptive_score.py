@@ -13,6 +13,7 @@ import pytest
 from src.grage.adaptive_score import (
     compute_faa_hybrid_score,
     compute_mcgc_score,
+    compute_selective_mcgc_score,
     rank_normalize,
 )
 
@@ -323,6 +324,97 @@ def test_mcgc_with_undirected(synthetic_edges):
     score = result["hybrid_score"]
     assert score.shape == (E,)
     print("✓ MCGC with undirected averaging")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Selective MCGC Tests
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+def test_selective_mcgc_hard_gate_uses_feature_quantile(synthetic_edges):
+    """Hard selective MCGC should activate only high-similarity edges."""
+    E = synthetic_edges["E"]
+    torch.manual_seed(42)
+    grads = [torch.randn(E) for _ in range(4)]
+
+    result = compute_selective_mcgc_score(
+        feature_risk=synthetic_edges["feature_risk"],
+        feature_similarity=synthetic_edges["feature_similarity"],
+        checkpoint_grads=grads,
+        tau_quantile=0.75,
+        gate_type="hard",
+        undirected=False,
+    )
+
+    gate = result["gate"]
+    diag = result["diagnostics"]
+    assert result["hybrid_score"].shape == (E,)
+    assert gate.shape == (E,)
+    assert ((gate == 0) | (gate == 1)).all(), "Hard gate should be binary"
+    assert 0.15 <= diag["gate_active_fraction"] <= 0.35, \
+        f"Top-quartile hard gate active fraction unexpected: {diag['gate_active_fraction']:.4f}"
+    print(f"✓ Selective MCGC hard gate active={diag['gate_active_fraction']:.4f}")
+
+
+def test_selective_mcgc_soft_gate_is_continuous(synthetic_edges):
+    """Soft selective MCGC should return a continuous gate in [0, 1]."""
+    E = synthetic_edges["E"]
+    torch.manual_seed(7)
+    grads = [torch.randn(E) for _ in range(4)]
+
+    result = compute_selective_mcgc_score(
+        feature_risk=synthetic_edges["feature_risk"],
+        feature_similarity=synthetic_edges["feature_similarity"],
+        checkpoint_grads=grads,
+        tau_quantile=0.5,
+        gate_type="soft",
+        soft_k=5.0,
+        undirected=False,
+    )
+
+    gate = result["gate"]
+    assert gate.min() >= 0.0
+    assert gate.max() <= 1.0
+    assert not ((gate == 0) | (gate == 1)).all(), "Soft gate should not be binary"
+    assert result["diagnostics"]["dynamic_contribution_abs_mean"] > 0
+    print(f"✓ Selective MCGC soft gate mean={gate.mean():.4f}")
+
+
+def test_selective_mcgc_zero_gate_matches_feature_only(synthetic_edges):
+    """When tau is unreachable, selective MCGC should reduce to feature-only."""
+    E = synthetic_edges["E"]
+    torch.manual_seed(13)
+    grads = [torch.randn(E) for _ in range(4)]
+
+    result = compute_selective_mcgc_score(
+        feature_risk=synthetic_edges["feature_risk"],
+        feature_similarity=synthetic_edges["feature_similarity"],
+        checkpoint_grads=grads,
+        tau=2.0,
+        gate_type="hard",
+        undirected=False,
+    )
+
+    expected = rank_normalize(synthetic_edges["feature_risk"])
+    assert torch.allclose(result["hybrid_score"], expected), \
+        "Zero active gate should exactly match feature-only rank score"
+    assert result["diagnostics"]["gate_active_fraction"] == 0.0
+    print("✓ Selective MCGC zero gate falls back to feature-only")
+
+
+def test_selective_mcgc_rejects_invalid_gate_type(synthetic_edges):
+    """Invalid gate type should fail fast."""
+    E = synthetic_edges["E"]
+    grads = [torch.randn(E) for _ in range(2)]
+
+    with pytest.raises(ValueError):
+        compute_selective_mcgc_score(
+            feature_risk=synthetic_edges["feature_risk"],
+            feature_similarity=synthetic_edges["feature_similarity"],
+            checkpoint_grads=grads,
+            gate_type="invalid",
+            undirected=False,
+        )
 
 
 def test_rank_normalize():

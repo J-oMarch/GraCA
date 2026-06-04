@@ -51,6 +51,33 @@ Proof sketch: Repeatedly apply the chain rule through the differentiable inner
 updates. The approximation error depends on optimization error after `K` steps
 and on smoothness of the inner objective.
 
+## Proposition 3: Selective Gate Conserves Feature-Only Ranking Off-Regime
+
+Let the selective score be:
+
+```text
+score(e)= R_f(e) + A_e D_e
+```
+
+where `D_e` is any bounded training-dynamics term, such as the MCGC positive and
+negative gradient contribution. If `A_e = 0` for all edges in a subset `B`, then
+the selective score restricted to `B` has exactly the same ordering as
+Feature-only:
+
+```text
+score(e) = R_f(e),  for all e in B.
+```
+
+Therefore, a hard gate that turns off dynamics in feature-clear regimes cannot
+change the pruning order inside that off-regime. For a soft gate with
+`0 <= A_e <= eta` on `B` and `|D_e| <= c`, the score perturbation is bounded by
+`eta c`; any pairwise Feature-only margin larger than `2 eta c` is order
+preserving.
+
+Proof sketch: The hard-gate case follows by substitution. For the soft-gate
+case, each edge score changes by at most `eta c`, so the pairwise score
+difference changes by at most `2 eta c`.
+
 ## Paper Claim To Validate
 
 The theory only justifies edge-gate gradients as local sensitivity signals. The
@@ -58,3 +85,8 @@ empirical paper claim requires showing that these sensitivities provide residual
 information beyond feature similarity and improve downstream accuracy under
 matched pruning budgets.
 
+After the first batch, the viable empirical claim is narrower: multi-checkpoint
+training dynamics may help in feature-ambiguous regimes, while the selective
+gate should preserve Feature-only behavior where feature evidence is already
+reliable. This must be validated against shuffled-gradient and zero-gate
+controls before it can be paper-facing.

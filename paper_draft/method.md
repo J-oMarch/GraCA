@@ -72,11 +72,33 @@ score(e)= R_f(e) + C_e lambda_pos R(relu(bar S_e))
 ```
 
 MCGC improved the feature-similar cross-class search slice but failed validation
-because it degraded low-feature-similarity cases. The next method should add a
-feature-regime gate `A_e` so dynamic terms are suppressed when feature risk is
-already reliable:
+because it degraded low-feature-similarity cases.
+
+## Current Candidate: Selective MCGC Regime Gate
+
+The current method candidate adds a feature-regime gate `A_e` so dynamic terms
+are suppressed when feature risk is already reliable:
 
 ```text
 score(e)= R_f(e) + A_e C_e lambda_pos R(relu(bar S_e))
                 - A_e C_e lambda_neg R(relu(-bar S_e))
 ```
+
+For the hard gate:
+
+```text
+A_e = 1[cos(x_u, x_v) >= tau]
+```
+
+For the soft gate:
+
+```text
+A_e = sigmoid(k (cos(x_u, x_v) - tau))
+```
+
+`tau` is selected without labels, using a fixed candidate-edge feature-similarity
+quantile or an unsupervised stability criterion. The intended behavior is not to
+replace Feature-only pruning everywhere, but to use edge-gate dynamics only in
+the feature-ambiguous region where first-batch search found MCGC gains. The
+required controls are shuffled checkpoint gradients, zero-gate fallback, and
+threshold sensitivity.

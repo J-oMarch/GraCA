@@ -76,6 +76,23 @@ This supports the next GraGE direction: a selective dynamics gate should act at
 edge level and choose between feature-only pruning and MCGC-style dynamic
 calibration.
 
+[Revisiting the Role of Heterophily in Graph Representation Learning: An Edge
+Classification Perspective](https://arxiv.org/abs/2205.11322) frames
+heterophily handling as an edge classification problem, either avoiding messages
+through heterophilous edges or using heterophilous neighbors differently. This is
+a novelty risk for any GraGE story that sounds like "classify edges as
+homophilic or heterophilic." The required distinction is that GraGE's selective
+gate is not trained to infer label agreement; it gates train-internal
+edge-gradient dynamics based on no-leak feature ambiguity and checkpoint
+stability, then evaluates matched-budget downstream effects.
+
+[GREET / AAAI 2023](https://ojs.aaai.org/index.php/AAAI/article/download/25573/25345)
+learns representations by discriminating and leveraging homophilic and
+heterophilic edge views in an unsupervised setting. GraGE can cite this as
+evidence that edge-regime separation is important, while emphasizing that the
+proposed mechanism is differentiable edge-gate sensitivity rather than a
+standalone edge discriminator.
+
 [Curriculum Graph Sparsification, KDD 2024](https://mn.cs.tsinghua.edu.cn/xinwang/PDF/papers/2024_Towards%20Lightweight%20Graph%20Neural%20Network%20Search%20with%20Curriculum%20Graph%20Sparsification.pdf)
 uses curriculum sparsification for lightweight GNN search. GraGE should avoid
 claiming generic sparsification novelty and instead report whether the dynamic

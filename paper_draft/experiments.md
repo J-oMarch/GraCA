@@ -53,6 +53,19 @@ features are ambiguous, but must be gated by feature-regime detection." The next
 experiment should test a selective dynamics gate that falls back to Feature-only
 when feature risk is already reliable.
 
+## Second Batch Prepared
+
+1. `2026-06-04-selective-mcgc-regime-gate`
+   tests hard and soft feature-regime gates for MCGC, with no-leak threshold
+   selection, shuffled/frozen dynamic controls, zero-gate fallback, and
+   threshold sensitivity. Success requires a positive feature-similar
+   cross-class delta without more than `-0.5 pp` degradation in
+   low-feature-similarity regimes.
+2. `2026-06-04-fscc-confirmation-rerun`
+   reruns the failed matched-budget confirmation with a direct auditable matrix
+   over Cora/CiteSeer/PubMed, 20 FSCC seeds, control regimes, and a small
+   heterophily slice.
+
 ## Required Reporting
 
 Every experiment must report mean, standard deviation, paired delta vs

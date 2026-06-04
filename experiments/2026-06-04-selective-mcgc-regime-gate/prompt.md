@@ -35,7 +35,10 @@ Read first:
 
 ## Method Requirements
 
-Implement at least two no-leak selective variants under `src/grage/`:
+Use the local `compute_selective_mcgc_score` helper in
+`src/grage/adaptive_score.py` if present. If the helper is missing or incomplete,
+repair it instead of creating an incompatible duplicate. Evaluate at least two
+no-leak selective variants:
 
 1. Hard selective MCGC:
 
@@ -58,7 +61,8 @@ Implement at least two no-leak selective variants under `src/grage/`:
 Choose `tau` without label leakage. Allowed choices:
 
 - fixed feature-similarity quantile computed from candidate edges only
-- train-internal unsupervised quantile sweep selected by stability, not labels
+- train-internal unsupervised quantile sweep selected by gradient stability or
+  conservative fallback behavior, not labels
 - a conservative preset such as top feature-similarity quartile
 
 Forbidden:
@@ -68,7 +72,7 @@ Forbidden:
 
 ## Tasks
 
-1. Add selective score code and tests.
+1. Verify or repair selective score code and tests.
 2. Extend `scripts/run_adaptive_grage_search.py` or add a focused runner for
    selective MCGC.
 3. Run smoke:
@@ -80,11 +84,17 @@ Forbidden:
    - datasets: `Cora`, `CiteSeer`
    - noise: `feature_similar_cross_class`, `low_feature_similarity`
    - seeds: `0..2`
-   - methods: Feature-only, MCGC, at least 4 selective variants
+   - methods: Feature-only, MCGC, at least 6 selective variants covering:
+     hard/soft gates, tau quantiles `0.5`, `0.75`, `0.9`, and at least two
+     `lambda_pos`/`lambda_neg` settings
 5. Select best variant with constraints:
    - positive mean delta vs Feature-only on `feature_similar_cross_class`
    - low-feature-similarity degradation no worse than `-0.005`
    - win rate vs Feature-only at least `0.6` on feature-similar cases
+   - shuffled-checkpoint-gradient control does not match or beat the selected
+     real-gradient variant
+   - zero-gate or low-active-gate fallback matches Feature-only within numerical
+     tolerance on low-feature-similarity cases
 6. Validation matrix:
    - datasets: `Cora`, `CiteSeer`, `PubMed`
    - noise: `feature_similar_cross_class`, `low_feature_similarity`,
@@ -95,6 +105,9 @@ Forbidden:
    - fraction of edges with `A_e > 0.5`
    - mean dynamic contribution by noise type
    - overlap between selected dynamic edges and pruned edges
+   - dynamic contribution sign split for pruned edges
+   - delta versus shuffled-gradient and frozen-checkpoint controls
+   - threshold sensitivity for tau quantiles `0.5`, `0.75`, `0.9`
    - runtime overhead versus MCGC and Feature-only
 8. Write result and failure analysis suitable for paper decisions.
 
@@ -132,6 +145,9 @@ The `metrics.json` must include:
   "win_rate_vs_feature_only": 0.0,
   "effect_size_vs_feature_only": 0.0,
   "dynamic_gate_active_fraction": 0.0,
+  "shuffled_gradient_delta_pp": 0.0,
+  "zero_gate_delta_vs_feature_only_pp": 0.0,
+  "best_tau_quantile": 0.0,
   "runtime_vs_feature_only_ratio": 0.0,
   "num_result_rows": 0,
   "new_files_or_modules": [],
@@ -142,4 +158,3 @@ The `metrics.json` must include:
 
 If the selective gate fails, state whether the bottleneck is threshold selection,
 gradient noise, feature-risk dominance, or budget constraints.
-

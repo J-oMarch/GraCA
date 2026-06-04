@@ -23,11 +23,12 @@ Candidate 2: Multi-Checkpoint Gradient Consistency (MCGC)
 Usage:
     from src.grage.adaptive_score import compute_faa_hybrid_score
     from src.grage.adaptive_score import compute_mcgc_score
+    from src.grage.adaptive_score import compute_selective_mcgc_score
 """
 import torch
 import torch.nn.functional as F
 import numpy as np
-from typing import Dict, List, Optional, Callable
+from typing import Dict, List, Optional, Callable, Literal
 from collections import defaultdict
 import logging
 
@@ -315,6 +316,154 @@ def compute_mcgc_score(
 
     return {
         "hybrid_score": hybrid_score,
+        "diagnostics": diagnostics,
+    }
+
+
+def compute_selective_mcgc_score(
+    feature_risk: torch.Tensor,
+    feature_similarity: torch.Tensor,
+    checkpoint_grads: List[torch.Tensor],
+    tau: Optional[float] = None,
+    tau_quantile: float = 0.75,
+    gate_type: Literal["hard", "soft"] = "hard",
+    soft_k: float = 20.0,
+    lambda_pos: float = 0.25,
+    lambda_neg: float = 0.25,
+    consistency_weight: float = 1.0,
+    undirected: bool = True,
+    edge_index: Optional[torch.Tensor] = None,
+    bad_edge_mask: Optional[torch.Tensor] = None,
+) -> Dict:
+    """Selective MCGC score with a no-leak feature-regime gate.
+
+    The gate activates training-dynamics terms only for feature-ambiguous edges,
+    approximated by high feature similarity. Thresholds are computed from
+    candidate-edge feature similarities unless ``tau`` is explicitly supplied;
+    labels and oracle bad-edge masks are evaluation-only.
+
+    score_e = R(feature_risk_e)
+            + A_e C_e lambda_pos R(relu(mean_grad_e))
+            - A_e C_e lambda_neg R(relu(-mean_grad_e))
+
+    Args:
+        feature_risk: [E] 1 - cosine similarity.
+        feature_similarity: [E] cosine similarity, higher means more ambiguous.
+        checkpoint_grads: list of [E] gradient tensors from checkpoints.
+        tau: optional fixed similarity threshold. If None, uses tau_quantile.
+        tau_quantile: no-leak quantile over feature_similarity for tau.
+        gate_type: "hard" for indicator gate, "soft" for sigmoid gate.
+        soft_k: sigmoid sharpness for soft gate.
+        lambda_pos: scale for positive gradient.
+        lambda_neg: scale for negative gradient.
+        consistency_weight: scale for consistency confidence.
+        undirected: average scores for undirected pairs.
+        edge_index: [2, E] required if undirected=True.
+        bad_edge_mask: [E] optional, for evaluation only.
+
+    Returns:
+        dict with hybrid_score [E], gate [E], and diagnostics.
+    """
+    if gate_type not in {"hard", "soft"}:
+        raise ValueError(f"gate_type must be 'hard' or 'soft', got {gate_type!r}")
+    if not checkpoint_grads:
+        raise ValueError("checkpoint_grads must contain at least one tensor")
+    if feature_risk.shape != feature_similarity.shape:
+        raise ValueError("feature_risk and feature_similarity must have the same shape")
+
+    device = feature_risk.device
+    R_feature = rank_normalize(feature_risk)
+
+    if tau is None:
+        tau_tensor = torch.quantile(feature_similarity.detach(), tau_quantile)
+    else:
+        tau_tensor = torch.tensor(float(tau), dtype=feature_similarity.dtype, device=device)
+
+    if gate_type == "hard":
+        gate = (feature_similarity >= tau_tensor).float()
+    else:
+        gate = torch.sigmoid(soft_k * (feature_similarity - tau_tensor))
+
+    grads_stack = torch.stack(checkpoint_grads, dim=0)
+    K = grads_stack.shape[0]
+    mean_grad = grads_stack.mean(dim=0)
+
+    mean_sign = torch.sign(mean_grad)
+    checkpoint_signs = torch.sign(grads_stack)
+    agreement = (checkpoint_signs == mean_sign).float()
+    agreement = agreement + (checkpoint_signs == 0).float()
+    agreement = agreement.clamp(0, 1)
+    consistency = agreement.mean(dim=0)
+
+    grad_std = grads_stack.std(dim=0)
+    grad_mean_abs = grads_stack.abs().mean(dim=0).clamp(min=1e-8)
+    stability = torch.exp(-(grad_std / grad_mean_abs))
+    confidence = rank_normalize(consistency * stability)
+    effective_weight = 1.0 + consistency_weight * (confidence - 0.5)
+    gated_weight = gate * effective_weight
+
+    pos_grad = F.relu(mean_grad)
+    neg_grad = F.relu(-mean_grad)
+    R_pos = rank_normalize(pos_grad)
+    R_neg = rank_normalize(neg_grad)
+
+    dynamic_contribution = gated_weight * lambda_pos * R_pos - gated_weight * lambda_neg * R_neg
+    hybrid_score = R_feature + dynamic_contribution
+
+    if undirected and edge_index is not None:
+        hybrid_score = _average_undirected(edge_index, hybrid_score, device)
+        dynamic_contribution = _average_undirected(edge_index, dynamic_contribution, device)
+        gate = _average_undirected(edge_index, gate, device)
+
+    hybrid_score = hybrid_score.clamp(-3, 5)
+
+    diagnostics = {
+        "method": "selective_mcgc",
+        "gate_type": gate_type,
+        "tau": float(tau_tensor),
+        "tau_quantile": tau_quantile,
+        "soft_k": soft_k,
+        "lambda_pos": lambda_pos,
+        "lambda_neg": lambda_neg,
+        "consistency_weight": consistency_weight,
+        "num_checkpoints": K,
+        "feature_risk_mean": float(feature_risk.mean()),
+        "feature_sim_mean": float(feature_similarity.mean()),
+        "mean_grad_mean": float(mean_grad.mean()),
+        "consistency_mean": float(consistency.mean()),
+        "stability_mean": float(stability.mean()),
+        "confidence_mean": float(confidence.mean()),
+        "gate_active_fraction": float((gate > 0.5).float().mean()),
+        "gate_mean": float(gate.mean()),
+        "dynamic_contribution_mean": float(dynamic_contribution.mean()),
+        "dynamic_contribution_abs_mean": float(dynamic_contribution.abs().mean()),
+        "hybrid_score_mean": float(hybrid_score.mean()),
+        "hybrid_score_std": float(hybrid_score.std()),
+    }
+
+    if bad_edge_mask is not None:
+        from sklearn.metrics import roc_auc_score
+        try:
+            auc = roc_auc_score(
+                bad_edge_mask.cpu().numpy(),
+                hybrid_score.cpu().numpy(),
+            )
+            diagnostics["edge_score_auc"] = auc
+        except ValueError:
+            diagnostics["edge_score_auc"] = 0.5
+
+    logger.info(
+        "Selective MCGC: gate=%s tau=%.4f active=%.3f score_mean=%.4f",
+        gate_type,
+        diagnostics["tau"],
+        diagnostics["gate_active_fraction"],
+        diagnostics["hybrid_score_mean"],
+    )
+
+    return {
+        "hybrid_score": hybrid_score,
+        "gate": gate,
+        "dynamic_contribution": dynamic_contribution,
         "diagnostics": diagnostics,
     }
 

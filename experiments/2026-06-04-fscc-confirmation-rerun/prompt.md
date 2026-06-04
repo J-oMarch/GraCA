@@ -52,6 +52,10 @@ Read first:
    - methods: `Feature-only`, `GraGE-Hybrid-FO-posneg-lp0.1-ln0.5`,
      `MCGC-cw3.0-lp0.1-ln0.5`, `Random-Matched`, `DegreeAwareRandom`,
      `GCN-Jaccard`
+   - if `experiments/2026-06-04-selective-mcgc-regime-gate/metrics.json`
+     already exists and reports a completed best selective method, include that
+     best selective method as an additional practical GraGE candidate; otherwise
+     do not block this rerun waiting for it
 4. Run control regimes:
    - datasets: `Cora`, `CiteSeer`, `PubMed`
    - noise: `cross_class_oracle`, `low_feature_similarity`,
@@ -69,6 +73,8 @@ Read first:
    - win rate
    - effect size
    - runtime
+   - whether each GraGE-family method beats the shuffled/frozen dynamic control
+     if such a control is available
 7. Write a decision report that states whether the current GraGE direction is
    supported, unsupported, or only regime-specific.
 8. Write `failure_analysis.md` covering datasets/noise regimes where GraGE loses
@@ -118,4 +124,3 @@ The `metrics.json` must include:
 
 No oracle, validation labels, test labels, or `bad_edge_mask` may be used to
 compute practical edge scores. `bad_edge_mask` is evaluation-only.
-
