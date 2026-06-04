@@ -25,6 +25,16 @@ if [ ! -d .git ]; then
   exit 1
 fi
 
+pull_current_branch() {
+  local current_branch
+  current_branch="$(git branch --show-current)"
+  if [ -z "${current_branch}" ]; then
+    echo "Cannot pull results while in detached HEAD state."
+    exit 1
+  fi
+  git pull --ff-only origin "${current_branch}"
+}
+
 echo "Checking remote tmux target: ${TMUX_SESSION}:${TMUX_WINDOW}"
 set +e
 ssh -p "${REMOTE_PORT}" "${REMOTE}" \
@@ -60,7 +70,7 @@ if [ "${TMUX_STATUS}" -eq 0 ]; then
 
   echo
   echo "Pulling latest GitHub changes because the run process is no longer active..."
-  git pull --ff-only
+  pull_current_branch
 
   if [ -f "${EXP_DIR}/result.md" ]; then
     echo
@@ -75,7 +85,7 @@ fi
 
 echo "Status: tmux target not found"
 echo "Pulling latest GitHub changes..."
-git pull --ff-only
+pull_current_branch
 
 if [ -f "${EXP_DIR}/result.md" ]; then
   echo
