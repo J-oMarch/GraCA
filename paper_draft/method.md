@@ -74,9 +74,9 @@ score(e)= R_f(e) + C_e lambda_pos R(relu(bar S_e))
 MCGC improved the feature-similar cross-class search slice but failed validation
 because it degraded low-feature-similarity cases.
 
-## Current Candidate: Selective MCGC Regime Gate
+## Historical Candidate: Selective MCGC Regime Gate
 
-The current method candidate adds a feature-regime gate `A_e` so dynamic terms
+The selective MCGC candidate adds a feature-regime gate `A_e` so dynamic terms
 are suppressed when feature risk is already reliable:
 
 ```text
@@ -102,3 +102,62 @@ replace Feature-only pruning everywhere, but to use edge-gate dynamics only in
 the feature-ambiguous region where first-batch search found MCGC gains. The
 required controls are shuffled checkpoint gradients, zero-gate fallback, and
 threshold sensitivity.
+
+The confirmation result is mixed: selective MCGC avoids some degradation, but it
+does not produce a meaningful FSCC gain. It is therefore an ablation/historical
+candidate rather than the main method.
+
+## Current Candidate: StabilityResidual-GraGE
+
+The current supported candidate changes the dynamic signal from raw edge-gate
+gradient ranks to prediction stability under stochastic graph perturbations.
+For edge scoring, train `K` no-leak probe models or graph views with dropout
+rates `{r_k}` using training labels only. For node `i`, collect prediction
+distributions:
+
+```text
+P_i = {p_k(i) = softmax(f_{theta_k}(i; G_k, X)) : k = 1..K}.
+```
+
+Define node instability as a rank-normalized mixture:
+
+```text
+U_i = 0.3 R(mean_k H(p_k(i)))
+    + 0.3 R(JSD(p_1(i), ..., p_K(i)))
+    + 0.2 R(mean_c Var_k p_k(i,c))
+    + 0.2 R(1 - mean_k max_c p_k(i,c)).
+```
+
+For edge `e=(u,v)`, the raw stability score is:
+
+```text
+T_e = (|U_u - U_v| + U_u U_v) (1 + sim_norm(x_u, x_v)).
+```
+
+To make the paper claim residual to static feature similarity, regress the
+ranked stability score against ranked feature risk:
+
+```text
+R_T(e) = R(T_e)
+R_f(e) = R(1 - cosine(x_u, x_v))
+beta   = <R_T, R_f> / <R_f, R_f>
+Z_e    = R(R_T(e) - beta R_f(e)).
+```
+
+The practical pruning score is:
+
+```text
+score(e) = R_f(e) + alpha Z_e,
+```
+
+with optional edge-gate confidence abstention:
+
+```text
+score(e) = R_f(e)                         if C_e < tau
+score(e) = R_f(e) + alpha Z_e             otherwise.
+```
+
+`C_e` is derived from edge-gate gradient consistency/magnitude across
+checkpoints, but validation shows the prediction-stability residual is the main
+source of improvement. Gradient confidence should be described as an auxiliary
+abstention or regularization mechanism, not as the primary signal.

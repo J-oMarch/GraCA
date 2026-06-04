@@ -36,3 +36,18 @@
   GCN-Jaccard. Any AAAI-facing version must either introduce a stronger
   no-leak dynamics channel or honestly frame the present results as a negative
   diagnostic study.
+- StabilityResidual-GraGE provides the first positive replacement channel:
+  FSCC validation improves by `+2.00 pp` over Feature-only (`p=0.0001`, win
+  rate `0.87`) with no material LFS/DAR degradation. However, this does not
+  rescue the old raw edge-gradient claim. The supported signal is prediction
+  stability under graph perturbations.
+- Per-dataset evidence remains uneven: Cora is strong (`+4.43 pp`), while
+  CiteSeer (`+0.72 pp`) and PubMed (`+0.84 pp`) are positive but not individually
+  significant.
+- Gradient confidence is not the dominant driver. The best selected candidate
+  uses a frozen-gradient control, and no-gradient variants are close. The paper
+  must present edge-gate gradients as auxiliary confidence/abstention unless a
+  later ablation shows stronger causal value.
+- Heterophily validation, residualization ablation, dropout-schedule
+  sensitivity, and stronger graph-structure-learning baselines are still needed
+  before claiming AAAI-final readiness.

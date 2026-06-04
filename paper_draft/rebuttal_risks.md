@@ -57,3 +57,24 @@ Current answer after `2026-06-04-fscc-confirmation-rerun`:
   graph evolution information beyond static feature similarity. It must either
   present a new mechanism with substantially different evidence or reframe the
   contribution as a diagnostic/falsification study.
+
+Current answer after `2026-06-04-stability-channel-rebuild`:
+
+- The positive paper path is reopened, but with a different mechanism.
+  StabilityResidual-GraGE beats Feature-only on FSCC by `+2.00 pp` (`p=0.0001`,
+  win rate `0.87`) across Cora/CiteSeer/PubMed with no material LFS/DAR
+  degradation.
+- The strongest rebuttal risk changes from "GraGE loses to Feature-only" to
+  "the successful method is prediction-stability graph augmentation, not
+  edge-gate gradients." This is a fair concern: no-gradient variants are close,
+  and the selected candidate uses a frozen-gradient control. The paper should
+  state that prediction stability is the main training-dynamics signal, with
+  edge-gate gradients serving as auxiliary confidence/abstention.
+- The residual evidence is paper-facing: projection ratio `<0.005`,
+  residual-feature-similarity correlation `<0.01`, and residual AUC around
+  `0.65`. This directly answers the feature-only collapse risk better than the
+  earlier hybrid and MCGC experiments.
+- Remaining reviewer demands before final submission: heterophily validation,
+  raw-vs-residual stability ablation, dropout schedule/number-of-views
+  sensitivity, comparison to LDS/IDGL/ProGNN-style GSL baselines, and a clear
+  explanation of why validation early stopping is not used for edge scoring.

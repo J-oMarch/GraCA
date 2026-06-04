@@ -6,19 +6,18 @@ structure learning methods frequently rely on static feature similarity or
 topological priors, which are strong but can fail when harmful edges connect
 feature-similar nodes. We study whether training dynamics expose edge-level
 signals that are not captured by static similarity. GraGE treats graph structure
-as an evolvable object by attaching differentiable gates to edges and scoring
-each edge with first-order or unrolled approximations to the effect of the gate
-on a train-internal score loss. A hybrid score combines feature risk with
-training-dynamics terms that promote harmful-edge pruning while protecting edges
-whose gradients indicate useful message passing. Experiments compare GraGE
-against Feature-only, similarity pruning, random matched pruning, and graph
-robustness baselines under matched budgets across citation and heterophily
-datasets. The current evidence is primarily negative. Raw edge-gate gradients
-are weak bad-edge detectors after feature-risk control, a selective
-multi-checkpoint gate does not produce a meaningful feature-similar cross-class
-gain, and a 20-seed confirmation rerun finds that GraGE-Hybrid loses to
-Feature-only by `-2.50 pp` while MCGC loses by `-0.72 pp`. The current paper is
-therefore not AAAI-ready as a positive method paper. A viable version must either
-introduce a stronger no-leak training-dynamics channel or reframe GraGE as a
-diagnostic study of when differentiable edge-gate signals fail relative to
-static feature similarity.
+as an evolvable object and scores edges using train-internal dynamics. Early
+edge-gate gradient variants were negative: raw gradients are weak bad-edge
+detectors after feature-risk control, and a 20-seed confirmation rerun finds
+that GraGE-Hybrid loses to Feature-only by `-2.50 pp`. We therefore rebuild the
+dynamic channel around prediction stability under graph perturbations.
+StabilityResidual-GraGE trains multiple stochastic graph views, converts
+prediction instability into edge scores, residualizes the signal against feature
+cosine, and uses edge-gate gradient confidence only as an abstention/regularizing
+constraint. In a 10-seed validation across Cora, CiteSeer, and PubMed,
+StabilityResidual-GraGE beats Feature-only by `+2.00 pp` on
+feature-similar cross-class noise (`p=0.0001`, win rate `0.87`) with no material
+degradation on low-feature-similarity or degree-aligned-random controls. The
+current paper path is viable again, but the claim must be precise: prediction
+stability is the supported residual training-dynamics signal, while raw
+edge-gate gradients remain auxiliary rather than the main source of gains.

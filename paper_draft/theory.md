@@ -85,8 +85,62 @@ empirical paper claim requires showing that these sensitivities provide residual
 information beyond feature similarity and improve downstream accuracy under
 matched pruning budgets.
 
-After the first batch, the viable empirical claim is narrower: multi-checkpoint
-training dynamics may help in feature-ambiguous regimes, while the selective
-gate should preserve Feature-only behavior where feature evidence is already
-reliable. This must be validated against shuffled-gradient and zero-gate
-controls before it can be paper-facing.
+After the first and second batches, raw edge-gate gradients are not sufficient as
+the main empirical signal. The current viable claim uses prediction stability as
+the primary training-dynamics signal and edge-gate gradients only as auxiliary
+confidence.
+
+## Proposition 4: Stability Residual Removes Linear Feature-Risk Component
+
+Let `R_T in R^|E|` be a rank-normalized prediction-stability edge score and
+`R_f in R^|E|` be rank-normalized feature risk. Define:
+
+```text
+beta = <R_T, R_f> / <R_f, R_f>
+Z    = R_T - beta R_f.
+```
+
+Then `Z` is orthogonal to the linear feature-risk direction:
+
+```text
+<Z, R_f> = 0.
+```
+
+Therefore, any nonzero downstream contribution of `Z` cannot be explained by
+the linear component of feature-risk ranking alone. The practical method
+rank-normalizes `Z` after residualization, so exact orthogonality may not be
+preserved after the final rank transform, but the residualization step removes
+the feature-correlated component before score combination.
+
+Proof sketch: Substitute the definition of `Z`:
+
+```text
+<Z, R_f> = <R_T, R_f> - beta <R_f, R_f>
+         = <R_T, R_f> - <R_T, R_f> = 0.
+```
+
+## Proposition 5: Confidence Abstention Bounds Damage From Weak Dynamics
+
+Let the StabilityResidual score be:
+
+```text
+score(e) = R_f(e) + A_e alpha Z_e,
+```
+
+where `A_e in {0,1}` is a confidence gate and `|Z_e| <= 1`. If `A_e=0`, the
+method exactly falls back to Feature-only on edge `e`. If `0 <= A_e <= eta` in a
+soft-gated variant, the score perturbation is bounded by `eta alpha`; any pair
+of edges whose Feature-only score margin exceeds `2 eta alpha` keeps the same
+relative order.
+
+Proof sketch: The hard-gate case follows by substitution. For the soft-gate
+case, each edge score changes by at most `eta alpha`, so any pairwise difference
+changes by at most `2 eta alpha`.
+
+## Updated Paper Claim To Validate
+
+The current experiments support the narrower claim that prediction stability
+under graph perturbations provides an edge-level residual signal beyond feature
+similarity on homophilic citation graphs. Before final paper claims, the method
+still needs heterophily validation, residualization ablations, and sensitivity
+analysis for dropout schedules and number of views.

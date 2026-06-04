@@ -47,12 +47,12 @@ search found only regime-dependent gains.
 
 ## Current Decision
 
-The current empirical claim is not AAAI-ready. The first batch already weakened
-the residual-signal story, and the second-batch confirmation now falsifies the
-strong practical claim under matched pruning budgets. The paper should either
-introduce a materially different training-dynamics mechanism or be reframed as a
-diagnostic study explaining why differentiable edge-gate gradients are often too
-weak/noisy relative to Feature-only pruning.
+The old edge-gradient hybrid claim is not AAAI-ready, but the method rebuild has
+produced a viable new main direction. The supported training-dynamics signal is
+prediction stability under graph perturbations, residualized against feature
+similarity. Edge-gate gradients should be presented as local sensitivity and
+abstention/regularization evidence, not as the primary source of the current
+accuracy gain.
 
 ## Second Batch Prepared
 
@@ -108,6 +108,48 @@ method must change the information channel, for example:
   uncertainty-aware gating that can abstain on near-zero gradients;
 - treat current GraGE as a diagnostic framework and make the paper's main claim
   about when training-dynamics edge signals fail relative to static similarity.
+
+## Third-Batch Outcome
+
+- `2026-06-04-stability-channel-rebuild` implemented StabilityResidual-GraGE.
+  The method trains multiple stochastic graph views, computes node prediction
+  entropy/JSD/variance/confidence, converts instability to edge scores,
+  residualizes against feature risk, and optionally uses edge-gate gradient
+  confidence as an abstention rule.
+- Search over Cora/CiteSeer found all real StabilityResidual variants beating
+  Feature-only on FSCC. The selected candidate was
+  `StabilityResidual-v5-dp0.15-grad-frozen`, with FSCC search delta `+2.56 pp`
+  (`p=0.0010`, win rate `0.90`). The no-gradient variant was close (`+2.45 pp`),
+  so the main signal is prediction stability, not temporal edge-gradient
+  evolution.
+- Validation over Cora/CiteSeer/PubMed, 10 seeds, and FSCC/LFS/DAR controls
+  supports the stability channel. On FSCC, StabilityResidual beats Feature-only
+  by `+2.00 pp` (`p=0.0001`, win rate `0.87`, Cohen's d `0.41`). It also avoids
+  material degradation on low-feature-similarity (`+0.73 pp`, `p=0.1638`) and
+  degree-aligned-random (`+0.30 pp`, `p=0.3802`) controls.
+- Per-dataset FSCC effects are positive but uneven: Cora `+4.43 pp`
+  (`p=0.0001`, 10/10 wins), CiteSeer `+0.72 pp` (`p=0.2555`), PubMed `+0.84 pp`
+  (`p=0.1054`). The paper should report this as consistent positive direction
+  with strongest evidence on Cora, not as uniformly significant per dataset.
+- Diagnostics support residual value beyond feature similarity: projection ratio
+  `<0.005`, residual-feature-similarity correlation `<0.01`, and residual AUC
+  around `0.65`. Shuffled-stability is not significant (`+1.90 pp`,
+  `p=0.1456`, win rate `0.50`), but gradient-frozen/shuffled controls show that
+  edge-gradient confidence is not the dominant driver.
+
+## Updated Paper-Facing Claim
+
+The strongest current claim is:
+
+```text
+Prediction stability under stochastic graph perturbations provides a
+train-dynamics-derived edge signal that is residual to feature similarity and
+improves matched-budget graph evolution in feature-ambiguous homophilic regimes.
+```
+
+The claim still needs heterophily validation, residualization ablation, dropout
+schedule sensitivity, and comparison to graph structure learning baselines
+before the stop condition for an AAAI-ready final package is fully satisfied.
 
 ## Required Reporting
 

@@ -120,6 +120,26 @@ is a differentiable edge gate.
    channel or honestly frame GraGE as a diagnostic/falsification study relative
    to Feature-only pruning.
 
+8. StabilityResidual-GraGE is the current positive main-method candidate.
+
+   `2026-06-04-stability-channel-rebuild` implemented a new no-leak
+   prediction-stability residual channel. The method trains stochastic graph
+   views, converts node prediction instability to edge scores, residualizes the
+   signal against feature risk, and uses edge-gate gradient confidence only as an
+   optional abstention/regularization mechanism. Validation over
+   Cora/CiteSeer/PubMed with 10 seeds and FSCC/LFS/DAR controls found FSCC
+   `+2.00 pp` vs Feature-only (`p=0.0001`, win rate `0.87`, Cohen's d `0.41`)
+   with no material degradation on LFS (`+0.73 pp`) or DAR (`+0.30 pp`).
+
+9. The supported claim has changed.
+
+   Do not claim that raw edge-gate gradients are the main successful signal.
+   The current supported claim is that prediction stability under graph
+   perturbations provides a training-dynamics-derived edge signal residual to
+   feature similarity. Edge-gate gradients remain useful as local sensitivity
+   theory and possible confidence/abstention, but the selected candidate and
+   controls show they are not the dominant empirical driver.
+
 ## Current Implementation State
 
 Relevant directories:
@@ -176,7 +196,10 @@ When designing new experiments, prioritize:
 Use these rules when interpreting results:
 
 1. If GraGE/hybrid consistently beats Feature-only with statistical support,
-   the AAAI paper direction remains viable.
+   the AAAI paper direction remains viable. This condition is provisionally met
+   by StabilityResidual-GraGE on homophilic citation FSCC, but final readiness
+   still requires heterophily, residualization, sensitivity, and stronger GSL
+   baseline evidence.
 2. If GraGE only beats Random-Matched but not Feature-only, the method needs a
    stronger technical contribution before paper writing.
 3. If edge-gate/hypergradient signals have poor bad-edge detection but accuracy

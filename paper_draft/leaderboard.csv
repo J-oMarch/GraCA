@@ -27,3 +27,12 @@ historical_grage_edge_gate,GraGE-FO,aggregate,all,3,0.6602,0.0541,-5.23,,,"",uns
 2026-06-04-fscc-confirmation-rerun,Feature-only,heterophily_slice,feature_similar_cross_class_and_degree_random,30,0.5155,0.1697,0,,,"",baseline_heterophily
 2026-06-04-fscc-confirmation-rerun,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,heterophily_slice,feature_similar_cross_class_and_degree_random,30,0.5044,0.1666,-1.11,,,"",unsupported_heterophily
 2026-06-04-fscc-confirmation-rerun,MCGC-cw3.0-lp0.1-ln0.5,heterophily_slice,feature_similar_cross_class_and_degree_random,30,0.4985,0.1646,-1.60,,,"",unsupported_heterophily
+2026-06-04-stability-channel-rebuild,Feature-only,validation_all,fscc_lfs_dar,90,0.6720,0.0654,0,,,"2.3s",baseline
+2026-06-04-stability-channel-rebuild,StabilityResidual-v5-dp0.15-grad-frozen,validation_all,fscc_lfs_dar,90,0.6820,0.0642,+1.01,,,"7.3s",supported_overall_stability_channel
+2026-06-04-stability-channel-rebuild,StabilityResidual-v5-dp0.15-grad-frozen,validation_fscc,feature_similar_cross_class,30,0.6307,,+2.00,0.0001,0.87,"7.3s",supported_fscc_stability_residual
+2026-06-04-stability-channel-rebuild,StabilityResidual-v5-dp0.15-grad-frozen,validation_lfs,low_feature_similarity,30,0.7058,,+0.73,0.1638,0.47,"7.3s",no_material_degradation
+2026-06-04-stability-channel-rebuild,StabilityResidual-v5-dp0.15-grad-frozen,validation_dar,degree_aligned_random,30,0.7097,,+0.30,0.3802,0.57,"7.3s",no_material_degradation
+2026-06-04-stability-channel-rebuild,MCGC-cw3.0-lp0.1-ln0.5,validation_all,fscc_lfs_dar,90,0.6570,0.0629,-1.50,,,"5.6s",unsupported_vs_feature_only
+2026-06-04-stability-channel-rebuild,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,validation_all,fscc_lfs_dar,90,0.6549,0.0721,-1.21,,,"3.6s",unsupported_vs_feature_only
+2026-06-04-stability-channel-rebuild,StabilityResidual-v5-shuffled-stability,search_fscc,feature_similar_cross_class,10,0.5998,0.0620,+1.90,0.1456,0.50,"",control_not_significant
+2026-06-04-stability-channel-rebuild,StabilityResidual-v5-dp0.15-grad-shuffled,search_fscc,feature_similar_cross_class,10,0.5989,0.0363,+1.81,0.0066,0.90,"",gradient_signal_not_primary
