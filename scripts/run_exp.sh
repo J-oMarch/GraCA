@@ -9,6 +9,7 @@ LOG_DIR="${EXP_DIR}/logs"
 LOG_FILE="${LOG_DIR}/claude.log"
 RESULT_FILE="${EXP_DIR}/result.md"
 METRICS_FILE="${EXP_DIR}/metrics.json"
+CLAUDE_BIN="${CLAUDE_BIN:-}"
 
 if [ ! -d .git ]; then
   echo "run_exp.sh must be run from the repository root."
@@ -22,11 +23,28 @@ fi
 
 mkdir -p "${LOG_DIR}"
 
+if [ -z "${CLAUDE_BIN}" ]; then
+  if command -v claude >/dev/null 2>&1; then
+    CLAUDE_BIN="$(command -v claude)"
+  else
+    CLAUDE_BIN="$(find "${HOME}/.vscode-server/extensions" \
+      -path "*/resources/native-binary/claude" \
+      -type f -perm -111 2>/dev/null | sort -V | tail -n 1 || true)"
+  fi
+fi
+
+if [ -z "${CLAUDE_BIN}" ] || [ ! -x "${CLAUDE_BIN}" ]; then
+  echo "Could not find an executable Claude Code CLI."
+  echo "Install claude in PATH or set CLAUDE_BIN=/absolute/path/to/claude."
+  exit 1
+fi
+
 echo "Running Claude Code experiment: ${EXP_ID}"
 echo "Prompt: ${PROMPT}"
+echo "Claude binary: ${CLAUDE_BIN}"
 
 set +e
-claude -p "$(cat "${PROMPT}")" 2>&1 | tee "${LOG_FILE}"
+"${CLAUDE_BIN}" -p "$(cat "${PROMPT}")" 2>&1 | tee "${LOG_FILE}"
 CLAUDE_STATUS=${PIPESTATUS[0]}
 set -e
 

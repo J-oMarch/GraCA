@@ -160,10 +160,17 @@ bash scripts/run_exp.sh <exp_id>
 experiments/<exp_id>/prompt.md
 ```
 
-然后执行：
+然后查找并执行 Claude Code CLI：
 
 ```bash
 claude -p "$(cat experiments/<exp_id>/prompt.md)"
+```
+
+如果服务器非交互 SSH 环境中没有 `claude` 命令，脚本会自动查找 VSCode
+Claude Code 扩展自带的 native binary。也可以手动指定：
+
+```bash
+CLAUDE_BIN=/absolute/path/to/claude bash scripts/run_exp.sh <exp_id>
 ```
 
 Claude Code 完成后，脚本会提交并推送：
