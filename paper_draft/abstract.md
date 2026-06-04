@@ -14,7 +14,9 @@ whose gradients indicate useful message passing. Experiments compare GraGE
 against Feature-only, similarity pruning, random matched pruning, and graph
 robustness baselines under matched budgets across citation and heterophily
 datasets. First-batch evidence shows that raw edge-gate gradients are weak as
-bad-edge detectors, but multi-checkpoint gradient consistency can help in
-feature-ambiguous regimes while hurting feature-clear regimes. The current paper
-claim is therefore being revised toward selective, regime-aware graph evolution
-rather than universal dynamic pruning.
+bad-edge detectors. A selective multi-checkpoint gate prevents dynamic-gradient
+degradation in low-feature-similarity regimes, but its gains on the target
+feature-similar cross-class setting are not statistically meaningful. The
+current paper claim is therefore not yet AAAI-ready: GraGE must either find a
+stronger training-dynamics signal or be reframed as a diagnostic study of when
+edge-gate dynamics fail relative to Feature-only pruning.

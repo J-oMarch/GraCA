@@ -27,3 +27,15 @@ Evidence needed:
 - Clear theorem-style local sensitivity claim with proof sketch.
 - A new selective-dynamics experiment showing that MCGC-style signal is used
   only in feature-ambiguous regimes and falls back to Feature-only elsewhere.
+
+Current answer after `2026-06-04-selective-mcgc-regime-gate`:
+
+- The selective gate does not yet answer the strongest reviewer concern. FSCC
+  improvement is `+0.09 pp`, not significant (`p=0.575`), with win rate `0.47`.
+- The gate does answer a narrower failure-mode question: raw MCGC degrades LFS
+  by `-2.46 pp`, while selective MCGC improves LFS by `+1.90 pp`. This supports
+  "gating prevents dynamic-gradient noise from hurting" more than "training
+  dynamics add residual edge information."
+- A reviewer can still argue that GraGE is Feature-only plus an expensive
+  regularizer unless the FSCC confirmation rerun finds a stronger multi-seed
+  delta over Feature-only.

@@ -66,6 +66,20 @@ when feature risk is already reliable.
    over Cora/CiteSeer/PubMed, 20 FSCC seeds, control regimes, and a small
    heterophily slice.
 
+## Second-Batch Outcome To Date
+
+- `2026-06-04-selective-mcgc-regime-gate` completed. The best variant was
+  `Selective-MCGC-hard-q0.5-lp0.1-ln0.5`. It is the best overall validation
+  method (`0.6787` vs Feature-only `0.6718`) and converts raw MCGC degradation
+  on `low_feature_similarity` from `-2.46 pp` to `+1.90 pp` (`p=0.025`).
+  However, the target `feature_similar_cross_class` delta is only `+0.09 pp`
+  (`p=0.575`, win rate `0.47`), so the candidate is not selected for
+  confirmation and does not satisfy the AAAI stop condition.
+- `2026-06-04-fscc-confirmation-rerun` is running after an operational rerun.
+  The first attempt only rewrote prompt files and produced placeholder metrics;
+  the prompt and runner were patched, smoke succeeded, and the primary matrix is
+  currently running.
+
 ## Required Reporting
 
 Every experiment must report mean, standard deviation, paired delta vs

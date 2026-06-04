@@ -17,3 +17,11 @@
 - Multi-checkpoint gradient consistency helps in the feature-similar cross-class
   search regime but degrades low-feature-similarity validation cases. A practical
   method needs explicit regime detection and fallback to Feature-only.
+- Selective MCGC prevents raw MCGC degradation on low-feature-similarity and
+  degree-aligned-random regimes, but its target feature-similar cross-class gain
+  is only `+0.09 pp` with `p=0.575` and win rate `0.47`. This supports a
+  regularization/failure-mode story, not the stronger claim that training
+  dynamics provide useful residual FSCC information beyond Feature-only.
+- The current selective gate chooses a median feature-similarity threshold and
+  activates on about half of edges. That behavior is not yet a convincing
+  feature-ambiguous regime detector.
