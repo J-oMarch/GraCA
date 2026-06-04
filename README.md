@@ -30,10 +30,25 @@ python scripts/run_noisy_edge_experiment.py \
     --noise_type low_feature_similarity --noise_ratio 0.10
 ```
 
+## Automated Claude Code Experiments
+
+New Codex/ChatGPT generated experiment prompts should be placed under
+`experiments/<exp_id>/prompt.md`, not in the repository root.
+
+```bash
+# Submit a prepared experiment prompt to GitHub and run it on the remote server
+bash scripts/submit_exp.sh <exp_id>
+```
+
+The remote server reads the prompt, runs Claude Code, writes results under the
+same experiment directory, commits them, and pushes them back. See
+`docs/EXPERIMENT_WORKFLOW.md` for the full operating guide.
+
 ## Project Structure
 
 ```
 GraCA/
+├── AGENTS.md              # Codex repository workflow instructions
 ├── src/
 │   ├── graca/              # Core GraCA module
 │   │   ├── gradient_collector.py  # Gradient collection from hidden layers
@@ -50,6 +65,8 @@ GraCA/
 ├── configs/                # YAML configs per dataset
 ├── scripts/                # Experiment runners
 ├── tests/                  # Unit tests
+├── experiments/            # Automated Claude Code experiment prompts/results
+├── docs/                   # Workflow docs and archived project materials
 ├── results_clean/          # New experiment results (unified schema)
 ├── paper_tables_clean/     # Auto-generated paper tables
 └── sanitized_graphs_clean/ # Saved pruned graphs

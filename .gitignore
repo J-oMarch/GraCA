@@ -13,6 +13,7 @@ build/
 
 # Logs
 *.log
+!experiments/**/logs/*.log
 
 # IDE
 .vscode/
