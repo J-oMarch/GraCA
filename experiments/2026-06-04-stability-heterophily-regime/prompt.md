@@ -36,6 +36,10 @@ Relevant code:
 
 ## Tasks
 
+0. Execution directive: this experiment has already been submitted through the
+   approved tmux workflow. Do not ask the user whether to submit it. Run the
+   heterophily matrix now, overwrite the placeholder `result.md` and
+   `metrics.json`, and produce the full output contract before exiting.
 1. Inspect the StabilityResidual implementation and current runner modes.
 2. Add or reuse a heterophily/regime validation mode for:
    - Texas
