@@ -11,6 +11,8 @@ High-risk reviewer questions:
   small seed sweep?
 - Do edge-gate gradients provide residual information after controlling for
   feature cosine?
+- First-batch answer: not for bad-edge detection. Full diagnostics found raw
+  gradient AUC near random and real-vs-shuffled hybrid deltas around `0.003`.
 - Are gains caused by the inner training schedule rather than graph evolution?
 - Does the method work outside homophilic citation graphs?
 - Why should raw edge gradients be considered novel given GNN explanation work?
@@ -23,4 +25,5 @@ Evidence needed:
 - Shuffled/frozen dynamic controls.
 - Heterophily failure analysis.
 - Clear theorem-style local sensitivity claim with proof sketch.
-
+- A new selective-dynamics experiment showing that MCGC-style signal is used
+  only in feature-ambiguous regimes and falls back to Feature-only elsewhere.

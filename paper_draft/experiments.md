@@ -12,9 +12,10 @@ Historical GraGE-Hybrid tables report:
 - Earlier raw edge-gate and unrolled scores did not beat Feature-only, so the
   current method claim must focus on hybrid dynamics and residual diagnostics.
 
-These results are promising but not AAAI-ready until confirmed with more seeds,
-effect sizes, win rates, heterophily failure analysis, and no-leak mechanism
-evidence.
+These results are no longer sufficient as paper evidence. The first automated
+batch found that the confirmation prompt failed operationally, the mechanism
+diagnostics contradict the edge-level residual-signal claim, and the adaptive
+search found only regime-dependent gains.
 
 ## First Batch
 
@@ -28,9 +29,32 @@ evidence.
    searches for a stronger no-leak training-dynamics mechanism suitable for a
    larger confirmation run.
 
+## First-Batch Outcome
+
+- `2026-06-04-fscc-hybrid-confirmation` failed operationally: Claude exited
+  without producing real metrics, so the matched-budget confirmation must be
+  rerun with a tighter prompt or direct runner.
+- `2026-06-04-dynamics-mechanism-diagnostics` completed 90 cases. It does not
+  support the claim that raw edge-gate gradients provide residual bad-edge
+  detection signal beyond feature risk: feature risk dominates global AUC, raw
+  gradients are near random, and real-vs-shuffled hybrid deltas are around
+  `0.003`.
+- `2026-06-04-adaptive-grage-search` implemented FAA-Hybrid and MCGC. MCGC
+  gained `+1.48 pp` over Feature-only in the search feature-similar cross-class
+  regime (`p=0.0402`, win rate `83.3%`), but failed validation overall and
+  degraded `low_feature_similarity` by `-2.66 pp`, violating the allowed
+  degradation constraint.
+
+## Current Decision
+
+The AAAI claim should shift from "edge gradients detect bad edges beyond feature
+similarity" to "training dynamics are regime-dependent and may help when static
+features are ambiguous, but must be gated by feature-regime detection." The next
+experiment should test a selective dynamics gate that falls back to Feature-only
+when feature risk is already reliable.
+
 ## Required Reporting
 
 Every experiment must report mean, standard deviation, paired delta vs
 Feature-only, effect size, p-value, win rate, runtime, and failure modes. Oracle
 results are diagnostic only.
-

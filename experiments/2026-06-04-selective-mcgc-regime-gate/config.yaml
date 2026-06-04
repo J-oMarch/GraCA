@@ -1,0 +1,20 @@
+exp_id: 2026-06-04-selective-mcgc-regime-gate
+purpose: selective_training_dynamics_gate
+base_candidate: MCGC-cw3.0-lp0.1-ln0.5
+datasets: [Cora, CiteSeer, PubMed]
+noise_types:
+  search: [feature_similar_cross_class, low_feature_similarity]
+  validate: [feature_similar_cross_class, low_feature_similarity, degree_aligned_random]
+seeds:
+  search: [0, 1, 2]
+  validate: [0, 1, 2, 3, 4]
+noise_ratio: 0.3
+prune_ratio: 0.2
+downstream_model: GCN
+primary_baseline: Feature-only
+required_outputs:
+  - result.md
+  - metrics.json
+  - failure_analysis.md
+  - logs/
+

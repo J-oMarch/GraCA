@@ -55,3 +55,28 @@ bilevel graph-structure gains can be partly explained by inner-loop training
 dynamics rather than graph rewiring itself. GraGE should add an inner-channel or
 frozen/shuffled diagnostic so improvements are not misattributed.
 
+## Adaptive Regime-Aware Graph Learning
+
+[Robust Graph Structure Learning under Heterophily, 2025](https://www.sciencedirect.com/science/article/pii/S0893608025000851)
+and its [arXiv version](https://arxiv.org/abs/2403.03659) highlight that robust
+graph learning must account for heterophilic regimes instead of assuming one
+homophily-style graph prior. GraGE can absorb this as a per-edge or per-regime
+gate that suppresses training-dynamics terms when feature evidence is already
+reliable.
+
+[Separation Coefficient-Guided Adaptive Graph Structure Adjustment, IJCAI 2025](https://www.ijcai.org/proceedings/2025/663)
+adapts graph structure based on representation separation to mitigate
+over-smoothing. The novelty risk is that "adaptive graph adjustment" alone is
+not enough; GraGE's distinction must be edge-gate training dynamics and
+matched-budget evidence against Feature-only.
+
+[Powerful GCNs with Adaptive Propagation for Homophily and Heterophily](https://arxiv.org/abs/2112.13562)
+adapts propagation according to homophily or heterophily between node pairs.
+This supports the next GraGE direction: a selective dynamics gate should act at
+edge level and choose between feature-only pruning and MCGC-style dynamic
+calibration.
+
+[Curriculum Graph Sparsification, KDD 2024](https://mn.cs.tsinghua.edu.cn/xinwang/PDF/papers/2024_Towards%20Lightweight%20Graph%20Neural%20Network%20Search%20with%20Curriculum%20Graph%20Sparsification.pdf)
+uses curriculum sparsification for lightweight GNN search. GraGE should avoid
+claiming generic sparsification novelty and instead report whether the dynamic
+gate changes which edges are pruned under the same budget.

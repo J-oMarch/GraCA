@@ -1,0 +1,20 @@
+exp_id: 2026-06-04-fscc-confirmation-rerun
+purpose: rerun_failed_matched_budget_confirmation
+datasets: [Cora, CiteSeer, PubMed]
+heterophily_slice: [Texas, Wisconsin, Actor]
+noise_types:
+  primary: [feature_similar_cross_class]
+  controls: [cross_class_oracle, low_feature_similarity, degree_aligned_random]
+seeds:
+  primary: 20
+  controls: 10
+noise_ratio: 0.3
+prune_ratio: 0.2
+downstream_model: GCN
+primary_baseline: Feature-only
+required_outputs:
+  - result.md
+  - metrics.json
+  - failure_analysis.md
+  - logs/
+

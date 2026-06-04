@@ -13,7 +13,8 @@ training-dynamics terms that promote harmful-edge pruning while protecting edges
 whose gradients indicate useful message passing. Experiments compare GraGE
 against Feature-only, similarity pruning, random matched pruning, and graph
 robustness baselines under matched budgets across citation and heterophily
-datasets. The paper claim remains provisional until the first AAAI confirmation
-batch establishes multi-seed gains, effect sizes, win rates, ablations, and
-failure modes.
-
+datasets. First-batch evidence shows that raw edge-gate gradients are weak as
+bad-edge detectors, but multi-checkpoint gradient consistency can help in
+feature-ambiguous regimes while hurting feature-clear regimes. The current paper
+claim is therefore being revised toward selective, regime-aware graph evolution
+rather than universal dynamic pruning.

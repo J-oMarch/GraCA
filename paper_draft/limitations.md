@@ -11,4 +11,9 @@
   may require adaptive graph-regime detection rather than uniform pruning.
 - Runtime for unrolled hypergradients may be too high for the main method unless
   the benefit is clearly larger than the first-order hybrid.
-
+- First-batch diagnostics show raw edge-gate gradients are near-random for
+  bad-edge detection after feature-risk control. Claims about residual dynamic
+  edge signal must be restricted or replaced.
+- Multi-checkpoint gradient consistency helps in the feature-similar cross-class
+  search regime but degrades low-feature-similarity validation cases. A practical
+  method needs explicit regime detection and fallback to Feature-only.

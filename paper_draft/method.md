@@ -58,3 +58,25 @@ degree protection. The first-batch confirmation focuses on
 `GraGE-Hybrid-FO-posneg-lp0.1-ln0.5`, which historically produced the strongest
 feature-similar cross-class result.
 
+## Adaptive Candidate: Multi-Checkpoint Gradient Consistency
+
+The adaptive search introduced MCGC, which collects edge-gate gradients at
+multiple training checkpoints and weights the gradient term by sign consistency.
+For checkpoint gradients `{S_e^(t)}`, define:
+
+```text
+bar S_e = mean_t S_e^(t)
+C_e     = fraction_t[sign(S_e^(t)) = sign(bar S_e)]
+score(e)= R_f(e) + C_e lambda_pos R(relu(bar S_e))
+                - C_e lambda_neg R(relu(-bar S_e))
+```
+
+MCGC improved the feature-similar cross-class search slice but failed validation
+because it degraded low-feature-similarity cases. The next method should add a
+feature-regime gate `A_e` so dynamic terms are suppressed when feature risk is
+already reliable:
+
+```text
+score(e)= R_f(e) + A_e C_e lambda_pos R(relu(bar S_e))
+                - A_e C_e lambda_neg R(relu(-bar S_e))
+```

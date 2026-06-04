@@ -2,3 +2,10 @@ exp_id,method,dataset,noise_type,seeds,mean_acc,std,delta_vs_feature_only_pp,p_v
 historical_grage_hybrid,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,aggregate,all,9,0.6791,,0.40,,,"",provisional
 historical_grage_hybrid,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,aggregate,feature_similar_cross_class,9,0.6256,,1.70,0.0129,,"",provisional
 historical_grage_edge_gate,GraGE-FO,aggregate,all,3,0.6602,0.0541,-5.23,,,"",unsupported
+2026-06-04-fscc-hybrid-confirmation,NA,aggregate,NA,NA,,,,,,"",failed_missing_metrics
+2026-06-04-dynamics-mechanism-diagnostics,raw_grad,aggregate,feature_similar_cross_class,30,NA,NA,NA,NA,NA,"",unsupported_near_random_auc_0.4947
+2026-06-04-dynamics-mechanism-diagnostics,hybrid,aggregate,feature_similar_cross_class,30,NA,NA,NA,NA,NA,"",unsupported_hybrid_auc_0.5659_vs_feature_risk_0.7142
+2026-06-04-adaptive-grage-search,MCGC-cw3.0-lp0.1-ln0.5,search_feature_similar_cross_class,feature_similar_cross_class,6,0.5947,,1.483,0.0402,0.8333,"",search_supported_validation_failed
+2026-06-04-adaptive-grage-search,Feature-only,validation_all,all,45,0.6711,0.0681,0,,,"",baseline
+2026-06-04-adaptive-grage-search,MCGC-cw3.0-lp0.1-ln0.5,validation_all,all,45,0.6568,0.0618,-1.426,,,"",unsupported_overall_vs_feature_only
+2026-06-04-adaptive-grage-search,MCGC-cw3.0-lp0.1-ln0.5,validation_low_feature_similarity,low_feature_similarity,15,,,-2.66,,,"",validation_constraint_failed

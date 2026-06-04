@@ -17,6 +17,7 @@ RESULT_FILE="${EXP_DIR}/result.md"
 METRICS_FILE="${EXP_DIR}/metrics.json"
 CLAUDE_BIN="${CLAUDE_BIN:-}"
 CLAUDE_ARGS="${CLAUDE_ARGS:-}"
+GIT_ADD_PATHS="${GIT_ADD_PATHS:-scripts src tests configs paper_draft}"
 
 if [ ! -d .git ]; then
   echo "run_exp.sh must be run from the repository root."
@@ -82,8 +83,13 @@ EOF
 fi
 
 git add "${EXP_DIR}"
+for path in ${GIT_ADD_PATHS}; do
+  if [ -e "${path}" ]; then
+    git add "${path}"
+  fi
+done
 if git diff --cached --quiet; then
-  echo "No experiment result changes to commit."
+  echo "No experiment result or code changes to commit."
 else
   git commit -m "run experiment ${EXP_ID}"
 fi
