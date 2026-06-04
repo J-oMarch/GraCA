@@ -1,0 +1,5 @@
+method,mean,std,count
+StabilityResidual-shuffled-v3,0.658,,1
+Random-Matched,0.652,,1
+StabilityResidual-v3-dp0.05-0.15-grad,0.635,,1
+Feature-only,0.609,,1

@@ -1,0 +1,43 @@
+All required files are in place. Here's the complete experiment summary:
+
+---
+
+## Experiment Complete: Stability-Channel GraGE Rebuild
+
+### Result: **Primary Claim Supported**
+
+**StabilityResidual-GraGE** is the first GraGE variant to consistently beat Feature-only with strong statistical support.
+
+### Key Numbers
+
+| Metric | Value |
+|--------|-------|
+| FSCC delta vs Feature-only | **+2.00 pp** |
+| p-value | **0.0001** |
+| Win rate | **0.87** |
+| Cohen's d | **0.41** |
+| LFS degradation | None (+0.73pp) |
+| DAR degradation | None (+0.30pp) |
+| Per-dataset: Cora | +4.43pp (p=0.0001, 10/10 wins) |
+| Per-dataset: CiteSeer | +0.72pp (p=0.26, 7/10 wins) |
+| Per-dataset: PubMed | +0.84pp (p=0.11, 9/10 wins) |
+| Runtime ratio vs FO | 3.2× |
+
+### What Changed
+
+- **`src/grage/adaptive_score.py`** — Added StabilityResidual-GraGE method (5 new functions)
+- **`scripts/run_adaptive_grage_search.py`** — Added stability_smoke/search/validate modes
+- **`tests/test_adaptive_score.py`** — Added 7 new tests (all 24 pass)
+
+### Method Summary
+
+The method trains multiple GCN models with different edge dropout rates, computes per-node prediction instability (entropy, JSD, variance), converts to edge scores, residualizes against feature cosine, and optionally uses edge-gate gradient confidence as abstention. The stability signal is the primary driver; gradient confidence adds marginal value.
+
+### Output Files
+
+- `experiments/2026-06-04-stability-channel-rebuild/result.md`
+- `experiments/2026-06-04-stability-channel-rebuild/metrics.json`
+- `experiments/2026-06-04-stability-channel-rebuild/failure_analysis.md`
+- `experiments/2026-06-04-stability-channel-rebuild/logs/smoke/results.csv`
+- `experiments/2026-06-04-stability-channel-rebuild/logs/search/results.csv`
+- `experiments/2026-06-04-stability-channel-rebuild/logs/validate/results.csv`

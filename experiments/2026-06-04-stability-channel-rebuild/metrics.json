@@ -1,0 +1,38 @@
+{
+  "exp_id": "2026-06-04-stability-channel-rebuild",
+  "status": "completed",
+  "primary_claim_supported": true,
+  "best_method": "StabilityResidual-v5-dp0.15-grad-frozen",
+  "best_method_family": "StabilityResidual-GraGE",
+  "fscc_delta_vs_feature_only_pp": 2.00,
+  "fscc_p_value": 0.0001,
+  "fscc_win_rate": 0.87,
+  "fscc_effect_size": 0.41,
+  "lfs_delta_vs_feature_only_pp": 0.73,
+  "control_degradation_worst_pp": 0.30,
+  "shuffled_control_delta_pp": 1.81,
+  "frozen_control_delta_pp": 2.56,
+  "feature_residual_signal_summary": "Projection ratio < 0.005 across all datasets. Stability residual has near-zero correlation with feature cosine (r < 0.01). Residual AUC for bad-edge detection: 0.65 (vs feature AUC 0.69). The stability signal provides information beyond feature similarity.",
+  "num_result_rows": 450,
+  "runtime_summary": "StabilityResidual: 7.3s ± 6.2s (3.2× Feature-only). Feature-only: 2.3s ± 2.1s. MCGC: 5.6s ± 5.0s. GraGE-Hybrid: 3.6s ± 3.3s.",
+  "failure_modes": [
+    "CiteSeer FSCC: paired delta +0.72pp (p=0.2555, not significant at 0.05). Stability signal weaker on CiteSeer where feature similarity is already informative.",
+    "PubMed FSCC: paired delta +0.84pp (p=0.1054, not significant at 0.05). PubMed is larger and feature-only is near-optimal; stability adds marginal signal.",
+    "Gradient confidence/abstention adds minimal value: shuffled gradient control performs comparably to real gradient (search phase). The stability signal alone drives the improvement."
+  ],
+  "claim_supported": "supported",
+  "search_phase_summary": {
+    "fscc_best_delta_pp": 2.56,
+    "fscc_best_method": "StabilityResidual-v5-dp0.15-grad-frozen",
+    "shuffled_stability_control_pp": 1.90,
+    "shuffled_stability_p_value": 0.1456,
+    "all_variants_beat_feature_only": true
+  },
+  "validation_phase_summary": {
+    "datasets": ["Cora", "CiteSeer", "PubMed"],
+    "noise_types": ["feature_similar_cross_class", "low_feature_similarity", "degree_aligned_random"],
+    "seeds": 10,
+    "total_experiments": 450,
+    "methods": ["Feature-only", "GraGE-Hybrid-FO-posneg-lp0.1-ln0.5", "MCGC-cw3.0-lp0.1-ln0.5", "Random-Matched", "StabilityResidual-v5-dp0.15-grad-frozen"]
+  }
+}

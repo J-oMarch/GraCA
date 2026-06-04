@@ -47,6 +47,7 @@ from src.grage.adaptive_score import (
     compute_mcgc_score,
     compute_selective_mcgc_score,
     collect_multi_checkpoint_grads,
+    compute_stability_residual_score,
 )
 from src.baselines.random_pruning import run_degree_aware_random
 from src.baselines.similarity_pruning import run_jaccard_pruning
@@ -442,6 +443,100 @@ def run_single_experiment(
         )
         edge_scores = selective_result["hybrid_score"]
         method_diagnostics = selective_result.get("diagnostics", {})
+
+    elif method_type == "stability_residual":
+        # StabilityResidual-GraGE: multi-view prediction stability
+        num_views = method_config.get("num_views", 5)
+        edge_dropout_rates = method_config.get("edge_dropout_rates", None)
+        total_epochs_stab = method_config.get("total_epochs", 200)
+        use_grad_conf = method_config.get("use_gradient_confidence", True)
+        grad_abstain_thresh = method_config.get("gradient_abstention_threshold", 0.1)
+        checkpoint_control = method_config.get("checkpoint_control", "real")
+        score_ratio = method_config.get("score_ratio", 0.3)
+
+        num_classes = int(y.max().item()) + 1
+
+        def model_ctor():
+            return GCN(
+                in_dim=x.shape[1], hidden_dim=64,
+                out_dim=num_classes, num_layers=2, dropout=0.5,
+            )
+
+        model = model_ctor().to(device)
+        init_state_dict = train_model_for_grage(
+            model, x, noisy_edge_index, y, train_mask, val_mask,
+            lr=config["training"]["lr"],
+            weight_decay=config["training"]["weight_decay"],
+            epochs=200, patience=50, seed=seed,
+        )
+
+        support_mask, score_mask = split_train_support_score(
+            train_mask, y, score_ratio=score_ratio, seed=seed
+        )
+
+        # Collect multi-checkpoint gradients for gradient confidence
+        checkpoint_grads = None
+        if use_grad_conf:
+            checkpoint_fractions = method_config.get("checkpoint_fractions", [0.3, 0.5, 0.7, 0.9])
+            checkpoint_grads = collect_multi_checkpoint_grads(
+                model_ctor=model_ctor,
+                init_state_dict=init_state_dict,
+                x=x, edge_index=noisy_edge_index, y=y,
+                train_mask=train_mask, score_mask=score_mask,
+                checkpoint_fractions=checkpoint_fractions,
+                total_epochs=200,
+                lr=config["training"]["lr"],
+                weight_decay=config["training"]["weight_decay"],
+                undirected=True,
+            )
+
+            if checkpoint_control == "shuffled":
+                generator = torch.Generator(device=device)
+                generator.manual_seed(seed + 7919)
+                checkpoint_grads = [
+                    grad[torch.randperm(grad.numel(), device=device, generator=generator)]
+                    for grad in checkpoint_grads
+                ]
+            elif checkpoint_control == "frozen":
+                checkpoint_grads = [checkpoint_grads[0].clone() for _ in checkpoint_grads]
+            elif checkpoint_control != "real":
+                raise ValueError(f"Unknown checkpoint_control: {checkpoint_control}")
+
+        feature_risk = compute_feature_risk(x, noisy_edge_index, device)
+        feature_similarity = compute_feature_similarity(x, noisy_edge_index, device)
+
+        stability_result = compute_stability_residual_score(
+            model_ctor=model_ctor,
+            init_state_dict=init_state_dict,
+            x=x,
+            edge_index=noisy_edge_index,
+            y=y,
+            train_mask=train_mask,
+            val_mask=val_mask,
+            feature_risk=feature_risk,
+            feature_similarity=feature_similarity,
+            checkpoint_grads=checkpoint_grads,
+            num_views=num_views,
+            edge_dropout_rates=edge_dropout_rates,
+            total_epochs=total_epochs_stab,
+            lr=config["training"]["lr"],
+            weight_decay=config["training"]["weight_decay"],
+            patience=50,
+            use_gradient_confidence=use_grad_conf,
+            gradient_abstention_threshold=grad_abstain_thresh,
+            undirected=True,
+            bad_edge_mask=bad_edge_mask,
+        )
+        edge_scores = stability_result["edge_score"]
+        method_diagnostics = stability_result.get("diagnostics", {})
+
+        # Shuffled stability control: permute edge scores to destroy signal
+        if method_config.get("_shuffled_stability", False):
+            generator = torch.Generator(device=device)
+            generator.manual_seed(seed + 7919)
+            perm = torch.randperm(edge_scores.numel(), device=device, generator=generator)
+            edge_scores = edge_scores[perm]
+            method_diagnostics["shuffled_stability"] = True
 
     else:
         raise ValueError(f"Unknown method type: {method_type}")
@@ -969,11 +1064,172 @@ def run_selective_validate(device, output_dir, best_candidate_config):
     )
 
 
+def get_stability_smoke_methods():
+    """Return a tiny StabilityResidual method set for smoke testing."""
+    return [
+        {"name": "Feature-only", "type": "feature_only"},
+        {"name": "StabilityResidual-v3-dp0.05-0.15-grad", "type": "stability_residual",
+         "num_views": 3,
+         "edge_dropout_rates": [0.05, 0.10, 0.15],
+         "total_epochs": 40,
+         "use_gradient_confidence": True,
+         "gradient_abstention_threshold": 0.1,
+         "score_ratio": 0.3,
+         "checkpoint_control": "real"},
+        {"name": "StabilityResidual-shuffled-v3", "type": "stability_residual",
+         "num_views": 3,
+         "edge_dropout_rates": [0.05, 0.10, 0.15],
+         "total_epochs": 40,
+         "use_gradient_confidence": True,
+         "gradient_abstention_threshold": 0.1,
+         "score_ratio": 0.3,
+         "checkpoint_control": "shuffled"},
+    ]
+
+
+def get_stability_search_methods():
+    """Return StabilityResidual method configurations for search."""
+    methods = [
+        {"name": "Feature-only", "type": "feature_only"},
+        {"name": "GraGE-Hybrid-FO-posneg-lp0.1-ln0.5", "type": "hybrid_baseline",
+         "lambda_pos": 0.1, "lambda_neg": 0.5, "score_ratio": 0.3},
+        {"name": "MCGC-cw3.0-lp0.1-ln0.5", "type": "mcgc",
+         "lambda_pos": 0.1, "lambda_neg": 0.5,
+         "consistency_weight": 3.0,
+         "score_ratio": 0.3,
+         "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+         "total_epochs": 200},
+    ]
+
+    # StabilityResidual variants: vary number of views and dropout rates
+    for num_views, drop_rates in [
+        (3, [0.05, 0.15, 0.25]),
+        (5, [0.0, 0.10, 0.15, 0.20, 0.30]),
+        (5, [0.05, 0.10, 0.20, 0.25, 0.30]),
+        (7, [0.0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30]),
+    ]:
+        for use_grad in [True, False]:
+            grad_label = "grad" if use_grad else "nograd"
+            methods.append({
+                "name": f"StabilityResidual-v{num_views}-dp{drop_rates[1]:.2f}-{grad_label}",
+                "type": "stability_residual",
+                "num_views": num_views,
+                "edge_dropout_rates": drop_rates,
+                "total_epochs": 200,
+                "use_gradient_confidence": use_grad,
+                "gradient_abstention_threshold": 0.1,
+                "score_ratio": 0.3,
+                "checkpoint_control": "real",
+            })
+
+    # Controls: shuffled gradients, frozen gradients, no-gradient
+    methods.extend([
+        {"name": "StabilityResidual-v5-dp0.15-grad-shuffled", "type": "stability_residual",
+         "num_views": 5,
+         "edge_dropout_rates": [0.0, 0.10, 0.15, 0.20, 0.30],
+         "total_epochs": 200,
+         "use_gradient_confidence": True,
+         "gradient_abstention_threshold": 0.1,
+         "score_ratio": 0.3,
+         "checkpoint_control": "shuffled"},
+        {"name": "StabilityResidual-v5-dp0.15-grad-frozen", "type": "stability_residual",
+         "num_views": 5,
+         "edge_dropout_rates": [0.0, 0.10, 0.15, 0.20, 0.30],
+         "total_epochs": 200,
+         "use_gradient_confidence": True,
+         "gradient_abstention_threshold": 0.1,
+         "score_ratio": 0.3,
+         "checkpoint_control": "frozen"},
+    ])
+
+    # Shuffled stability control: permute the stability score itself
+    methods.append({
+        "name": "StabilityResidual-v5-shuffled-stability",
+        "type": "stability_residual",
+        "num_views": 5,
+        "edge_dropout_rates": [0.0, 0.10, 0.15, 0.20, 0.30],
+        "total_epochs": 200,
+        "use_gradient_confidence": False,
+        "score_ratio": 0.3,
+        "checkpoint_control": "real",
+        "_shuffled_stability": True,  # handled in run_single_experiment
+    })
+
+    return methods
+
+
+def get_stability_validation_methods(best_candidate_config):
+    """Return validation methods for StabilityResidual."""
+    methods = [
+        {"name": "Feature-only", "type": "feature_only"},
+        {"name": "GraGE-Hybrid-FO-posneg-lp0.1-ln0.5", "type": "hybrid_baseline",
+         "lambda_pos": 0.1, "lambda_neg": 0.5, "score_ratio": 0.3},
+        {"name": "MCGC-cw3.0-lp0.1-ln0.5", "type": "mcgc",
+         "lambda_pos": 0.1, "lambda_neg": 0.5,
+         "consistency_weight": 3.0,
+         "score_ratio": 0.3,
+         "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+         "total_epochs": 200},
+    ]
+    if best_candidate_config is not None:
+        methods.append(best_candidate_config)
+    return methods
+
+
+def run_stability_smoke(device, output_dir):
+    """StabilityResidual smoke test."""
+    return run_experiment_matrix(
+        datasets=["Cora"],
+        noise_types=["feature_similar_cross_class"],
+        noise_ratio=0.3,
+        seeds=[0],
+        downstream_model="GCN",
+        prune_ratio=0.2,
+        method_configs=get_stability_smoke_methods(),
+        device=device,
+        output_dir=output_dir,
+        include_random_matched=True,
+    )
+
+
+def run_stability_search(device, output_dir):
+    """StabilityResidual search matrix."""
+    return run_experiment_matrix(
+        datasets=["Cora", "CiteSeer"],
+        noise_types=["feature_similar_cross_class", "low_feature_similarity"],
+        noise_ratio=0.3,
+        seeds=[0, 1, 2, 3, 4],
+        downstream_model="GCN",
+        prune_ratio=0.2,
+        method_configs=get_stability_search_methods(),
+        device=device,
+        output_dir=output_dir,
+        include_random_matched=True,
+    )
+
+
+def run_stability_validate(device, output_dir, best_candidate_config):
+    """StabilityResidual validation matrix."""
+    return run_experiment_matrix(
+        datasets=["Cora", "CiteSeer", "PubMed"],
+        noise_types=["feature_similar_cross_class", "low_feature_similarity", "degree_aligned_random"],
+        noise_ratio=0.3,
+        seeds=list(range(10)),
+        downstream_model="GCN",
+        prune_ratio=0.2,
+        method_configs=get_stability_validation_methods(best_candidate_config),
+        device=device,
+        output_dir=output_dir,
+        include_random_matched=True,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Adaptive GraGE Method Search")
     parser.add_argument("--mode", choices=[
         "smoke", "search", "validate",
         "selective_smoke", "selective_search", "selective_validate",
+        "stability_smoke", "stability_search", "stability_validate",
     ], default="smoke",
                         help="Experiment mode")
     parser.add_argument("--output_dir", type=str, default=None,
@@ -1013,6 +1269,15 @@ def main():
         if args.best_candidate:
             best_config = json.loads(args.best_candidate)
         df = run_selective_validate(device, output_dir, best_config)
+    elif args.mode == "stability_smoke":
+        df = run_stability_smoke(device, output_dir)
+    elif args.mode == "stability_search":
+        df = run_stability_search(device, output_dir)
+    elif args.mode == "stability_validate":
+        best_config = None
+        if args.best_candidate:
+            best_config = json.loads(args.best_candidate)
+        df = run_stability_validate(device, output_dir, best_config)
 
     # Print summary
     if df is not None and len(df) > 0:

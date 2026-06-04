@@ -14,6 +14,9 @@ from src.grage.adaptive_score import (
     compute_faa_hybrid_score,
     compute_mcgc_score,
     compute_selective_mcgc_score,
+    compute_node_stability,
+    stability_to_edge_score,
+    residualize_stability_score,
     rank_normalize,
 )
 
@@ -429,6 +432,179 @@ def test_rank_normalize():
     # Lowest value should get rank 0.0
     assert r[1] == 0.0, f"Lowest value should get rank 0.0: {r[1]}"
     print("✓ rank_normalize correct")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# StabilityResidual-GraGE Tests
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+def test_compute_node_stability_shape(synthetic_edges):
+    """compute_node_stability should return correct shapes."""
+    N = 50
+    C = 3
+    num_views = 4
+    torch.manual_seed(42)
+    predictions = [torch.softmax(torch.randn(N, C), dim=1) for _ in range(num_views)]
+
+    result = compute_node_stability(predictions)
+
+    assert result["node_entropy"].shape == (N,)
+    assert result["node_variance"].shape == (N,)
+    assert result["node_jsd"].shape == (N,)
+    assert result["node_confidence"].shape == (N,)
+    assert result["node_instability"].shape == (N,)
+    print("✓ compute_node_stability shape correct")
+
+
+def test_compute_node_stability_jsd_nonnegative(synthetic_edges):
+    """JSD should be non-negative."""
+    N = 50
+    C = 3
+    torch.manual_seed(42)
+    predictions = [torch.softmax(torch.randn(N, C), dim=1) for _ in range(5)]
+
+    result = compute_node_stability(predictions)
+    assert (result["node_jsd"] >= 0).all(), "JSD should be non-negative"
+    print(f"✓ JSD non-negative: min={result['node_jsd'].min():.6f}")
+
+
+def test_compute_node_stability_identical_views_low_jsd(synthetic_edges):
+    """Identical predictions should give near-zero JSD."""
+    N = 50
+    C = 3
+    torch.manual_seed(42)
+    base_pred = torch.softmax(torch.randn(N, C), dim=1)
+    predictions = [base_pred.clone() for _ in range(5)]
+
+    result = compute_node_stability(predictions)
+    assert result["node_jsd"].max() < 1e-5, \
+        f"Identical views should give near-zero JSD: max={result['node_jsd'].max():.6f}"
+    print("✓ Identical views → near-zero JSD")
+
+
+def test_compute_node_stability_diverse_views_high_jsd(synthetic_edges):
+    """Very different predictions should give higher JSD."""
+    N = 50
+    C = 3
+    torch.manual_seed(42)
+
+    # Identical views
+    base_pred = torch.softmax(torch.randn(N, C), dim=1)
+    identical = [base_pred.clone() for _ in range(5)]
+    result_identical = compute_node_stability(identical)
+
+    # Diverse views
+    diverse = [torch.softmax(torch.randn(N, C) * 3, dim=1) for _ in range(5)]
+    result_diverse = compute_node_stability(diverse)
+
+    assert result_diverse["node_jsd"].mean() > result_identical["node_jsd"].mean(), \
+        "Diverse views should have higher mean JSD"
+    print(f"✓ Diverse JSD={result_diverse['node_jsd'].mean():.4f} > "
+          f"Identical JSD={result_identical['node_jsd'].mean():.6f}")
+
+
+def test_stability_to_edge_score_shape(synthetic_edges):
+    """stability_to_edge_score should return correct shape."""
+    N = synthetic_edges["N"]
+    edge_index = synthetic_edges["edge_index"]
+    E_actual = edge_index.shape[1]
+    torch.manual_seed(42)
+    node_instability = torch.rand(N)
+
+    score = stability_to_edge_score(
+        edge_index=edge_index,
+        node_instability=node_instability,
+        undirected=False,
+    )
+    assert score.shape == (E_actual,)
+    print("✓ stability_to_edge_score shape correct")
+
+
+def test_stability_to_edge_score_with_feature_similarity(synthetic_edges):
+    """Feature similarity should amplify edge scores for ambiguous edges."""
+    N = synthetic_edges["N"]
+    edge_index = synthetic_edges["edge_index"]
+    E_actual = edge_index.shape[1]
+    torch.manual_seed(42)
+    node_instability = torch.rand(N)
+
+    # Without feature similarity
+    score_no_sim = stability_to_edge_score(
+        edge_index=edge_index,
+        node_instability=node_instability,
+        undirected=False,
+    )
+
+    # With high feature similarity (ambiguous)
+    high_sim = torch.full((E_actual,), 0.9)
+    score_high_sim = stability_to_edge_score(
+        edge_index=edge_index,
+        node_instability=node_instability,
+        feature_similarity=high_sim,
+        undirected=False,
+    )
+
+    # With low feature similarity (clear)
+    low_sim = torch.full((E_actual,), -0.9)
+    score_low_sim = stability_to_edge_score(
+        edge_index=edge_index,
+        node_instability=node_instability,
+        feature_similarity=low_sim,
+        undirected=False,
+    )
+
+    # High sim should amplify more than low sim
+    assert score_high_sim.mean() > score_low_sim.mean(), \
+        "High feature similarity should amplify edge scores"
+    print("✓ stability_to_edge_score amplifies with feature similarity")
+
+
+def test_residualize_stability_score_removes_feature_component(synthetic_edges):
+    """Residualized score should be less correlated with feature risk."""
+    E = synthetic_edges["E"]
+    fr = synthetic_edges["feature_risk"]
+    torch.manual_seed(42)
+    # Create a stability score that is partially correlated with feature_risk
+    stability_score = 0.7 * rank_normalize(fr) + 0.3 * torch.rand(E)
+
+    result = residualize_stability_score(
+        stability_score=stability_score,
+        feature_risk=fr,
+    )
+
+    residual = result["residual"]
+    R_feature = rank_normalize(fr)
+
+    # Residual should have lower correlation with feature_risk than original
+    orig_corr = float(((rank_normalize(stability_score) - rank_normalize(stability_score).mean()) *
+                       (R_feature - R_feature.mean())).mean() /
+                      (rank_normalize(stability_score).std().clamp(min=1e-8) * R_feature.std().clamp(min=1e-8)))
+    resid_corr = float(((residual - residual.mean()) * (R_feature - R_feature.mean())).mean() /
+                       (residual.std().clamp(min=1e-8) * R_feature.std().clamp(min=1e-8)))
+
+    assert abs(resid_corr) < abs(orig_corr), \
+        f"Residual should be less correlated with features: {resid_corr:.4f} vs {orig_corr:.4f}"
+    print(f"✓ Residual correlation reduced: {abs(resid_corr):.4f} < {abs(orig_corr):.4f}")
+
+
+def test_residualize_stability_score_has_residual_signal(synthetic_edges):
+    """Residualized score should retain some signal beyond feature_risk."""
+    E = synthetic_edges["E"]
+    fr = synthetic_edges["feature_risk"]
+    torch.manual_seed(42)
+    # Stability score with an independent component
+    stability_score = rank_normalize(fr) + 0.5 * torch.rand(E)
+
+    result = residualize_stability_score(
+        stability_score=stability_score,
+        feature_risk=fr,
+    )
+
+    residual = result["residual"]
+    assert residual.std() > 0.01, \
+        f"Residual should have non-trivial variance: {residual.std():.6f}"
+    print(f"✓ Residual has signal: std={residual.std():.4f}")
 
 
 if __name__ == "__main__":
