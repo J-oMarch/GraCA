@@ -1,0 +1,31 @@
+exp_id: 2026-06-04-adaptive-grage-search
+title: Adaptive GraGE method search for AAAI-level contribution
+goal:
+  primary: Find or falsify a stronger no-leak training-dynamics-guided graph evolution method.
+  direction: Keep the original GraGE thesis but allow substantial code and method changes.
+datasets:
+  search: [Cora, CiteSeer]
+  validation: [Cora, CiteSeer, PubMed]
+noise_types:
+  search: [feature_similar_cross_class, cross_class_oracle]
+  validation: [feature_similar_cross_class, low_feature_similarity, degree_aligned_random]
+noise_ratio: 0.3
+prune_ratio: 0.2
+seeds:
+  search: [0, 1, 2]
+  validation: [0, 1, 2, 3, 4]
+required_baselines:
+  - Feature-only
+  - GraGE-Hybrid-FO-posneg-lp0.1-ln0.5
+  - Random-Matched
+candidate_families:
+  - adaptive_lambda_by_feature_ambiguity
+  - prediction_stability_edge_signal
+  - multi_checkpoint_gradient_consistency
+  - protect_low_loss_edges_negative_gradient
+selection_rule:
+  primary: mean paired delta over Feature-only on feature_similar_cross_class
+  constraints:
+    - no val/test label leakage for scoring
+    - no worse than Feature-only by more than 0.005 on low_feature_similarity
+    - reproducible with fixed seeds

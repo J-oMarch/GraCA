@@ -1,0 +1,36 @@
+exp_id: 2026-06-04-fscc-hybrid-confirmation
+title: Feature-similar cross-class GraGE-Hybrid confirmation
+claim:
+  primary: Training-dynamics calibration improves over static feature similarity when harmful edges are feature-similar.
+  scope: No-leak practical graph pruning for node classification.
+datasets:
+  primary: [Cora, CiteSeer, PubMed]
+  optional_if_time: [Actor, Texas, Wisconsin]
+noise_types:
+  primary: [feature_similar_cross_class]
+  controls: [cross_class_oracle, low_feature_similarity, degree_aligned_random]
+noise_ratio: 0.3
+prune_ratio: 0.2
+seeds: 0-19
+downstream_models:
+  primary: [GCN]
+  optional_if_time: [GAT, GraphSAGE]
+methods:
+  baselines:
+    - Original+Noise
+    - Random-Matched
+    - DegreeAwareRandom
+    - GCN-Jaccard
+    - Feature-only
+  grage:
+    - GraGE-Hybrid-FO-posneg-lp0.1-ln0.5
+    - GraGE-Hybrid-FO-posneg-lp0.25-ln0.25
+    - GraGE-Hybrid-FO-pos-lam0.5
+required_statistics:
+  - paired mean delta vs Feature-only
+  - 95% confidence interval
+  - paired t-test
+  - Wilcoxon signed-rank test
+  - win rate by dataset/noise/seed
+  - bad-edge precision/recall/F1
+  - edge homophily before/after

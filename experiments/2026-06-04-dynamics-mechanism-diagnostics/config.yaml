@@ -1,0 +1,27 @@
+exp_id: 2026-06-04-dynamics-mechanism-diagnostics
+title: Mechanism diagnostics for training-dynamics edge signals
+claim:
+  primary: Dynamic edge-gate gradients add information in feature-ambiguous edge regions.
+  diagnostic_only: Some analyses may use bad_edge_mask only for evaluation, never for scoring.
+datasets: [Cora, CiteSeer, PubMed]
+noise_types:
+  - feature_similar_cross_class
+  - cross_class_oracle
+  - low_feature_similarity
+noise_ratio: 0.3
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+signals:
+  - feature_risk
+  - raw_dynamic_grad
+  - positive_grad
+  - negative_grad
+  - hybrid_score
+  - shuffled_grad_hybrid
+diagnostics:
+  - global_auc
+  - ambiguous_feature_bin_auc
+  - precision_at_prune_ratio
+  - spearman_correlation
+  - partial_or_residual_auc_after_feature_risk
+  - score_distribution_tables
+  - score_shuffling_ablation
