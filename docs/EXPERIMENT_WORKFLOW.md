@@ -31,19 +31,25 @@ https://github.com/J-oMarch/GraCA
    /Users/jo/ClaudePlace/GraCA
    ```
 
-2. 和 Codex/ChatGPT 讨论实验方向，例如：
+2. 让 Codex 先读取项目记忆：
+
+   ```text
+   请先阅读 AGENTS.md、docs/PROJECT_STATE.md 和 docs/EXPERIMENT_WORKFLOW.md，然后和我讨论下一轮实验。
+   ```
+
+3. 和 Codex/ChatGPT 讨论实验方向，例如：
 
    ```text
    基于当前 GraGE edge-gate 结果，生成一个验证 hybrid score 是否稳定超过 feature-only 的新实验。
    ```
 
-3. Codex 应创建一个实验目录：
+4. Codex 应创建一个实验目录：
 
    ```text
    experiments/2026-06-04-hybrid-score-validation/
    ```
 
-4. 最少应生成：
+5. 最少应生成：
 
    ```text
    experiments/<exp_id>/prompt.md
@@ -56,24 +62,42 @@ https://github.com/J-oMarch/GraCA
    experiments/<exp_id>/notes.md
    ```
 
-5. 你检查 `prompt.md` 后，在本地运行：
+6. 你检查 `prompt.md` 后，直接在 Codex 对话里说：
 
-   ```bash
-   cd /Users/jo/ClaudePlace/GraCA
-   bash scripts/submit_exp.sh <exp_id>
+   ```text
+   用 tmux 提交这个实验
    ```
 
-6. 脚本会自动完成：
+   Codex 应执行：
+
+   ```bash
+   bash scripts/submit_exp_tmux.sh <exp_id>
+   ```
+
+   你不需要自己打开本地终端执行这条命令。
+
+7. tmux 脚本会自动完成：
 
    ```text
    本地 git add/commit/push
    服务器 git pull
-   服务器 bash scripts/run_exp.sh <exp_id>
-   服务器 git add/commit/push 实验结果
-   本地 git pull
+   服务器新建 tmux session
+   tmux 内运行 Claude Code 最大权限实验
    ```
 
-7. 结果回来后，查看：
+8. 之后你可以让 Codex 检查状态：
+
+   ```text
+   检查这个实验是否跑完
+   ```
+
+   Codex 应执行：
+
+   ```bash
+   bash scripts/check_exp_status.sh <exp_id>
+   ```
+
+9. 结果回来后，让 Codex 读取：
 
    ```text
    experiments/<exp_id>/result.md
@@ -125,7 +149,25 @@ Claude Code 必须写入：
 
 ## 本地提交脚本
 
-提交并触发服务器执行：
+推荐：提交并在服务器 tmux 后台执行：
+
+```bash
+bash scripts/submit_exp_tmux.sh <exp_id>
+```
+
+这个脚本会在服务器上创建新的 tmux session，session 名默认是：
+
+```text
+graca_<exp_id>
+```
+
+Claude Code 会使用：
+
+```bash
+--dangerously-skip-permissions --permission-mode bypassPermissions --effort max
+```
+
+阻塞模式：提交并等待服务器执行结束：
 
 ```bash
 bash scripts/submit_exp.sh <exp_id>
@@ -145,6 +187,8 @@ REMOTE_DIR=/home/jyh/workplace/ClaudeProjects/GraCA
 ```bash
 REMOTE_DIR=/new/path bash scripts/submit_exp.sh <exp_id>
 ```
+
+tmux 后台模式也支持同样的变量覆盖。
 
 ## 服务器执行脚本
 
@@ -173,6 +217,13 @@ Claude Code 扩展自带的 native binary。也可以手动指定：
 CLAUDE_BIN=/absolute/path/to/claude bash scripts/run_exp.sh <exp_id>
 ```
 
+额外 Claude 参数通过 `CLAUDE_ARGS` 传入：
+
+```bash
+CLAUDE_ARGS="--dangerously-skip-permissions --permission-mode bypassPermissions --effort max" \
+bash scripts/run_exp.sh <exp_id>
+```
+
 Claude Code 完成后，脚本会提交并推送：
 
 ```text
@@ -187,6 +238,8 @@ experiments/<exp_id>/
 - 每个实验使用独立 `exp_id`，避免结果互相覆盖。
 - 旧 Prompt 和历史报告统一放在 `docs/archive/`。
 - 触发远程算力前，建议先人工检查 `prompt.md`。
+- 日常操作以 Codex 对话为入口。你给出明确指令后，由 Codex 执行脚本。
+- 长实验默认使用 tmux 后台模式，方便你 SSH 到服务器人工观察。
 
 ## 常见问题
 
@@ -219,10 +272,31 @@ experiments/<exp_id>/result.md
 
 ### 是否可以让 Codex 自动提交？
 
-可以，但只有你明确说“提交这个实验”或“运行这个实验”时，Codex 才应该执行：
+可以，但只有你明确说“提交这个实验”“运行这个实验”或“用 tmux 提交这个实验”时，Codex 才应该执行：
 
 ```bash
-bash scripts/submit_exp.sh <exp_id>
+bash scripts/submit_exp_tmux.sh <exp_id>
 ```
 
 平时 Codex 只负责生成和修改 `experiments/<exp_id>/prompt.md`。
+
+### 如何人工观察服务器 tmux？
+
+Codex 提交后会输出 session 名，例如：
+
+```text
+graca_2026-06-04-hybrid-score-validation
+```
+
+你可以打开本地终端，仅用于观察：
+
+```bash
+ssh -p 15600 jyh@59.72.109.245
+tmux attach -t graca_2026-06-04-hybrid-score-validation
+```
+
+退出观察但不停止实验：
+
+```text
+Ctrl-b，然后按 d
+```

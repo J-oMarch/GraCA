@@ -3,6 +3,12 @@ set -euo pipefail
 
 EXP_ID="${1:?Usage: bash scripts/run_exp.sh <exp_id>}"
 
+if [[ ! "${EXP_ID}" =~ ^[A-Za-z0-9._-]+$ ]]; then
+  echo "Invalid exp_id: ${EXP_ID}"
+  echo "Use only letters, numbers, dot, underscore, and hyphen."
+  exit 1
+fi
+
 EXP_DIR="experiments/${EXP_ID}"
 PROMPT="${EXP_DIR}/prompt.md"
 LOG_DIR="${EXP_DIR}/logs"
@@ -10,6 +16,7 @@ LOG_FILE="${LOG_DIR}/claude.log"
 RESULT_FILE="${EXP_DIR}/result.md"
 METRICS_FILE="${EXP_DIR}/metrics.json"
 CLAUDE_BIN="${CLAUDE_BIN:-}"
+CLAUDE_ARGS="${CLAUDE_ARGS:-}"
 
 if [ ! -d .git ]; then
   echo "run_exp.sh must be run from the repository root."
@@ -42,9 +49,12 @@ fi
 echo "Running Claude Code experiment: ${EXP_ID}"
 echo "Prompt: ${PROMPT}"
 echo "Claude binary: ${CLAUDE_BIN}"
+echo "Claude args: ${CLAUDE_ARGS:-<none>}"
+
+read -r -a CLAUDE_EXTRA_ARGS <<< "${CLAUDE_ARGS}"
 
 set +e
-"${CLAUDE_BIN}" -p "$(cat "${PROMPT}")" 2>&1 | tee "${LOG_FILE}"
+"${CLAUDE_BIN}" "${CLAUDE_EXTRA_ARGS[@]}" -p "$(cat "${PROMPT}")" 2>&1 | tee "${LOG_FILE}"
 CLAUDE_STATUS=${PIPESTATUS[0]}
 set -e
 

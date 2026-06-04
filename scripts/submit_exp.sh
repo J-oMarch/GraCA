@@ -3,6 +3,12 @@ set -euo pipefail
 
 EXP_ID="${1:?Usage: bash scripts/submit_exp.sh <exp_id>}"
 
+if [[ ! "${EXP_ID}" =~ ^[A-Za-z0-9._-]+$ ]]; then
+  echo "Invalid exp_id: ${EXP_ID}"
+  echo "Use only letters, numbers, dot, underscore, and hyphen."
+  exit 1
+fi
+
 REMOTE_PORT="${REMOTE_PORT:-15600}"
 REMOTE_USER="${REMOTE_USER:-jyh}"
 REMOTE_HOST="${REMOTE_HOST:-59.72.109.245}"

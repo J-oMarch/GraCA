@@ -44,6 +44,13 @@ The remote server reads the prompt, runs Claude Code, writes results under the
 same experiment directory, commits them, and pushes them back. See
 `docs/EXPERIMENT_WORKFLOW.md` for the full operating guide.
 
+For long experiments, prefer the tmux background workflow:
+
+```bash
+bash scripts/submit_exp_tmux.sh <exp_id>
+bash scripts/check_exp_status.sh <exp_id>
+```
+
 ## Project Structure
 
 ```

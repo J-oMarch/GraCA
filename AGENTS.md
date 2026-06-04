@@ -6,6 +6,13 @@ This repository is the executable GraCA/GraGE codebase. Keep research notes,
 historical prompts, and reports under `docs/`; keep runnable code, configs,
 tests, and experiment automation at the repository root.
 
+Before discussing a new research direction, experiment, result interpretation,
+or paper claim, read:
+
+- `docs/PROJECT_STATE.md`
+- `docs/EXPERIMENT_WORKFLOW.md`
+- relevant archived prompts/reports under `docs/archive/` only when needed
+
 ## Experiment Workflow
 
 When the user asks to design or run a new experiment:
@@ -36,31 +43,47 @@ When the user asks to design or run a new experiment:
 6. Do not manually upload files through VSCode. Experiment prompts and results
    must flow through Git.
 
-7. After creating experiment files, tell the user to run:
-   `bash scripts/submit_exp.sh <exp_id>`
+7. After creating experiment files, tell the user the experiment id and wait for
+   explicit submit approval.
 
-8. Only run the submit script when the user explicitly asks, for example:
+8. Only run a submit script when the user explicitly asks, for example:
    - `submit this experiment`
    - `提交这个实验`
    - `运行这个实验`
+   - `用 tmux 提交这个实验`
 
-9. The local submit script is responsible for:
+9. Prefer the tmux submit path for long experiments:
+   `bash scripts/submit_exp_tmux.sh <exp_id>`
+
+   Use the blocking path only when the user explicitly asks to wait in the
+   current Codex run:
+   `bash scripts/submit_exp.sh <exp_id>`
+
+10. The local submit script is responsible for:
    - committing `experiments/<exp_id>`
    - pushing to GitHub
    - asking the remote server to `git pull`
    - running Claude Code through `scripts/run_exp.sh`
-   - pulling results back locally
+   - for blocking runs, pulling results back locally
+   - for tmux runs, reporting the tmux session name and monitor commands
 
-10. The remote server is responsible only for:
+11. The remote server is responsible only for:
     - `git pull`
     - running Claude Code against `experiments/<exp_id>/prompt.md`
     - writing results under `experiments/<exp_id>/`
     - committing and pushing results
 
-11. Local analysis should read:
+12. Local analysis should read:
     - `experiments/<exp_id>/result.md`
     - `experiments/<exp_id>/metrics.json`
     - relevant logs under `experiments/<exp_id>/logs/`
+
+13. To check whether a tmux experiment has finished, run:
+    `bash scripts/check_exp_status.sh <exp_id>`
+
+14. The user should not need to open a local terminal to execute repository
+    workflow commands. When the user gives explicit approval, run the relevant
+    command from Codex.
 
 ## Cleanup Rules
 
