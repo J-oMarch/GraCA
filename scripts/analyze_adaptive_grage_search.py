@@ -107,13 +107,22 @@ def compute_win_rate(df, candidate, baseline, noise_type, dataset=None):
     return float(wins / len(merged))
 
 
-def select_best_candidate(search_df):
+def select_best_candidate(search_df, selection_mode="adaptive"):
     """Select best candidate based on search results.
 
     Primary: paired delta over Feature-only on feature_similar_cross_class
     """
     candidates = [m for m in search_df["method"].unique()
                   if m not in ("Feature-only", "GraGE-Hybrid-FO-posneg-lp0.1-ln0.5", "Random-Matched")]
+
+    if selection_mode in ("selective", "selective_relaxed"):
+        candidates = [
+            m for m in candidates
+            if "selective" in m.lower()
+            and "shuffled" not in m.lower()
+            and "frozen" not in m.lower()
+            and "zero-gate" not in m.lower()
+        ]
 
     best_candidate = None
     best_delta = -float("inf")
@@ -127,6 +136,33 @@ def select_best_candidate(search_df):
             continue
 
         delta = delta_info["mean_delta"]
+        if selection_mode == "selective":
+            lfs_delta = compute_paired_delta(
+                search_df, cand, "Feature-only", "low_feature_similarity"
+            )
+            win_rate = compute_win_rate(
+                search_df, cand, "Feature-only", "feature_similar_cross_class"
+            )
+            if delta <= 0:
+                continue
+            if lfs_delta is None or lfs_delta["mean_delta"] < -0.005:
+                continue
+            if win_rate < 0.6:
+                continue
+
+            control_deltas = []
+            for control in search_df["method"].unique():
+                control_name = control.lower()
+                if "shuffled" not in control_name and "frozen" not in control_name:
+                    continue
+                control_delta = compute_paired_delta(
+                    search_df, control, "Feature-only", "feature_similar_cross_class"
+                )
+                if control_delta is not None:
+                    control_deltas.append(control_delta["mean_delta"])
+            if control_deltas and delta <= max(control_deltas):
+                continue
+
         if delta > best_delta:
             best_delta = delta
             best_candidate = cand
@@ -367,7 +403,7 @@ across checkpoints indicates reliable edge-level information.
     return md
 
 
-def generate_metrics_json(search_df, best_candidate, best_stats, output_dir):
+def generate_metrics_json(search_df, best_candidate, best_stats, output_dir, selection_mode="adaptive"):
     """Generate metrics.json."""
     noise_types = search_df["noise_type"].unique()
 
@@ -382,6 +418,27 @@ def generate_metrics_json(search_df, best_candidate, best_stats, output_dir):
     # Win rate
     wr = compute_win_rate(search_df, best_candidate, "Feature-only", "feature_similar_cross_class")
 
+    lfs_delta = compute_paired_delta(search_df, best_candidate, "Feature-only", "low_feature_similarity")
+    lfs_delta_val = lfs_delta["mean_delta"] if lfs_delta else 0.0
+
+    control_delta_vals = []
+    for control in search_df["method"].unique():
+        control_name = control.lower()
+        if "shuffled" not in control_name and "frozen" not in control_name:
+            continue
+        control_delta = compute_paired_delta(
+            search_df, control, "Feature-only", "feature_similar_cross_class"
+        )
+        if control_delta is not None:
+            control_delta_vals.append(control_delta["mean_delta"])
+    best_control_delta = max(control_delta_vals) if control_delta_vals else 0.0
+    shuffled_gradient_delta = fsc_delta_val - best_control_delta
+
+    zero_gate_delta = compute_paired_delta(
+        search_df, "Selective-MCGC-zero-gate", "Feature-only", "low_feature_similarity"
+    )
+    zero_gate_delta_val = zero_gate_delta["mean_delta"] if zero_gate_delta else 0.0
+
     # Effect size (Cohen's d)
     cand_acc = search_df[search_df["method"] == best_candidate]["test_acc"]
     fo_acc = search_df[search_df["method"] == "Feature-only"]["test_acc"]
@@ -389,7 +446,9 @@ def generate_metrics_json(search_df, best_candidate, best_stats, output_dir):
     cohens_d = (cand_acc.mean() - fo_acc.mean()) / max(pooled_std, 1e-8)
 
     # Determine candidate family
-    if "faa" in best_candidate.lower():
+    if "selective" in best_candidate.lower():
+        family = "Selective MCGC Regime Gate"
+    elif "faa" in best_candidate.lower():
         family = "Feature-Ambiguity-Adaptive Hybrid"
     elif "mcgc" in best_candidate.lower():
         family = "Multi-Checkpoint Gradient Consistency"
@@ -410,26 +469,50 @@ def generate_metrics_json(search_df, best_candidate, best_stats, output_dir):
     ]
 
     # Determine status
-    if fsc_delta_val > 0:
+    selected = fsc_delta_val > 0
+    if selection_mode == "selective":
+        selected = (
+            fsc_delta_val > 0
+            and lfs_delta_val >= -0.005
+            and wr >= 0.6
+            and shuffled_gradient_delta > 0
+        )
+
+    if selected:
         status = "completed"
-        claim_rec = f"{best_candidate} shows +{fsc_delta_val:.4f} delta over Feature-only on feature_similar_cross_class. Recommend confirmation experiment."
-        selected = True
+        claim_rec = f"{best_candidate} passes selection constraints with {fsc_delta_val:+.4f} delta over Feature-only on feature_similar_cross_class. Recommend confirmation experiment."
     else:
         status = "completed"
-        claim_rec = f"No candidate beats Feature-only on feature_similar_cross_class. Best delta: {fsc_delta_val:+.4f}. Consider method redesign."
-        selected = False
+        claim_rec = f"No candidate passes all selection constraints. Best candidate {best_candidate} has FSCC delta {fsc_delta_val:+.4f}, LFS delta {lfs_delta_val:+.4f}, win rate {wr:.4f}, real-vs-control delta {shuffled_gradient_delta:+.4f}."
+
+    cand_subset = search_df[search_df["method"] == best_candidate]
+    gate_active = 0.0
+    if "diag_gate_active_fraction" in cand_subset.columns:
+        gate_active = float(cand_subset["diag_gate_active_fraction"].dropna().mean())
+    best_tau_quantile = 0.0
+    if "hp_tau_quantile" in cand_subset.columns:
+        values = cand_subset["hp_tau_quantile"].dropna()
+        if len(values) > 0:
+            best_tau_quantile = float(values.iloc[0])
 
     metrics = {
-        "exp_id": "2026-06-04-adaptive-grage-search",
+        "exp_id": "2026-06-04-selective-mcgc-regime-gate" if selection_mode == "selective" else "2026-06-04-adaptive-grage-search",
         "status": status,
         "best_candidate": best_candidate,
+        "best_selective_method": best_candidate if selection_mode == "selective" else "",
         "candidate_family": family,
         "candidate_selected_for_confirmation": selected,
         "delta_vs_feature_only_feature_similar_cross_class": round(fsc_delta_val, 6),
+        "delta_vs_feature_only_feature_similar_cross_class_pp": round(fsc_delta_val * 100, 4),
         "delta_vs_current_hybrid_feature_similar_cross_class": round(hybrid_delta_val, 6),
-        "low_feature_similarity_degradation_vs_feature_only": 0.0,  # Filled during validation
+        "low_feature_similarity_degradation_vs_feature_only": round(lfs_delta_val, 6),
+        "low_feature_similarity_degradation_vs_feature_only_pp": round(lfs_delta_val * 100, 4),
         "win_rate_vs_feature_only": round(wr, 4),
         "effect_size_vs_feature_only": round(float(cohens_d), 4),
+        "dynamic_gate_active_fraction": round(gate_active, 6),
+        "shuffled_gradient_delta_pp": round(shuffled_gradient_delta * 100, 4),
+        "zero_gate_delta_vs_feature_only_pp": round(zero_gate_delta_val * 100, 4),
+        "best_tau_quantile": round(best_tau_quantile, 4),
         "failure_modes": [],
         "num_candidate_methods": num_candidates,
         "num_result_rows": len(search_df),
@@ -516,6 +599,9 @@ def main():
                         help="Path to validation results CSV (optional)")
     parser.add_argument("--output_dir", type=str, required=True,
                         help="Output directory for analysis files")
+    parser.add_argument("--selection_mode", choices=["adaptive", "selective"],
+                        default="adaptive",
+                        help="Candidate selection policy")
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -532,7 +618,14 @@ def main():
 
     # Select best candidate
     print("\n--- Selecting best candidate ---")
-    best_candidate, best_stats = select_best_candidate(search_df)
+    best_candidate, best_stats = select_best_candidate(search_df, args.selection_mode)
+    if best_candidate is None:
+        if args.selection_mode == "selective":
+            best_candidate, best_stats = select_best_candidate(search_df, "selective_relaxed")
+            print("  No candidate passed strict selection constraints; falling back to best selective FSCC delta for reporting.")
+        if best_candidate is None:
+            best_candidate, best_stats = select_best_candidate(search_df, "adaptive")
+            print("  No selective candidate found; falling back to best adaptive FSCC delta for reporting.")
     print(f"  Best candidate: {best_candidate}")
     if best_stats:
         print(f"  Delta vs Feature-only on feature_similar_cross_class: {best_stats['mean_delta']:+.4f}")
@@ -551,7 +644,7 @@ def main():
 
     # Generate metrics.json
     print("\n--- Generating metrics.json ---")
-    generate_metrics_json(search_df, best_candidate, best_stats, args.output_dir)
+    generate_metrics_json(search_df, best_candidate, best_stats, args.output_dir, args.selection_mode)
 
     # Generate failure_analysis.md
     print("\n--- Generating failure_analysis.md ---")

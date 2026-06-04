@@ -123,6 +123,38 @@ pytest -q tests/test_adaptive_score.py tests/test_edge_gate.py tests/test_scorin
 Then run smoke/search/validate commands for the selective runner. Document exact
 commands in `result.md`.
 
+Preferred runner commands:
+
+```bash
+python scripts/run_adaptive_grage_search.py \
+  --mode selective_smoke \
+  --output_dir experiments/2026-06-04-selective-mcgc-regime-gate/logs/smoke
+
+python scripts/run_adaptive_grage_search.py \
+  --mode selective_search \
+  --output_dir experiments/2026-06-04-selective-mcgc-regime-gate/logs/search
+```
+
+After selecting the best no-leak selective config from search, pass its JSON
+config to:
+
+```bash
+python scripts/run_adaptive_grage_search.py \
+  --mode selective_validate \
+  --best_candidate '<json config>' \
+  --output_dir experiments/2026-06-04-selective-mcgc-regime-gate/logs/validate
+```
+
+Use the strict selective analyzer after search and again after validation:
+
+```bash
+python scripts/analyze_adaptive_grage_search.py \
+  --selection_mode selective \
+  --search_csv experiments/2026-06-04-selective-mcgc-regime-gate/logs/search/results.csv \
+  --validation_csv experiments/2026-06-04-selective-mcgc-regime-gate/logs/validate/results.csv \
+  --output_dir experiments/2026-06-04-selective-mcgc-regime-gate
+```
+
 ## Output Contract
 
 Write:

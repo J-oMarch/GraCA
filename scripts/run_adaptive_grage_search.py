@@ -6,6 +6,9 @@ Modes:
     smoke   — tiny matrix for CI/debug (1 dataset, 1 noise, 1 seed, 1 method)
     search  — candidate search matrix (Cora, CiteSeer × 2 noise types × 3 seeds)
     validate — validation matrix for best candidate (3 datasets × 3 noise × 5 seeds)
+    selective_smoke — smoke test for Selective MCGC
+    selective_search — no-leak Selective MCGC search matrix
+    selective_validate — validation matrix for a selected Selective MCGC config
 
 Usage:
     python scripts/run_adaptive_grage_search.py --mode smoke \
@@ -42,6 +45,7 @@ from src.grage.hybrid_score import compute_grage_hybrid_score
 from src.grage.adaptive_score import (
     compute_faa_hybrid_score,
     compute_mcgc_score,
+    compute_selective_mcgc_score,
     collect_multi_checkpoint_grads,
 )
 from src.utils.mask_split import split_train_support_score
@@ -130,6 +134,7 @@ def run_single_experiment(
 
     method_name = method_config["name"]
     method_type = method_config["type"]
+    method_diagnostics = {}
 
     # ─── Compute edge scores ───
     if method_type == "feature_only":
@@ -178,6 +183,7 @@ def run_single_experiment(
             bad_edge_mask=bad_edge_mask,
         )
         edge_scores = hybrid_result["hybrid_score"]
+        method_diagnostics = hybrid_result.get("diagnostics", {})
 
     elif method_type == "faa_hybrid":
         # Feature-Ambiguity-Adaptive Hybrid
@@ -229,6 +235,7 @@ def run_single_experiment(
             bad_edge_mask=bad_edge_mask,
         )
         edge_scores = faa_result["hybrid_score"]
+        method_diagnostics = faa_result.get("diagnostics", {})
 
     elif method_type == "mcgc":
         # Multi-Checkpoint Gradient Consistency
@@ -285,6 +292,87 @@ def run_single_experiment(
             bad_edge_mask=bad_edge_mask,
         )
         edge_scores = mcgc_result["hybrid_score"]
+        method_diagnostics = mcgc_result.get("diagnostics", {})
+
+    elif method_type == "selective_mcgc":
+        # Selective Multi-Checkpoint Gradient Consistency with a no-leak
+        # feature-regime gate.
+        lambda_pos = method_config.get("lambda_pos", 0.1)
+        lambda_neg = method_config.get("lambda_neg", 0.5)
+        consistency_weight = method_config.get("consistency_weight", 1.0)
+        score_ratio = method_config.get("score_ratio", 0.3)
+        checkpoint_fractions = method_config.get("checkpoint_fractions", [0.3, 0.5, 0.7, 0.9])
+        total_epochs = method_config.get("total_epochs", 200)
+        tau = method_config.get("tau", None)
+        tau_quantile = method_config.get("tau_quantile", 0.75)
+        gate_type = method_config.get("gate_type", "hard")
+        soft_k = method_config.get("soft_k", 20.0)
+        checkpoint_control = method_config.get("checkpoint_control", "real")
+
+        num_classes = int(y.max().item()) + 1
+
+        def model_ctor():
+            return GCN(
+                in_dim=x.shape[1], hidden_dim=64,
+                out_dim=num_classes, num_layers=2, dropout=0.5,
+            )
+
+        model = model_ctor().to(device)
+        init_state_dict = train_model_for_grage(
+            model, x, noisy_edge_index, y, train_mask, val_mask,
+            lr=config["training"]["lr"],
+            weight_decay=config["training"]["weight_decay"],
+            epochs=200, patience=50, seed=seed,
+        )
+
+        support_mask, score_mask = split_train_support_score(
+            train_mask, y, score_ratio=score_ratio, seed=seed
+        )
+
+        checkpoint_grads = collect_multi_checkpoint_grads(
+            model_ctor=model_ctor,
+            init_state_dict=init_state_dict,
+            x=x, edge_index=noisy_edge_index, y=y,
+            train_mask=train_mask, score_mask=score_mask,
+            checkpoint_fractions=checkpoint_fractions,
+            total_epochs=total_epochs,
+            lr=config["training"]["lr"],
+            weight_decay=config["training"]["weight_decay"],
+            undirected=True,
+        )
+
+        if checkpoint_control == "shuffled":
+            generator = torch.Generator(device=device)
+            generator.manual_seed(seed + 7919)
+            checkpoint_grads = [
+                grad[torch.randperm(grad.numel(), device=device, generator=generator)]
+                for grad in checkpoint_grads
+            ]
+        elif checkpoint_control == "frozen":
+            checkpoint_grads = [checkpoint_grads[0].clone() for _ in checkpoint_grads]
+        elif checkpoint_control != "real":
+            raise ValueError(f"Unknown checkpoint_control: {checkpoint_control}")
+
+        feature_risk = compute_feature_risk(x, noisy_edge_index, device)
+        feature_similarity = compute_feature_similarity(x, noisy_edge_index, device)
+
+        selective_result = compute_selective_mcgc_score(
+            feature_risk=feature_risk,
+            feature_similarity=feature_similarity,
+            checkpoint_grads=checkpoint_grads,
+            tau=tau,
+            tau_quantile=tau_quantile,
+            gate_type=gate_type,
+            soft_k=soft_k,
+            lambda_pos=lambda_pos,
+            lambda_neg=lambda_neg,
+            consistency_weight=consistency_weight,
+            undirected=True,
+            edge_index=noisy_edge_index,
+            bad_edge_mask=bad_edge_mask,
+        )
+        edge_scores = selective_result["hybrid_score"]
+        method_diagnostics = selective_result.get("diagnostics", {})
 
     else:
         raise ValueError(f"Unknown method type: {method_type}")
@@ -341,6 +429,10 @@ def run_single_experiment(
     for k, v in method_config.items():
         if k not in ("name", "type") and not k.startswith("_"):
             result[f"hp_{k}"] = v
+
+    for k, v in method_diagnostics.items():
+        if isinstance(v, (str, int, float, bool)) or v is None:
+            result[f"diag_{k}"] = v
 
     return result
 
@@ -409,6 +501,88 @@ def get_smoke_methods():
     ]
 
 
+def get_selective_search_methods():
+    """Return Selective MCGC method configurations for regime-gate search."""
+    methods = [
+        {"name": "Feature-only", "type": "feature_only"},
+        {"name": "GraGE-Hybrid-FO-posneg-lp0.1-ln0.5", "type": "hybrid_baseline",
+         "lambda_pos": 0.1, "lambda_neg": 0.5, "score_ratio": 0.3},
+        {"name": "MCGC-cw3.0-lp0.1-ln0.5", "type": "mcgc",
+         "lambda_pos": 0.1, "lambda_neg": 0.5,
+         "consistency_weight": 3.0,
+         "score_ratio": 0.3,
+         "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+         "total_epochs": 200},
+    ]
+
+    for gate_type in ["hard", "soft"]:
+        for tau_quantile in [0.5, 0.75, 0.9]:
+            for lp, ln in [(0.1, 0.5), (0.25, 0.25)]:
+                methods.append({
+                    "name": f"Selective-MCGC-{gate_type}-q{tau_quantile}-lp{lp}-ln{ln}",
+                    "type": "selective_mcgc",
+                    "gate_type": gate_type,
+                    "tau_quantile": tau_quantile,
+                    "soft_k": 20.0,
+                    "lambda_pos": lp,
+                    "lambda_neg": ln,
+                    "consistency_weight": 3.0,
+                    "score_ratio": 0.3,
+                    "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+                    "total_epochs": 200,
+                    "checkpoint_control": "real",
+                })
+
+    # Controls for attribution: if these match the real-gradient variant, the
+    # paper cannot claim training-dynamics signal.
+    methods.extend([
+        {"name": "Selective-MCGC-hard-q0.75-shuffled", "type": "selective_mcgc",
+         "gate_type": "hard", "tau_quantile": 0.75,
+         "lambda_pos": 0.1, "lambda_neg": 0.5,
+         "consistency_weight": 3.0, "score_ratio": 0.3,
+         "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+         "total_epochs": 200, "checkpoint_control": "shuffled"},
+        {"name": "Selective-MCGC-hard-q0.75-frozen", "type": "selective_mcgc",
+         "gate_type": "hard", "tau_quantile": 0.75,
+         "lambda_pos": 0.1, "lambda_neg": 0.5,
+         "consistency_weight": 3.0, "score_ratio": 0.3,
+         "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+         "total_epochs": 200, "checkpoint_control": "frozen"},
+        {"name": "Selective-MCGC-zero-gate", "type": "selective_mcgc",
+         "gate_type": "hard", "tau": 2.0,
+         "lambda_pos": 0.1, "lambda_neg": 0.5,
+         "consistency_weight": 3.0, "score_ratio": 0.3,
+         "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+         "total_epochs": 200, "checkpoint_control": "real"},
+    ])
+
+    return methods
+
+
+def get_selective_smoke_methods():
+    """Return a tiny Selective MCGC method set for smoke testing."""
+    return [
+        {"name": "Feature-only", "type": "feature_only"},
+        {"name": "MCGC-cw3.0-lp0.1-ln0.5", "type": "mcgc",
+         "lambda_pos": 0.1, "lambda_neg": 0.5,
+         "consistency_weight": 3.0, "score_ratio": 0.3,
+         "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+         "total_epochs": 40},
+        {"name": "Selective-MCGC-hard-q0.75-lp0.1-ln0.5", "type": "selective_mcgc",
+         "gate_type": "hard", "tau_quantile": 0.75,
+         "lambda_pos": 0.1, "lambda_neg": 0.5,
+         "consistency_weight": 3.0, "score_ratio": 0.3,
+         "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+         "total_epochs": 40, "checkpoint_control": "real"},
+        {"name": "Selective-MCGC-soft-q0.75-lp0.1-ln0.5", "type": "selective_mcgc",
+         "gate_type": "soft", "tau_quantile": 0.75, "soft_k": 20.0,
+         "lambda_pos": 0.1, "lambda_neg": 0.5,
+         "consistency_weight": 3.0, "score_ratio": 0.3,
+         "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+         "total_epochs": 40, "checkpoint_control": "real"},
+    ]
+
+
 def get_validation_methods(best_candidate_config):
     """Return methods for validation: best candidate + baselines."""
     methods = [
@@ -418,6 +592,38 @@ def get_validation_methods(best_candidate_config):
     ]
     if best_candidate_config is not None:
         methods.append(best_candidate_config)
+    return methods
+
+
+def get_selective_validation_methods(best_candidate_config):
+    """Return validation methods for Selective MCGC."""
+    methods = [
+        {"name": "Feature-only", "type": "feature_only"},
+        {"name": "GraGE-Hybrid-FO-posneg-lp0.1-ln0.5", "type": "hybrid_baseline",
+         "lambda_pos": 0.1, "lambda_neg": 0.5, "score_ratio": 0.3},
+        {"name": "MCGC-cw3.0-lp0.1-ln0.5", "type": "mcgc",
+         "lambda_pos": 0.1, "lambda_neg": 0.5,
+         "consistency_weight": 3.0,
+         "score_ratio": 0.3,
+         "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+         "total_epochs": 200},
+    ]
+    if best_candidate_config is not None:
+        methods.append(best_candidate_config)
+    else:
+        methods.append({
+            "name": "Selective-MCGC-hard-q0.75-lp0.1-ln0.5",
+            "type": "selective_mcgc",
+            "gate_type": "hard",
+            "tau_quantile": 0.75,
+            "lambda_pos": 0.1,
+            "lambda_neg": 0.5,
+            "consistency_weight": 3.0,
+            "score_ratio": 0.3,
+            "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+            "total_epochs": 200,
+            "checkpoint_control": "real",
+        })
     return methods
 
 
@@ -646,9 +852,60 @@ def run_validate(device, output_dir, best_candidate_config):
     )
 
 
+def run_selective_smoke(device, output_dir):
+    """Selective MCGC smoke test."""
+    return run_experiment_matrix(
+        datasets=["Cora"],
+        noise_types=["feature_similar_cross_class"],
+        noise_ratio=0.3,
+        seeds=[0],
+        downstream_model="GCN",
+        prune_ratio=0.2,
+        method_configs=get_selective_smoke_methods(),
+        device=device,
+        output_dir=output_dir,
+        include_random_matched=True,
+    )
+
+
+def run_selective_search(device, output_dir):
+    """Selective MCGC no-leak regime-gate search."""
+    return run_experiment_matrix(
+        datasets=["Cora", "CiteSeer"],
+        noise_types=["feature_similar_cross_class", "low_feature_similarity"],
+        noise_ratio=0.3,
+        seeds=[0, 1, 2],
+        downstream_model="GCN",
+        prune_ratio=0.2,
+        method_configs=get_selective_search_methods(),
+        device=device,
+        output_dir=output_dir,
+        include_random_matched=True,
+    )
+
+
+def run_selective_validate(device, output_dir, best_candidate_config):
+    """Selective MCGC validation matrix."""
+    return run_experiment_matrix(
+        datasets=["Cora", "CiteSeer", "PubMed"],
+        noise_types=["feature_similar_cross_class", "low_feature_similarity", "degree_aligned_random"],
+        noise_ratio=0.3,
+        seeds=[0, 1, 2, 3, 4],
+        downstream_model="GCN",
+        prune_ratio=0.2,
+        method_configs=get_selective_validation_methods(best_candidate_config),
+        device=device,
+        output_dir=output_dir,
+        include_random_matched=True,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Adaptive GraGE Method Search")
-    parser.add_argument("--mode", choices=["smoke", "search", "validate"], default="smoke",
+    parser.add_argument("--mode", choices=[
+        "smoke", "search", "validate",
+        "selective_smoke", "selective_search", "selective_validate",
+    ], default="smoke",
                         help="Experiment mode")
     parser.add_argument("--output_dir", type=str, default=None,
                         help="Output directory for results")
@@ -678,6 +935,15 @@ def main():
         if args.best_candidate:
             best_config = json.loads(args.best_candidate)
         df = run_validate(device, output_dir, best_config)
+    elif args.mode == "selective_smoke":
+        df = run_selective_smoke(device, output_dir)
+    elif args.mode == "selective_search":
+        df = run_selective_search(device, output_dir)
+    elif args.mode == "selective_validate":
+        best_config = None
+        if args.best_candidate:
+            best_config = json.loads(args.best_candidate)
+        df = run_selective_validate(device, output_dir, best_config)
 
     # Print summary
     if df is not None and len(df) > 0:
