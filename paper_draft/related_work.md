@@ -97,3 +97,31 @@ standalone edge discriminator.
 uses curriculum sparsification for lightweight GNN search. GraGE should avoid
 claiming generic sparsification novelty and instead report whether the dynamic
 gate changes which edges are pruned under the same budget.
+
+## Stability And Self-Supervised Structure Signals
+
+[Regularizing GNNs via Consistency-Diversity Graph Augmentations, AAAI 2022](https://ojs.aaai.org/index.php/AAAI/article/view/20307)
+argues that graph augmentations should be evaluated by both consistency and
+diversity. For GraGE, this suggests a stronger no-leak channel than raw
+edge-gradient signs: score edges by whether they destabilize predictions across
+graph views, then use edge-gate gradients only as a consistency/abstention
+constraint.
+
+[SLAPS, 2021](https://openreview.net/forum?id=JWRRBHFPKTJ) uses
+self-supervision to improve adjacency learning. The novelty risk is that a
+prediction-stability GraGE rebuild may look like self-supervised structure
+learning unless it explicitly keeps the observed noisy graph, reports
+matched-budget pruning against Feature-only, and isolates residual evidence
+beyond feature cosine.
+
+[Self-Supervised Graph Structure Refinement, 2022](https://arxiv.org/abs/2211.06545)
+refines graph structure using multi-view contrastive pretraining and estimated
+edge probabilities. GraGE can absorb the multi-view idea, but must keep the
+edge-gate/hypergradient framing: stability is a train-dynamics-derived edge
+signal, not a replacement by link prediction.
+
+[On the Prediction Instability of Graph Neural Networks](https://www.catalyzex.com/paper/on-the-prediction-instability-of-graph-neural)
+studies how node predictions vary with training randomness and graph/model
+choices. This supports using prediction instability as a measurable training
+dynamics object, but GraGE must convert node-level instability into edge-level
+graph evolution scores and test shuffled/frozen controls.
