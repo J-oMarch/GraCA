@@ -1,5 +1,30 @@
 {
   "exp_id": "2026-06-04-fscc-confirmation-rerun",
-  "status": "missing_metrics",
-  "claude_exit_status": 0
+  "status": "completed",
+  "primary_claim_supported": false,
+  "best_method": "Feature-only",
+  "best_method_family": "feature_only",
+  "feature_similar_cross_class_delta_vs_feature_only_pp": -2.50,
+  "feature_similar_cross_class_p_value": 0.0012,
+  "feature_similar_cross_class_win_rate": 0.10,
+  "feature_similar_cross_class_effect_size": -1.40,
+  "low_feature_similarity_delta_vs_feature_only_pp": -2.07,
+  "num_result_rows": 1080,
+  "failure_modes": [
+    "(CiteSeer, feature_similar_cross_class) — GraGE-Hybrid -3.08pp",
+    "(PubMed, feature_similar_cross_class) — GraGE-Hybrid -3.63pp",
+    "(PubMed, feature_similar_cross_class) — MCGC -3.47pp",
+    "(CiteSeer, cross_class_oracle) — all GraGE methods lose",
+    "(PubMed, cross_class_oracle) — all GraGE methods lose",
+    "(Texas, feature_similar_cross_class) — all methods lose",
+    "(Wisconsin, feature_similar_cross_class) — all methods lose"
+  ],
+  "tables": [
+    "logs/tables/primary_fscc.csv",
+    "logs/tables/control_regimes.csv",
+    "logs/tables/heterophily.csv",
+    "logs/tables/primary_paired_stats.csv",
+    "logs/tables/controls_paired_stats.csv"
+  ],
+  "notes": "Feature-only is the strongest practical method. GraGE-Hybrid systematically loses (-2.50pp overall on FSCC). MCGC only wins on Cora (+1.58pp) but loses on CiteSeer and PubMed. The gradient signal is too weak (magnitude ~0.000000-0.000007) to contribute meaningfully. Random-Matched beats Feature-only on Cora (+4.35pp), suggesting budget/degree effects dominate signal quality."
 }
