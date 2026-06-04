@@ -187,7 +187,16 @@ Preferred execution path for long experiments:
 bash scripts/submit_exp_tmux.sh <exp_id>
 ```
 
-This starts a new tmux session on the remote server and runs Claude Code with:
+This uses one fixed remote tmux session:
+
+```text
+graca_claude
+```
+
+Each submitted experiment gets its own tmux window inside that session. This
+keeps management simple while still allowing explicit parallel experiments.
+
+Claude Code runs with:
 
 ```bash
 --dangerously-skip-permissions --permission-mode bypassPermissions --effort max

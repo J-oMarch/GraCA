@@ -81,8 +81,9 @@ https://github.com/J-oMarch/GraCA
    ```text
    本地 git add/commit/push
    服务器 git pull
-   服务器新建 tmux session
-   tmux 内运行 Claude Code 最大权限实验
+   服务器进入固定 tmux session: graca_claude
+   在该 session 中为本实验新建一个 window
+   window 内运行 Claude Code 最大权限实验
    ```
 
 8. 之后你可以让 Codex 检查状态：
@@ -155,10 +156,16 @@ Claude Code 必须写入：
 bash scripts/submit_exp_tmux.sh <exp_id>
 ```
 
-这个脚本会在服务器上创建新的 tmux session，session 名默认是：
+这个脚本会在服务器上使用一个固定 tmux session：
 
 ```text
-graca_<exp_id>
+graca_claude
+```
+
+每个实验会在这个固定 session 里新建一个 window，window 名默认是：
+
+```text
+exp_<exp_id>
 ```
 
 Claude Code 会使用：
@@ -282,18 +289,21 @@ bash scripts/submit_exp_tmux.sh <exp_id>
 
 ### 如何人工观察服务器 tmux？
 
-Codex 提交后会输出 session 名，例如：
+Codex 提交后会输出固定 session 名和实验 window 名，例如：
 
 ```text
-graca_2026-06-04-hybrid-score-validation
+Session: graca_claude
+Window: exp_2026-06-04-hybrid-score-validation
 ```
 
 你可以打开本地终端，仅用于观察：
 
 ```bash
 ssh -p 15600 jyh@59.72.109.245
-tmux attach -t graca_2026-06-04-hybrid-score-validation
+tmux attach -t graca_claude
 ```
+
+进入后用 `Ctrl-b w` 选择实验 window。这样只有一个 tmux 管理入口，但可以同时监督多个并行实验。
 
 退出观察但不停止实验：
 

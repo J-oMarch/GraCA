@@ -18,7 +18,8 @@ REMOTE="${REMOTE_USER}@${REMOTE_HOST}"
 EXP_DIR="experiments/${EXP_ID}"
 PROMPT="${EXP_DIR}/prompt.md"
 SAFE_EXP_ID="$(printf '%s' "${EXP_ID}" | tr -c 'A-Za-z0-9_-' '_')"
-TMUX_SESSION="${TMUX_SESSION:-graca_${SAFE_EXP_ID}}"
+TMUX_SESSION="${TMUX_SESSION:-graca_claude}"
+TMUX_WINDOW="${TMUX_WINDOW:-exp_${SAFE_EXP_ID}}"
 CLAUDE_ARGS_DEFAULT="--dangerously-skip-permissions --permission-mode bypassPermissions --effort max"
 REMOTE_CLAUDE_ARGS="${REMOTE_CLAUDE_ARGS:-${CLAUDE_ARGS_DEFAULT}}"
 
@@ -57,19 +58,29 @@ if ! command -v tmux >/dev/null 2>&1; then
   exit 1
 fi
 
-if tmux has-session -t "${TMUX_SESSION}" 2>/dev/null; then
-  echo "tmux session already exists: ${TMUX_SESSION}"
+if tmux has-session -t "${TMUX_SESSION}" 2>/dev/null && \
+   tmux list-windows -t "${TMUX_SESSION}" -F '#W' | grep -Fx "${TMUX_WINDOW}" >/dev/null; then
+  echo "tmux window already exists: ${TMUX_SESSION}:${TMUX_WINDOW}"
   echo "Attach with: tmux attach -t ${TMUX_SESSION}"
   exit 1
 fi
 
-tmux new-session -d -s "${TMUX_SESSION}" "cd '${REMOTE_DIR}' && CLAUDE_ARGS='${REMOTE_CLAUDE_ARGS}' bash scripts/run_exp.sh '${EXP_ID}'; status=\\\$?; echo; echo '[tmux] experiment ${EXP_ID} finished with status '\${status}; exec bash"
+RUN_CMD="cd '${REMOTE_DIR}' && CLAUDE_ARGS='${REMOTE_CLAUDE_ARGS}' bash scripts/run_exp.sh '${EXP_ID}'; status=\\\$?; echo; echo '[tmux] experiment ${EXP_ID} finished with status '\${status}; exec bash"
+
+if tmux has-session -t "${TMUX_SESSION}" 2>/dev/null; then
+  tmux new-window -t "${TMUX_SESSION}" -n "${TMUX_WINDOW}" "\${RUN_CMD}"
+else
+  tmux new-session -d -s "${TMUX_SESSION}" -n "${TMUX_WINDOW}" "\${RUN_CMD}"
+fi
+
 tmux ls | grep "${TMUX_SESSION}"
+tmux list-windows -t "${TMUX_SESSION}"
 EOF
 
 echo
 echo "Remote tmux experiment started."
 echo "Session: ${TMUX_SESSION}"
+echo "Window: ${TMUX_WINDOW}"
 echo
 echo "Monitor from Mac through Codex:"
 echo "  bash scripts/check_exp_status.sh ${EXP_ID}"
@@ -77,6 +88,7 @@ echo
 echo "Manual server observation:"
 echo "  ssh -p ${REMOTE_PORT} ${REMOTE}"
 echo "  tmux attach -t ${TMUX_SESSION}"
+echo "  # then use Ctrl-b w to choose window ${TMUX_WINDOW}"
 echo
 echo "After it finishes, pull results with:"
 echo "  git pull --ff-only"

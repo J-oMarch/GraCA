@@ -55,6 +55,10 @@ When the user asks to design or run a new experiment:
 9. Prefer the tmux submit path for long experiments:
    `bash scripts/submit_exp_tmux.sh <exp_id>`
 
+   This uses one fixed remote tmux session named `graca_claude`. Each experiment
+   runs in its own tmux window inside that session, so the user has one
+   management entry point while still allowing explicit parallel experiments.
+
    Use the blocking path only when the user explicitly asks to wait in the
    current Codex run:
    `bash scripts/submit_exp.sh <exp_id>`
@@ -65,7 +69,7 @@ When the user asks to design or run a new experiment:
    - asking the remote server to `git pull`
    - running Claude Code through `scripts/run_exp.sh`
    - for blocking runs, pulling results back locally
-   - for tmux runs, reporting the tmux session name and monitor commands
+   - for tmux runs, reporting the tmux session/window name and monitor commands
 
 11. The remote server is responsible only for:
     - `git pull`
