@@ -1,0 +1,6 @@
+method,mean,std,count
+Random-Matched,0.653,,1
+MCGC-cw3.0-lp0.1-ln0.5,0.63,,1
+Selective-MCGC-hard-q0.75-lp0.1-ln0.5,0.611,,1
+Selective-MCGC-soft-q0.75-lp0.1-ln0.5,0.611,,1
+Feature-only,0.608,,1

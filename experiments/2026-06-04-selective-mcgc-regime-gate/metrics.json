@@ -1,0 +1,28 @@
+{
+  "exp_id": "2026-06-04-selective-mcgc-regime-gate",
+  "status": "completed",
+  "best_selective_method": "Selective-MCGC-hard-q0.5-lp0.1-ln0.5",
+  "candidate_selected_for_confirmation": false,
+  "delta_vs_feature_only_feature_similar_cross_class_pp": 0.09,
+  "low_feature_similarity_degradation_vs_feature_only_pp": -1.90,
+  "win_rate_vs_feature_only": 0.47,
+  "effect_size_vs_feature_only": 0.10,
+  "dynamic_gate_active_fraction": 0.501,
+  "shuffled_gradient_delta_pp": 0.47,
+  "zero_gate_delta_vs_feature_only_pp": 0.18,
+  "best_tau_quantile": 0.5,
+  "runtime_vs_feature_only_ratio": 3.0,
+  "num_result_rows": 453,
+  "new_files_or_modules": [
+    "src/grage/adaptive_score.py",
+    "tests/test_adaptive_score.py",
+    "scripts/run_adaptive_grage_search.py",
+    "scripts/analyze_adaptive_grage_search.py"
+  ],
+  "failure_modes": [
+    "Gradient signal too weak (mean magnitude ~0.000003) to improve FSCC beyond feature-only",
+    "Gate activation at 50% (median threshold) is not regime-aware — effectively random edge selection",
+    "FSCC delta +0.09pp not significant (p=0.575), win rate 0.47 below 0.6 threshold"
+  ],
+  "claim_recommendation": "The selective gate prevents MCGC degradation (+1.9pp LFS vs -2.5pp for raw MCGC) but cannot create meaningful FSCC gains. The bottleneck is gradient signal quality, not threshold selection. The paper should either (1) reframe around the gate-as-regularizer story (preventing gradient noise from hurting), or (2) abandon the training-dynamics claim and focus on the engineering contribution of selective gating."
+}

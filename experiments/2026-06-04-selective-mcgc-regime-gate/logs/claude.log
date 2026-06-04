@@ -1,0 +1,26 @@
+All output files are in place. Here's the experiment summary:
+
+## Experiment Complete: Selective MCGC Regime Gate
+
+### What Was Done
+1. ✅ Verified code compiles and all 30 tests pass
+2. ✅ Ran selective smoke test (4 methods, Cora, seed 0)
+3. ✅ Ran selective search matrix (19 methods × 2 datasets × 2 noise × 3 seeds = 228 experiments)
+4. ✅ Ran validation matrix (5 methods × 3 datasets × 3 noise × 5 seeds = 225 experiments)
+5. ✅ Generated result.md, metrics.json, failure_analysis.md
+
+### Key Results
+
+| Noise Type | Selective vs FO | MCGC vs FO | Selective vs MCGC |
+|-----------|----------------|-----------|-------------------|
+| feature_similar_cross_class | **+0.09pp** (n.s.) | -0.51pp | +0.60pp |
+| low_feature_similarity | **+1.90pp** (p=0.025) | **-2.46pp** (p=0.012) | **+4.36pp** |
+| degree_aligned_random | +0.09pp (n.s.) | **-1.91pp** (p=0.001) | +1.99pp |
+
+### Verdict: **Partial — NOT selected for confirmation**
+
+**What works**: The selective gate successfully prevents MCGC degradation on LFS/DAR, converting -2.5pp degradation into +1.9pp improvement. It's the best overall method (0.6787 vs 0.6718 for Feature-only).
+
+**What fails**: FSCC gains are negligible (+0.09pp, p=0.575, win rate 0.47). The gradient signal is too weak (~0.000003 magnitude) to meaningfully improve edge scoring beyond feature risk alone.
+
+**Bottleneck**: Gradient signal quality, not threshold selection or gate design.
