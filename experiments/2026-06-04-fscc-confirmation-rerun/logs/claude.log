@@ -1,0 +1,42 @@
+The experiment is ready. Here's what I've done:
+
+## Summary
+
+**Experiment ID**: `2026-06-04-fscc-confirmation-rerun`
+
+### Files written/updated:
+- `experiments/2026-06-04-fscc-confirmation-rerun/prompt.md` — comprehensive step-by-step workflow (9 steps)
+- `experiments/2026-06-04-fscc-confirmation-rerun/config.yaml` — experiment configuration
+- `experiments/2026-06-04-fscc-confirmation-rerun/notes.md` — updated notes
+
+### Verification completed:
+- ✅ `python -m py_compile` on all 4 required files — **all pass**
+- ✅ `pytest -q` on 4 test files — **30 tests pass**
+- ✅ Selective MCGC metrics.json does **not exist** (confirmed), so no selective method will be included
+
+### What the prompt specifies:
+
+The remote agent will:
+1. **Add `DegreeAwareRandom` and `GCN-Jaccard`** as method types to `run_adaptive_grage_search.py` (both already exist in `src/baselines/`)
+2. **Run smoke test** on Cora/FSCC/seed=0
+3. **Run primary confirmation**: 3 datasets × 1 noise × 20 seeds × 6 methods = **360 runs**
+4. **Run control regimes**: 3 datasets × 3 noise × 10 seeds × 6 methods = **540 runs**
+5. **Run heterophily slice**: 3 datasets × 2 noise × 5 seeds × 6 methods = **180 runs**
+6. **Compute paired stats**: t-test, Wilcoxon, win rate, Cohen's d, runtime
+7. **Write** `result.md`, `failure_analysis.md`, `metrics.json`
+
+### 6 Methods under test:
+| Method | Type |
+|--------|------|
+| Feature-only | baseline |
+| GraGE-Hybrid-FO-posneg-lp0.1-ln0.5 | hybrid |
+| MCGC-cw3.0-lp0.1-ln0.5 | mcgc |
+| Random-Matched | random (via `include_random_matched=True`) |
+| DegreeAwareRandom | degree-aware random (needs wiring) |
+| GCN-Jaccard | Jaccard similarity (needs wiring) |
+
+### Next step:
+When you're ready, say **"submit this experiment"** or **"用 tmux 提交这个实验"** and I'll run:
+```bash
+bash scripts/submit_exp_tmux.sh 2026-06-04-fscc-confirmation-rerun
+```

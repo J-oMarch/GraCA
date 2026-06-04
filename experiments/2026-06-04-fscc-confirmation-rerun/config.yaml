@@ -1,20 +1,57 @@
 exp_id: 2026-06-04-fscc-confirmation-rerun
 purpose: rerun_failed_matched_budget_confirmation
-datasets: [Cora, CiteSeer, PubMed]
-heterophily_slice: [Texas, Wisconsin, Actor]
+status: ready_to_submit
+
+datasets:
+  primary: [Cora, CiteSeer, PubMed]
+  heterophily: [Texas, Wisconsin, Actor]
+
 noise_types:
   primary: [feature_similar_cross_class]
   controls: [cross_class_oracle, low_feature_similarity, degree_aligned_random]
+  heterophily: [feature_similar_cross_class, degree_aligned_random]
+
 seeds:
   primary: 20
   controls: 10
+  heterophily: 5
+
 noise_ratio: 0.3
 prune_ratio: 0.2
 downstream_model: GCN
+
+methods:
+  # Methods in method_configs (passed to run_experiment_matrix)
+  - name: Feature-only
+    type: feature_only
+  - name: GraGE-Hybrid-FO-posneg-lp0.1-ln0.5
+    type: hybrid_baseline
+    lambda_pos: 0.1
+    lambda_neg: 0.5
+    score_ratio: 0.3
+  - name: MCGC-cw3.0-lp0.1-ln0.5
+    type: mcgc
+    lambda_pos: 0.1
+    lambda_neg: 0.5
+    consistency_weight: 3.0
+    score_ratio: 0.3
+    checkpoint_fractions: [0.3, 0.5, 0.7, 0.9]
+    total_epochs: 200
+  - name: DegreeAwareRandom
+    type: degree_aware_random
+  - name: GCN-Jaccard
+    type: jaccard
+  # Random-Matched is handled separately via include_random_matched=True
+
 primary_baseline: Feature-only
+total_runs_estimate:
+  primary: 360       # 3 datasets × 1 noise × 20 seeds × 6 methods
+  controls: 540      # 3 datasets × 3 noise × 10 seeds × 6 methods
+  heterophily: 180   # 3 datasets × 2 noise × 5 seeds × 6 methods
+  total: 1080
+
 required_outputs:
   - result.md
   - metrics.json
   - failure_analysis.md
   - logs/
-
