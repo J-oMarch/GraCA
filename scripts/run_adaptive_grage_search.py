@@ -453,6 +453,7 @@ def run_single_experiment(
         grad_abstain_thresh = method_config.get("gradient_abstention_threshold", 0.1)
         checkpoint_control = method_config.get("checkpoint_control", "real")
         score_ratio = method_config.get("score_ratio", 0.3)
+        skip_residualization = method_config.get("skip_residualization", False)
 
         num_classes = int(y.max().item()) + 1
 
@@ -526,6 +527,7 @@ def run_single_experiment(
             gradient_abstention_threshold=grad_abstain_thresh,
             undirected=True,
             bad_edge_mask=bad_edge_mask,
+            skip_residualization=skip_residualization,
         )
         edge_scores = stability_result["edge_score"]
         method_diagnostics = stability_result.get("diagnostics", {})
@@ -537,6 +539,20 @@ def run_single_experiment(
             perm = torch.randperm(edge_scores.numel(), device=device, generator=generator)
             edge_scores = edge_scores[perm]
             method_diagnostics["shuffled_stability"] = True
+
+        # Shuffled residual control: keep feature risk, replace residual with shuffled
+        if method_config.get("_shuffled_residual", False):
+            from src.grage.adaptive_score import rank_normalize
+            R_feature = rank_normalize(feature_risk)
+            residual = stability_result["residual"]
+            generator = torch.Generator(device=device)
+            generator.manual_seed(seed + 7919)
+            perm = torch.randperm(residual.numel(), device=device, generator=generator)
+            shuffled_residual = residual[perm]
+            alpha = 0.5
+            edge_scores = R_feature + alpha * shuffled_residual
+            edge_scores = edge_scores.clamp(-2, 5)
+            method_diagnostics["shuffled_residual"] = True
 
     else:
         raise ValueError(f"Unknown method type: {method_type}")
@@ -890,20 +906,27 @@ def run_experiment_matrix(
             for seed in seeds:
                 set_seed(seed)
 
-                # Inject noise
-                noise_result = inject_noise(
-                    edge_index=data.edge_index,
-                    num_nodes=data.num_nodes,
-                    noise_type=noise_type,
-                    noise_ratio=noise_ratio,
-                    x=data.x,
-                    y=data.y,
-                    train_mask=data.train_mask,
-                    seed=seed,
-                )
-
-                noisy_edge_index = noise_result["noisy_edge_index"]
-                bad_edge_mask = noise_result["bad_edge_mask"]
+                # Inject noise (or use clean graph)
+                if noise_type == "clean":
+                    noisy_edge_index = data.edge_index.clone()
+                    bad_edge_mask = torch.zeros(
+                        noisy_edge_index.shape[1], dtype=torch.bool
+                    )
+                    effective_noise_ratio = 0.0
+                else:
+                    noise_result = inject_noise(
+                        edge_index=data.edge_index,
+                        num_nodes=data.num_nodes,
+                        noise_type=noise_type,
+                        noise_ratio=noise_ratio,
+                        x=data.x,
+                        y=data.y,
+                        train_mask=data.train_mask,
+                        seed=seed,
+                    )
+                    noisy_edge_index = noise_result["noisy_edge_index"]
+                    bad_edge_mask = noise_result["bad_edge_mask"]
+                    effective_noise_ratio = noise_ratio
 
                 data_noisy = data.clone()
                 data_noisy.edge_index = noisy_edge_index
@@ -914,7 +937,7 @@ def run_experiment_matrix(
                         result = run_single_experiment(
                             dataset_name=dataset_name,
                             noise_type=noise_type,
-                            noise_ratio=noise_ratio,
+                            noise_ratio=effective_noise_ratio,
                             seed=seed,
                             method_config=method_config,
                             downstream_model_name=downstream_model,
@@ -942,7 +965,7 @@ def run_experiment_matrix(
                         result = run_random_matched_baseline(
                             dataset_name=dataset_name,
                             noise_type=noise_type,
-                            noise_ratio=noise_ratio,
+                            noise_ratio=effective_noise_ratio,
                             seed=seed,
                             downstream_model_name=downstream_model,
                             prune_ratio=prune_ratio,
@@ -1176,6 +1199,164 @@ def get_stability_validation_methods(best_candidate_config):
     return methods
 
 
+def get_stability_ablation_methods():
+    """Return StabilityResidual ablation configurations.
+
+    Ablates:
+    1. Raw stability (no residualization) vs residualized stability
+    2. Feature-only + shuffled residual (control)
+    3. Gradient confidence: none, real, shuffled, frozen
+    4. Dropout schedules
+    5. Number of views
+    """
+    base_dp5 = [0.0, 0.10, 0.15, 0.20, 0.30]
+
+    methods = [
+        # ── Baselines ──
+        {"name": "Feature-only", "type": "feature_only"},
+
+        # ── Core ablation: raw vs residualized stability ──
+        {"name": "StabilityResidual-residualized-v5-dp0.15-nograd",
+         "type": "stability_residual",
+         "num_views": 5, "edge_dropout_rates": base_dp5,
+         "total_epochs": 200, "use_gradient_confidence": False,
+         "score_ratio": 0.3, "checkpoint_control": "real",
+         "skip_residualization": False},
+
+        {"name": "StabilityResidual-raw-v5-dp0.15-nograd",
+         "type": "stability_residual",
+         "num_views": 5, "edge_dropout_rates": base_dp5,
+         "total_epochs": 200, "use_gradient_confidence": False,
+         "score_ratio": 0.3, "checkpoint_control": "real",
+         "skip_residualization": True},
+
+        # ── Shuffled residual control ──
+        {"name": "StabilityResidual-shuffled-residual-v5",
+         "type": "stability_residual",
+         "num_views": 5, "edge_dropout_rates": base_dp5,
+         "total_epochs": 200, "use_gradient_confidence": False,
+         "score_ratio": 0.3, "checkpoint_control": "real",
+         "_shuffled_residual": True},
+
+        # ── Gradient confidence controls ──
+        {"name": "StabilityResidual-v5-dp0.15-nograd",
+         "type": "stability_residual",
+         "num_views": 5, "edge_dropout_rates": base_dp5,
+         "total_epochs": 200, "use_gradient_confidence": False,
+         "score_ratio": 0.3, "checkpoint_control": "real"},
+
+        {"name": "StabilityResidual-v5-dp0.15-grad-real",
+         "type": "stability_residual",
+         "num_views": 5, "edge_dropout_rates": base_dp5,
+         "total_epochs": 200, "use_gradient_confidence": True,
+         "gradient_abstention_threshold": 0.1,
+         "score_ratio": 0.3, "checkpoint_control": "real"},
+
+        {"name": "StabilityResidual-v5-dp0.15-grad-shuffled",
+         "type": "stability_residual",
+         "num_views": 5, "edge_dropout_rates": base_dp5,
+         "total_epochs": 200, "use_gradient_confidence": True,
+         "gradient_abstention_threshold": 0.1,
+         "score_ratio": 0.3, "checkpoint_control": "shuffled"},
+
+        {"name": "StabilityResidual-v5-dp0.15-grad-frozen",
+         "type": "stability_residual",
+         "num_views": 5, "edge_dropout_rates": base_dp5,
+         "total_epochs": 200, "use_gradient_confidence": True,
+         "gradient_abstention_threshold": 0.1,
+         "score_ratio": 0.3, "checkpoint_control": "frozen"},
+
+        # ── Dropout schedule sensitivity ──
+        {"name": "StabilityResidual-v3-dp00-05-10-nograd",
+         "type": "stability_residual",
+         "num_views": 3,
+         "edge_dropout_rates": [0.0, 0.05, 0.10],
+         "total_epochs": 200, "use_gradient_confidence": False,
+         "score_ratio": 0.3, "checkpoint_control": "real"},
+
+        {"name": "StabilityResidual-v5-dp00-10-15-20-30-nograd",
+         "type": "stability_residual",
+         "num_views": 5,
+         "edge_dropout_rates": [0.0, 0.10, 0.15, 0.20, 0.30],
+         "total_epochs": 200, "use_gradient_confidence": False,
+         "score_ratio": 0.3, "checkpoint_control": "real"},
+
+        {"name": "StabilityResidual-v3-dp00-20-35-nograd",
+         "type": "stability_residual",
+         "num_views": 3,
+         "edge_dropout_rates": [0.0, 0.20, 0.35],
+         "total_epochs": 200, "use_gradient_confidence": False,
+         "score_ratio": 0.3, "checkpoint_control": "real"},
+
+        # ── Number of views sensitivity ──
+        {"name": "StabilityResidual-v3-dp0.15-nograd",
+         "type": "stability_residual",
+         "num_views": 3, "edge_dropout_rates": [0.05, 0.10, 0.15],
+         "total_epochs": 200, "use_gradient_confidence": False,
+         "score_ratio": 0.3, "checkpoint_control": "real"},
+
+        {"name": "StabilityResidual-v5-dp0.15-nograd",
+         "type": "stability_residual",
+         "num_views": 5,
+         "edge_dropout_rates": [0.0, 0.10, 0.15, 0.20, 0.30],
+         "total_epochs": 200, "use_gradient_confidence": False,
+         "score_ratio": 0.3, "checkpoint_control": "real"},
+
+        {"name": "StabilityResidual-v7-dp0.15-nograd",
+         "type": "stability_residual",
+         "num_views": 7,
+         "edge_dropout_rates": [0.0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30],
+         "total_epochs": 200, "use_gradient_confidence": False,
+         "score_ratio": 0.3, "checkpoint_control": "real"},
+    ]
+
+    return methods
+
+
+def get_stability_confirm20_methods():
+    """Return methods for 20-seed confirmation.
+
+    Includes:
+    - Feature-only
+    - GCN-Jaccard
+    - Random-Matched (handled inline)
+    - DegreeAwareRandom (handled via degree_aware_random type)
+    - GraGE-Hybrid
+    - MCGC
+    - StabilityResidual selected candidate (frozen-gradient)
+    """
+    base_dp5 = [0.0, 0.10, 0.15, 0.20, 0.30]
+
+    methods = [
+        {"name": "Feature-only", "type": "feature_only"},
+
+        {"name": "GCN-Jaccard", "type": "jaccard",
+         "score_ratio": 0.3},
+
+        {"name": "DegreeAwareRandom", "type": "degree_aware_random",
+         "score_ratio": 0.3},
+
+        {"name": "GraGE-Hybrid-FO-posneg-lp0.1-ln0.5", "type": "hybrid_baseline",
+         "lambda_pos": 0.1, "lambda_neg": 0.5, "score_ratio": 0.3},
+
+        {"name": "MCGC-cw3.0-lp0.1-ln0.5", "type": "mcgc",
+         "lambda_pos": 0.1, "lambda_neg": 0.5,
+         "consistency_weight": 3.0,
+         "score_ratio": 0.3,
+         "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+         "total_epochs": 200},
+
+        {"name": "StabilityResidual-v5-dp0.15-grad-frozen",
+         "type": "stability_residual",
+         "num_views": 5, "edge_dropout_rates": base_dp5,
+         "total_epochs": 200, "use_gradient_confidence": True,
+         "gradient_abstention_threshold": 0.1,
+         "score_ratio": 0.3, "checkpoint_control": "frozen"},
+    ]
+
+    return methods
+
+
 def run_stability_smoke(device, output_dir):
     """StabilityResidual smoke test."""
     return run_experiment_matrix(
@@ -1224,12 +1405,117 @@ def run_stability_validate(device, output_dir, best_candidate_config):
     )
 
 
+def get_heterophily_methods():
+    """Return method configurations for the heterophily regime test.
+
+    Includes all methods specified in the experiment prompt:
+    - Feature-only
+    - GCN-Jaccard
+    - Random-Matched (handled inline by run_experiment_matrix)
+    - DegreeAwareRandom
+    - MCGC
+    - GraGE-Hybrid
+    - StabilityResidual-v5-dp0.15-grad-frozen (selected candidate)
+    """
+    base_dp5 = [0.0, 0.10, 0.15, 0.20, 0.30]
+
+    methods = [
+        {"name": "Feature-only", "type": "feature_only"},
+
+        {"name": "GCN-Jaccard", "type": "jaccard",
+         "score_ratio": 0.3},
+
+        {"name": "DegreeAwareRandom", "type": "degree_aware_random",
+         "score_ratio": 0.3},
+
+        {"name": "MCGC-cw3.0-lp0.1-ln0.5", "type": "mcgc",
+         "lambda_pos": 0.1, "lambda_neg": 0.5,
+         "consistency_weight": 3.0,
+         "score_ratio": 0.3,
+         "checkpoint_fractions": [0.3, 0.5, 0.7, 0.9],
+         "total_epochs": 200},
+
+        {"name": "GraGE-Hybrid-FO-posneg-lp0.1-ln0.5", "type": "hybrid_baseline",
+         "lambda_pos": 0.1, "lambda_neg": 0.5, "score_ratio": 0.3},
+
+        {"name": "StabilityResidual-v5-dp0.15-grad-frozen",
+         "type": "stability_residual",
+         "num_views": 5, "edge_dropout_rates": base_dp5,
+         "total_epochs": 200, "use_gradient_confidence": True,
+         "gradient_abstention_threshold": 0.1,
+         "score_ratio": 0.3, "checkpoint_control": "frozen"},
+    ]
+
+    return methods
+
+
+def run_heterophily(device, output_dir):
+    """Heterophily regime test: StabilityResidual on Texas, Wisconsin, Actor.
+
+    Datasets: Texas, Wisconsin, Actor
+    Noise: feature_similar_cross_class, low_feature_similarity,
+           degree_aligned_random, clean
+    Seeds: 10 for Texas/Wisconsin, 10 for Actor
+    """
+    return run_experiment_matrix(
+        datasets=["Texas", "Wisconsin", "Actor"],
+        noise_types=[
+            "feature_similar_cross_class",
+            "low_feature_similarity",
+            "degree_aligned_random",
+            "clean",
+        ],
+        noise_ratio=0.3,
+        seeds=list(range(10)),
+        downstream_model="GCN",
+        prune_ratio=0.2,
+        method_configs=get_heterophily_methods(),
+        device=device,
+        output_dir=output_dir,
+        include_random_matched=True,
+    )
+
+
+def run_stability_ablation(device, output_dir):
+    """StabilityResidual ablation matrix: residualization, gradient controls, dropout, views."""
+    return run_experiment_matrix(
+        datasets=["Cora", "CiteSeer", "PubMed"],
+        noise_types=["feature_similar_cross_class"],
+        noise_ratio=0.3,
+        seeds=list(range(5)),
+        downstream_model="GCN",
+        prune_ratio=0.2,
+        method_configs=get_stability_ablation_methods(),
+        device=device,
+        output_dir=output_dir,
+        include_random_matched=True,
+    )
+
+
+def run_stability_confirm20(device, output_dir):
+    """20-seed confirmation: selected StabilityResidual vs all baselines."""
+    return run_experiment_matrix(
+        datasets=["Cora", "CiteSeer", "PubMed"],
+        noise_types=["feature_similar_cross_class", "low_feature_similarity", "degree_aligned_random"],
+        noise_ratio=0.3,
+        seeds=list(range(20)),
+        downstream_model="GCN",
+        prune_ratio=0.2,
+        method_configs=get_stability_confirm20_methods(),
+        device=device,
+        output_dir=output_dir,
+        include_random_matched=True,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Adaptive GraGE Method Search")
     parser.add_argument("--mode", choices=[
         "smoke", "search", "validate",
         "selective_smoke", "selective_search", "selective_validate",
         "stability_smoke", "stability_search", "stability_validate",
+        "stability_ablation", "stability_confirm20",
+        "stability_heterophily",
     ], default="smoke",
                         help="Experiment mode")
     parser.add_argument("--output_dir", type=str, default=None,
@@ -1278,6 +1564,12 @@ def main():
         if args.best_candidate:
             best_config = json.loads(args.best_candidate)
         df = run_stability_validate(device, output_dir, best_config)
+    elif args.mode == "stability_ablation":
+        df = run_stability_ablation(device, output_dir)
+    elif args.mode == "stability_confirm20":
+        df = run_stability_confirm20(device, output_dir)
+    elif args.mode == "stability_heterophily":
+        df = run_heterophily(device, output_dir)
 
     # Print summary
     if df is not None and len(df) > 0:

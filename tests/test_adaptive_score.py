@@ -9,6 +9,7 @@ Tests:
 6. Both methods handle edge cases
 """
 import torch
+import numpy as np
 import pytest
 from src.grage.adaptive_score import (
     compute_faa_hybrid_score,
@@ -605,6 +606,109 @@ def test_residualize_stability_score_has_residual_signal(synthetic_edges):
     assert residual.std() > 0.01, \
         f"Residual should have non-trivial variance: {residual.std():.6f}"
     print(f"✓ Residual has signal: std={residual.std():.4f}")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Stats Tests
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+def test_cohens_d_positive():
+    """Cohen's d should be positive when treatment > baseline."""
+    from src.grage.stats import cohens_d
+    np.random.seed(42)
+    x = np.array([0.7, 0.8, 0.75, 0.82, 0.78]) + np.random.normal(0, 0.01, 5)
+    y = np.array([0.6, 0.7, 0.65, 0.72, 0.68]) + np.random.normal(0, 0.01, 5)
+    d = cohens_d(x, y)
+    assert d > 0, f"Cohen's d should be positive: {d}"
+    print(f"✓ Cohen's d = {d:.4f}")
+
+
+def test_cohens_d_zero():
+    """Cohen's d should be zero when samples are identical."""
+    from src.grage.stats import cohens_d
+    x = np.array([0.7, 0.8, 0.75])
+    d = cohens_d(x, x)
+    assert d == 0.0
+    print("✓ Cohen's d = 0 for identical samples")
+
+
+def test_win_rate():
+    """Win rate should count treatment > baseline correctly."""
+    from src.grage.stats import win_rate
+    x = np.array([0.7, 0.8, 0.6, 0.9, 0.75])
+    y = np.array([0.6, 0.7, 0.65, 0.85, 0.70])
+    wr = win_rate(x, y)
+    assert abs(wr - 0.8) < 1e-6, f"Win rate should be 0.8: {wr}"
+    print(f"✓ Win rate = {wr}")
+
+
+def test_paired_t_test():
+    """Paired t-test should return sensible values."""
+    from src.grage.stats import paired_t_test
+    np.random.seed(42)
+    x = np.random.normal(0.7, 0.05, 20)
+    y = x - 0.02 + np.random.normal(0, 0.01, 20)
+    t_stat, p_value = paired_t_test(x, y)
+    assert p_value < 0.05, f"Should detect difference: p={p_value}"
+    print(f"✓ Paired t-test: t={t_stat:.4f}, p={p_value:.6f}")
+
+
+def test_wilcoxon_test():
+    """Wilcoxon test should return sensible values."""
+    from src.grage.stats import wilcoxon_test
+    np.random.seed(42)
+    x = np.random.normal(0.7, 0.05, 20)
+    y = x - 0.02 + np.random.normal(0, 0.01, 20)
+    stat, p_value = wilcoxon_test(x, y)
+    assert p_value < 0.05, f"Should detect difference: p={p_value}"
+    print(f"✓ Wilcoxon test: stat={stat:.4f}, p={p_value:.6f}")
+
+
+def test_paired_stats():
+    """paired_stats should combine all metrics."""
+    from src.grage.stats import paired_stats
+    np.random.seed(42)
+    x = np.random.normal(0.7, 0.05, 20)
+    y = x - 0.02 + np.random.normal(0, 0.01, 20)
+    result = paired_stats(x, y)
+    assert "delta_pp" in result
+    assert "paired_t_pvalue" in result
+    assert "wilcoxon_pvalue" in result
+    assert "cohens_d" in result
+    assert "win_rate" in result
+    assert result["delta_pp"] > 0
+    print(f"✓ paired_stats: delta={result['delta_pp']:.2f}pp, "
+          f"d={result['cohens_d']:.4f}, wr={result['win_rate']:.2f}")
+
+
+def test_compute_residual_diagnostics():
+    """Residual diagnostics should compute all required metrics."""
+    from src.grage.stats import compute_residual_diagnostics
+    np.random.seed(42)
+    E = 200
+    feature_risk = np.random.rand(E)
+    feature_similarity = np.random.randn(E)
+    # Stability partially correlated with feature_risk
+    stability_score = 0.6 * feature_risk + 0.4 * np.random.rand(E)
+    bad_edge_mask = (np.random.rand(E) > 0.7).astype(float)
+
+    result = compute_residual_diagnostics(
+        stability_score=stability_score,
+        feature_risk=feature_risk,
+        feature_similarity=feature_similarity,
+        bad_edge_mask=bad_edge_mask,
+    )
+
+    assert "projection_ratio" in result
+    assert "residual_feature_sim_corr" in result
+    assert "residual_auc" in result
+    assert "raw_stability_auc" in result
+    assert "feature_risk_auc" in result
+    assert 0 <= result["projection_ratio"] <= 1.5
+    print(f"✓ Residual diagnostics: proj_ratio={result['projection_ratio']:.4f}, "
+          f"resid_corr={result['residual_feature_sim_corr']:.4f}, "
+          f"resid_auc={result['residual_auc']:.4f}")
 
 
 if __name__ == "__main__":

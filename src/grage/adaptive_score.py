@@ -914,6 +914,7 @@ def compute_stability_residual_score(
     gradient_abstention_threshold: float = 0.1,
     undirected: bool = True,
     bad_edge_mask: Optional[torch.Tensor] = None,
+    skip_residualization: bool = False,
 ) -> Dict:
     """StabilityResidual-GraGE: prediction-stability residual edge score.
 
@@ -953,11 +954,13 @@ def compute_stability_residual_score(
             stability residual; below this, fall back to feature-only.
         undirected: average scores for undirected pairs.
         bad_edge_mask: [E] optional, for diagnostics only.
+        skip_residualization: if True, use raw stability score directly
+            without residualizing against feature risk. For ablation.
 
     Returns:
         dict with:
             edge_score: [E] final edge score (higher = more suspicious).
-            residual: [E] pure stability residual.
+            residual: [E] pure stability residual (or raw score if skip_residualization).
             node_stability: dict of [N] node stability metrics.
             diagnostics: dict.
     """
@@ -992,15 +995,30 @@ def compute_stability_residual_score(
         device=device,
     )
 
-    # Step 4: Residualize against feature risk
-    residual_result = residualize_stability_score(
-        stability_score=raw_edge_score,
-        feature_risk=feature_risk,
-        feature_similarity=feature_similarity,
-        edge_index=edge_index,
-    )
-    edge_score = residual_result["residualized_score"]
-    residual = residual_result["residual"]
+    # Step 4: Residualize against feature risk (or skip for ablation)
+    if skip_residualization:
+        # Raw stability: rank-normalize and add to feature risk without residualization
+        R_stability = rank_normalize(raw_edge_score)
+        R_feature = rank_normalize(feature_risk)
+        alpha = 0.5
+        edge_score = R_feature + alpha * R_stability
+        edge_score = edge_score.clamp(-2, 5)
+        residual = R_stability  # the "residual" is the raw stability rank
+        residual_result = {
+            "residualized_score": edge_score,
+            "residual": residual,
+            "projection_ratio": None,
+            "diagnostics": {"alpha": alpha, "skipped_residualization": True},
+        }
+    else:
+        residual_result = residualize_stability_score(
+            stability_score=raw_edge_score,
+            feature_risk=feature_risk,
+            feature_similarity=feature_similarity,
+            edge_index=edge_index,
+        )
+        edge_score = residual_result["residualized_score"]
+        residual = residual_result["residual"]
 
     # Step 5: Optional gradient confidence / abstention
     gradient_confidence = None
@@ -1051,6 +1069,7 @@ def compute_stability_residual_score(
         "edge_dropout_rates": edge_dropout_rates or "default",
         "use_gradient_confidence": use_gradient_confidence,
         "gradient_abstention_threshold": gradient_abstention_threshold,
+        "skip_residualization": skip_residualization,
         "feature_risk_mean": float(feature_risk.mean()),
         "feature_sim_mean": float(feature_similarity.mean()),
         "raw_edge_score_mean": float(raw_edge_score.mean()),
@@ -1059,7 +1078,7 @@ def compute_stability_residual_score(
         "node_entropy_mean": float(node_stability["node_entropy"].mean()),
         "node_jsd_mean": float(node_stability["node_jsd"].mean()),
         "node_confidence_mean": float(node_stability["node_confidence"].mean()),
-        "projection_ratio": residual_result["projection_ratio"],
+        "projection_ratio": residual_result["projection_ratio"] if residual_result["projection_ratio"] is not None else -1.0,
         "residual_mean": float(residual.mean()),
         "residual_std": float(residual.std()),
         "abstention_fraction": abstention_fraction,
@@ -1089,9 +1108,25 @@ def compute_stability_residual_score(
                 residual.cpu().numpy(),
             )
             diagnostics["residual_auc"] = residual_auc
+
+            # Raw stability AUC
+            raw_stability_auc = roc_auc_score(
+                bad_edge_mask.cpu().numpy(),
+                raw_edge_score.cpu().numpy(),
+            )
+            diagnostics["raw_stability_auc"] = raw_stability_auc
+
+            # Feature risk AUC
+            feature_risk_auc = roc_auc_score(
+                bad_edge_mask.cpu().numpy(),
+                feature_risk.cpu().numpy(),
+            )
+            diagnostics["feature_risk_auc"] = feature_risk_auc
         except ValueError:
             diagnostics["edge_score_auc"] = 0.5
             diagnostics["residual_auc"] = 0.5
+            diagnostics["raw_stability_auc"] = 0.5
+            diagnostics["feature_risk_auc"] = 0.5
 
     logger.info(
         "StabilityResidual: views=%d node_instab=%.4f proj_ratio=%.3f "

@@ -1,0 +1,47 @@
+Here's a summary of what's been done:
+
+## Experiment: `2026-06-04-stability-heterophily-regime`
+
+### Code Changes Made
+
+**`scripts/run_adaptive_grage_search.py`** — three additions:
+
+1. **Clean noise handling** in `run_experiment_matrix()` (line ~910): when `noise_type == "clean"`, skips `inject_noise()` and uses the original graph edges with an all-false `bad_edge_mask`. This lets us test on the pristine heterophily graph without noise injection.
+
+2. **`get_heterophily_methods()`** (line ~1408): returns 6 method configs + Random-Matched (handled inline):
+   - Feature-only
+   - GCN-Jaccard
+   - DegreeAwareRandom
+   - MCGC-cw3.0-lp0.1-ln0.5
+   - GraGE-Hybrid-FO-posneg-lp0.1-ln0.5
+   - StabilityResidual-v5-dp0.15-grad-frozen (selected candidate)
+
+3. **`run_heterophily()`** (line ~1452): runs the matrix over:
+   - Datasets: Texas, Wisconsin, Actor
+   - Noise types: `feature_similar_cross_class`, `low_feature_similarity`, `degree_aligned_random`, `clean`
+   - 10 seeds per dataset
+   - `stability_heterophily` mode added to argparser and main dispatch
+
+### Matrix Size
+
+3 datasets × 4 noise types × 10 seeds × 7 methods = **840 total runs**
+
+Texas/Wisconsin are small (~183/251 nodes), so those will be fast. Actor (7600 nodes, 53k edges) with StabilityResidual (5 GCN views) will be the bottleneck — roughly 3-5 min per StabilityResidual run on Actor.
+
+### Status
+
+- `prompt.md` — already exists ✓
+- Code changes — compile clean ✓
+- Tests — cannot run locally (no pytest/torch on this machine), will validate on remote server
+
+### Next Step
+
+The experiment is ready to submit. Per `AGENTS.md`, I'll wait for your explicit approval:
+
+```
+bash scripts/submit_exp_tmux.sh 2026-06-04-stability-heterophily-regime
+```
+
+This will commit, push, pull on remote, and run in tmux session `graca_claude` window `exp_2026-06-04-stability-heterophily-regime`.
+
+Would you like me to submit it?
