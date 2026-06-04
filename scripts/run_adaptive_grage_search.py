@@ -48,6 +48,8 @@ from src.grage.adaptive_score import (
     compute_selective_mcgc_score,
     collect_multi_checkpoint_grads,
 )
+from src.baselines.random_pruning import run_degree_aware_random
+from src.baselines.similarity_pruning import run_jaccard_pruning
 from src.utils.mask_split import split_train_support_score
 from src.utils.seed import set_seed
 
@@ -135,6 +137,73 @@ def run_single_experiment(
     method_name = method_config["name"]
     method_type = method_config["type"]
     method_diagnostics = {}
+
+    if method_type in {"degree_aware_random", "jaccard"}:
+        num_features = x.shape[1]
+        num_classes = int(y.max().item()) + 1
+        if method_type == "degree_aware_random":
+            baseline_results, graph_stats, prune_mask = run_degree_aware_random(
+                data=data,
+                config=config,
+                num_features=num_features,
+                num_classes=num_classes,
+                device=device,
+                seed=seed,
+                match_graca_ratio=prune_ratio,
+                edge_index_override=noisy_edge_index,
+            )
+        else:
+            baseline_results, graph_stats, prune_mask = run_jaccard_pruning(
+                data=data,
+                config=config,
+                num_features=num_features,
+                num_classes=num_classes,
+                device=device,
+                seed=seed,
+                match_graca_ratio=prune_ratio,
+                edge_index_override=noisy_edge_index,
+            )
+
+        if downstream_model_name not in baseline_results:
+            raise ValueError(
+                f"{method_name} did not return downstream results for {downstream_model_name}"
+            )
+
+        prune_mask = prune_mask.cpu().bool()
+        pruned_edge_index = noisy_edge_index.detach().cpu()[:, ~prune_mask].to(device)
+        detection = evaluate_bad_edge_detection(prune_mask, bad_edge_mask, noisy_edge_index)
+        homo_before = compute_edge_homophily(noisy_edge_index, y)
+        homo_after = compute_edge_homophily(pruned_edge_index, y)
+        downstream_results = baseline_results[downstream_model_name]
+        runtime = time.time() - start_time
+
+        result = {
+            "dataset": dataset_name,
+            "noise_type": noise_type,
+            "noise_ratio": noise_ratio,
+            "seed": seed,
+            "method": method_name,
+            "method_type": method_type,
+            "downstream_model": downstream_model_name,
+            "test_acc": downstream_results["test_acc"],
+            "test_f1": downstream_results["test_f1"],
+            "val_acc": downstream_results["val_acc"],
+            "bad_edge_precision": detection["bad_edge_precision"],
+            "bad_edge_recall": detection["bad_edge_recall"],
+            "bad_edge_f1": detection["bad_edge_f1"],
+            "actual_prune_ratio": graph_stats["prune_ratio"],
+            "edge_homophily_before": homo_before,
+            "edge_homophily_after": homo_after,
+            "num_edges_before": graph_stats["num_edges_before"],
+            "num_edges_after": graph_stats["num_edges_after"],
+            "runtime": runtime,
+        }
+
+        for k, v in method_config.items():
+            if k not in ("name", "type") and not k.startswith("_"):
+                result[f"hp_{k}"] = v
+
+        return result
 
     # ─── Compute edge scores ───
     if method_type == "feature_only":

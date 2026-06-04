@@ -1,5 +1,18 @@
 # Experiment: FSCC Matched-Budget Confirmation Rerun
 
+## Execution Directive
+
+This prompt is already being run by `scripts/run_exp.sh` inside the remote tmux
+experiment `2026-06-04-fscc-confirmation-rerun`. The submit authorization has
+already been granted by the user and the local Codex agent. Do **not** stop after
+rewriting this prompt, do **not** ask the user to submit, and do **not** merely
+prepare files.
+
+Execute the experiment now. The existing `result.md` and `metrics.json` in this
+directory are placeholder artifacts from a previous operational failure. You
+must overwrite them with real experiment outputs, or with a concrete failed
+status that explains the actual blocker after attempting the required commands.
+
 ## Objective
 
 Recover the failed matched-budget confirmation experiment with a direct,
