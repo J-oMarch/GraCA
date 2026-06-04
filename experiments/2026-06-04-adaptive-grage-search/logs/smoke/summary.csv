@@ -1,0 +1,4 @@
+method,mean,std,count
+Random-Matched,0.655,,1
+Feature-only,0.611,,1
+FAA-Hybrid-as1.0-lp0.1-ln0.5,0.61,,1

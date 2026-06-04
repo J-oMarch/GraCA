@@ -1,0 +1,25 @@
+{
+  "exp_id": "2026-06-04-adaptive-grage-search",
+  "status": "completed",
+  "best_candidate": "MCGC-cw3.0-lp0.1-ln0.5",
+  "candidate_family": "Multi-Checkpoint Gradient Consistency",
+  "candidate_selected_for_confirmation": false,
+  "delta_vs_feature_only_feature_similar_cross_class": 0.014833,
+  "delta_vs_current_hybrid_feature_similar_cross_class": 0.023667,
+  "low_feature_similarity_degradation_vs_feature_only": -0.0266,
+  "win_rate_vs_feature_only": 0.8333,
+  "effect_size_vs_feature_only": -0.1022,
+  "failure_modes": ["low_feature_similarity_degradation_exceeds_constraint"],
+  "validation_constraint_violated": true,
+  "validation_constraint_max_degradation": 0.005,
+  "validation_observed_degradation": -0.0266,
+  "num_candidate_methods": 16,
+  "num_result_rows": 228,
+  "new_files_or_modules": [
+    "src/grage/adaptive_score.py",
+    "tests/test_adaptive_score.py",
+    "scripts/run_adaptive_grage_search.py",
+    "scripts/analyze_adaptive_grage_search.py"
+  ],
+  "claim_recommendation": "MCGC shows +0.0148 on feature_similar_cross_class but violates low_feature_similarity constraint (-0.0266 degradation). Training-dynamics signals are useful where features are ambiguous but harmful where features are informative. Paper should frame this as evidence for adaptive regime-dependent scoring. Next: design method that automatically detects feature regime per-edge."
+}

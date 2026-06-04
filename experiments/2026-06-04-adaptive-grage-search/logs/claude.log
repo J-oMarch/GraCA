@@ -1,0 +1,61 @@
+All 30 tests pass (18 existing + 12 new). Here's the complete experiment summary:
+
+---
+
+## Experiment Summary: Adaptive GraGE Method Search
+
+### New Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/grage/adaptive_score.py` | FAA-Hybrid and MCGC method implementations |
+| `tests/test_adaptive_score.py` | 12 unit tests for new methods |
+| `scripts/run_adaptive_grage_search.py` | Search runner (smoke/search/validate modes) |
+| `scripts/analyze_adaptive_grage_search.py` | Results analysis and report generation |
+
+### Two Candidate Methods Implemented
+
+**1. Feature-Ambiguity-Adaptive Hybrid (FAA-Hybrid)**
+- Amplifies gradient signal where feature similarity is high (ambiguous features)
+- Alpha weighting: `alpha = base_alpha + ambig_scale * feature_similarity`
+
+**2. Multi-Checkpoint Gradient Consistency (MCGC)**
+- Collects edge-gate gradients at 4 training checkpoints (30%, 50%, 70%, 90%)
+- Uses sign consistency as confidence signal to weight gradient contribution
+
+### Search Phase Results (228 experiments: 2 datasets × 2 noise × 3 seeds × 19 methods)
+
+**Best candidate**: `MCGC-cw3.0-lp0.1-ln0.5`
+- Delta vs Feature-only on `feature_similar_cross_class`: **+0.0148** (p=0.0402, significant)
+- Delta vs current best hybrid: **+0.0237**
+- Win rate vs Feature-only: **83.3%**
+
+### Validation Phase Results (180 experiments: 3 datasets × 3 noise × 5 seeds × 4 methods)
+
+| Method | Mean Test Acc |
+|--------|--------------|
+| Feature-only | 0.6711 |
+| MCGC-cw3.0-lp0.1-ln0.5 | 0.6568 |
+| GraGE-Hybrid-FO-posneg-lp0.1-ln0.5 | 0.6562 |
+| Random-Matched | 0.6465 |
+
+**Validation constraint**: MCGC degrades by **-0.0266** on `low_feature_similarity` (constraint: max 0.005). **CONSTRAINT VIOLATED**.
+
+### Key Insight
+
+Training-dynamics signals are **regime-dependent**: they help where features are ambiguous but hurt where features are informative. This supports a paper story about **adaptive, regime-aware graph evolution** rather than a universal improvement.
+
+### Paper Recommendation
+
+Frame the contribution as: "Training-dynamics signals contain useful edge-level information in the feature-ambiguous regime, and an adaptive method should learn to use them selectively." The next method should automatically detect per-edge feature regime and adjust gradient weighting accordingly.
+
+### Output Files
+
+All required outputs are at `experiments/2026-06-04-adaptive-grage-search/`:
+- `result.md` — decision report
+- `metrics.json` — structured metrics
+- `failure_analysis.md` — per-candidate analysis
+- `candidate_search_results.csv` — search phase table
+- `candidate_validation_results.csv` — validation phase table
+- `candidate_vs_feature_only_stats.csv` — paired deltas
+- `method_ablation_summary.csv` — all methods ranked
