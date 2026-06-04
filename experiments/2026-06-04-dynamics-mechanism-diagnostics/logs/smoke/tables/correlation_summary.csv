@@ -1,0 +1,5 @@
+dataset,noise_type,seed,pair,spearman_corr,spearman_p
+Cora,feature_similar_cross_class,0,feature_vs_raw_grad,0.032573666487541925,0.00013542664109908757
+Cora,feature_similar_cross_class,0,feature_vs_pos_grad,0.04565713643423081,8.765202717901192e-08
+Cora,feature_similar_cross_class,0,feature_vs_neg_grad,0.010477483692490158,0.21972331766398412
+Cora,feature_similar_cross_class,0,feature_vs_hybrid,0.9340938078389497,0.0

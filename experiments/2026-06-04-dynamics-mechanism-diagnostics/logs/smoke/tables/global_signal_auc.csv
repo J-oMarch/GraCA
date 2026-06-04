@@ -1,0 +1,7 @@
+dataset,noise_type,seed,score,auc
+Cora,feature_similar_cross_class,0,feature_risk,0.6080494619197867
+Cora,feature_similar_cross_class,0,raw_grad,0.5143143705250246
+Cora,feature_similar_cross_class,0,pos_grad,0.5078991670211418
+Cora,feature_similar_cross_class,0,neg_grad,0.4892504991577572
+Cora,feature_similar_cross_class,0,hybrid,0.47205961311653255
+Cora,feature_similar_cross_class,0,shuffled_hybrid,0.46731231823919217

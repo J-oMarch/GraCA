@@ -1,0 +1,560 @@
+2026-06-04 18:32:43,522 INFO Device: cuda
+2026-06-04 18:35:01,062 INFO GraGE-FO: grad_mean=0.000004, pos_ratio=0.425, score_loss=0.7216
+2026-06-04 18:35:01,281 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8426, grad_mean=0.000004
+2026-06-04 18:35:01,447 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8426, grad_mean=0.000004
+2026-06-04 18:35:01,500 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8426, grad_mean=0.000004
+2026-06-04 18:35:01,500 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8426, grad_mean=0.000004
+2026-06-04 18:35:01,505 INFO [1/90] Cora/feature_similar_cross_class/seed0 done in 138.0s — global_auc: feature=0.608, hybrid=0.472, bin0_hybrid=0.212
+2026-06-04 18:37:05,080 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.430, score_loss=0.0016
+2026-06-04 18:37:05,955 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000000
+2026-06-04 18:37:06,832 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000000
+2026-06-04 18:37:06,882 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000000
+2026-06-04 18:37:06,883 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000000
+2026-06-04 18:37:06,888 INFO [2/90] Cora/feature_similar_cross_class/seed1 done in 125.4s — global_auc: feature=0.613, hybrid=0.486, bin0_hybrid=0.253
+2026-06-04 18:39:19,915 INFO GraGE-FO: grad_mean=0.000007, pos_ratio=0.377, score_loss=0.9148
+2026-06-04 18:39:20,082 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8429, grad_mean=0.000007
+2026-06-04 18:39:20,248 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8429, grad_mean=0.000007
+2026-06-04 18:39:20,298 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8429, grad_mean=0.000007
+2026-06-04 18:39:20,298 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8429, grad_mean=0.000007
+2026-06-04 18:39:20,304 INFO [3/90] Cora/feature_similar_cross_class/seed2 done in 133.4s — global_auc: feature=0.613, hybrid=0.468, bin0_hybrid=0.208
+2026-06-04 18:41:28,581 INFO GraGE-FO: grad_mean=0.000004, pos_ratio=0.457, score_loss=1.0151
+2026-06-04 18:41:28,746 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8429, grad_mean=0.000004
+2026-06-04 18:41:28,910 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8429, grad_mean=0.000004
+2026-06-04 18:41:28,960 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8429, grad_mean=0.000004
+2026-06-04 18:41:28,960 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8429, grad_mean=0.000004
+2026-06-04 18:41:28,965 INFO [4/90] Cora/feature_similar_cross_class/seed3 done in 128.7s — global_auc: feature=0.612, hybrid=0.477, bin0_hybrid=0.236
+2026-06-04 18:44:02,663 INFO GraGE-FO: grad_mean=0.000005, pos_ratio=0.441, score_loss=0.9814
+2026-06-04 18:44:02,828 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000005
+2026-06-04 18:44:02,993 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000005
+2026-06-04 18:44:03,043 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000005
+2026-06-04 18:44:03,044 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000005
+2026-06-04 18:44:03,049 INFO [5/90] Cora/feature_similar_cross_class/seed4 done in 154.1s — global_auc: feature=0.613, hybrid=0.476, bin0_hybrid=0.259
+2026-06-04 18:46:36,378 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.466, score_loss=0.0028
+2026-06-04 18:46:36,544 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8429, grad_mean=0.000000
+2026-06-04 18:46:36,710 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8429, grad_mean=0.000000
+2026-06-04 18:46:36,761 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8429, grad_mean=0.000000
+2026-06-04 18:46:36,762 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8429, grad_mean=0.000000
+2026-06-04 18:46:36,766 INFO [6/90] Cora/feature_similar_cross_class/seed5 done in 153.7s — global_auc: feature=0.611, hybrid=0.483, bin0_hybrid=0.225
+2026-06-04 18:48:41,270 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.445, score_loss=0.0014
+2026-06-04 18:48:42,169 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8427, grad_mean=0.000000
+2026-06-04 18:48:42,470 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8427, grad_mean=0.000000
+2026-06-04 18:48:42,520 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8427, grad_mean=0.000000
+2026-06-04 18:48:42,521 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8427, grad_mean=0.000000
+2026-06-04 18:48:42,525 INFO [7/90] Cora/feature_similar_cross_class/seed6 done in 125.8s — global_auc: feature=0.608, hybrid=0.473, bin0_hybrid=0.241
+2026-06-04 18:50:44,195 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.446, score_loss=0.0014
+2026-06-04 18:50:44,357 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8428, grad_mean=0.000000
+2026-06-04 18:50:44,519 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8428, grad_mean=0.000000
+2026-06-04 18:50:44,570 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8428, grad_mean=0.000000
+2026-06-04 18:50:44,570 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8428, grad_mean=0.000000
+2026-06-04 18:50:44,575 INFO [8/90] Cora/feature_similar_cross_class/seed7 done in 122.1s — global_auc: feature=0.611, hybrid=0.476, bin0_hybrid=0.226
+2026-06-04 18:53:12,849 INFO GraGE-FO: grad_mean=0.000007, pos_ratio=0.436, score_loss=0.5552
+2026-06-04 18:53:13,016 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000007
+2026-06-04 18:53:13,184 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000007
+2026-06-04 18:53:13,234 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000007
+2026-06-04 18:53:13,235 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000007
+2026-06-04 18:53:13,239 INFO [9/90] Cora/feature_similar_cross_class/seed8 done in 148.7s — global_auc: feature=0.614, hybrid=0.478, bin0_hybrid=0.198
+2026-06-04 18:55:49,078 INFO GraGE-FO: grad_mean=0.000005, pos_ratio=0.454, score_loss=0.2813
+2026-06-04 18:55:49,246 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000005
+2026-06-04 18:55:49,411 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000005
+2026-06-04 18:55:49,462 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000005
+2026-06-04 18:55:49,463 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8430, grad_mean=0.000005
+2026-06-04 18:55:49,467 INFO [10/90] Cora/feature_similar_cross_class/seed9 done in 156.2s — global_auc: feature=0.614, hybrid=0.476, bin0_hybrid=0.228
+2026-06-04 18:55:49,973 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.435, score_loss=0.0024
+2026-06-04 18:55:50,215 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8579, grad_mean=0.000000
+2026-06-04 18:55:50,384 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8579, grad_mean=0.000000
+2026-06-04 18:55:50,436 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8579, grad_mean=0.000000
+2026-06-04 18:55:50,437 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8579, grad_mean=0.000000
+2026-06-04 18:55:50,441 INFO [11/90] Cora/cross_class_oracle/seed0 done in 1.0s — global_auc: feature=0.801, hybrid=0.683, bin0_hybrid=0.248
+2026-06-04 18:55:50,779 INFO GraGE-FO: grad_mean=0.000003, pos_ratio=0.401, score_loss=1.4863
+2026-06-04 18:55:50,944 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8585, grad_mean=0.000003
+2026-06-04 18:55:51,109 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8585, grad_mean=0.000003
+2026-06-04 18:55:51,161 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8585, grad_mean=0.000003
+2026-06-04 18:55:51,161 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8585, grad_mean=0.000003
+2026-06-04 18:55:51,166 INFO [12/90] Cora/cross_class_oracle/seed1 done in 0.7s — global_auc: feature=0.809, hybrid=0.692, bin0_hybrid=0.196
+2026-06-04 18:55:51,650 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.396, score_loss=0.0018
+2026-06-04 18:55:51,818 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8587, grad_mean=0.000000
+2026-06-04 18:55:51,986 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8587, grad_mean=0.000000
+2026-06-04 18:55:52,037 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8587, grad_mean=0.000000
+2026-06-04 18:55:52,037 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8587, grad_mean=0.000000
+2026-06-04 18:55:52,042 INFO [13/90] Cora/cross_class_oracle/seed2 done in 0.9s — global_auc: feature=0.811, hybrid=0.678, bin0_hybrid=0.214
+2026-06-04 18:55:52,601 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.425, score_loss=0.0022
+2026-06-04 18:55:52,769 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8588, grad_mean=0.000000
+2026-06-04 18:55:52,936 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8588, grad_mean=0.000000
+2026-06-04 18:55:52,987 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8588, grad_mean=0.000000
+2026-06-04 18:55:52,987 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8588, grad_mean=0.000000
+2026-06-04 18:55:52,992 INFO [14/90] Cora/cross_class_oracle/seed3 done in 0.9s — global_auc: feature=0.812, hybrid=0.702, bin0_hybrid=0.242
+2026-06-04 18:55:53,335 INFO GraGE-FO: grad_mean=0.000004, pos_ratio=0.444, score_loss=1.2885
+2026-06-04 18:55:53,502 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8581, grad_mean=0.000004
+2026-06-04 18:55:53,670 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8581, grad_mean=0.000004
+2026-06-04 18:55:53,722 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8581, grad_mean=0.000004
+2026-06-04 18:55:53,722 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8581, grad_mean=0.000004
+2026-06-04 18:55:53,727 INFO [15/90] Cora/cross_class_oracle/seed4 done in 0.7s — global_auc: feature=0.804, hybrid=0.680, bin0_hybrid=0.280
+2026-06-04 18:55:54,070 INFO GraGE-FO: grad_mean=0.000005, pos_ratio=0.459, score_loss=0.8733
+2026-06-04 18:55:54,238 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8580, grad_mean=0.000005
+2026-06-04 18:55:54,406 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8580, grad_mean=0.000005
+2026-06-04 18:55:54,458 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8580, grad_mean=0.000005
+2026-06-04 18:55:54,458 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8580, grad_mean=0.000005
+2026-06-04 18:55:54,463 INFO [16/90] Cora/cross_class_oracle/seed5 done in 0.7s — global_auc: feature=0.800, hybrid=0.672, bin0_hybrid=0.227
+2026-06-04 18:55:54,809 INFO GraGE-FO: grad_mean=0.000006, pos_ratio=0.452, score_loss=0.5218
+2026-06-04 18:55:54,976 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8587, grad_mean=0.000006
+2026-06-04 18:55:55,144 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8587, grad_mean=0.000006
+2026-06-04 18:55:55,195 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8587, grad_mean=0.000006
+2026-06-04 18:55:55,196 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8587, grad_mean=0.000006
+2026-06-04 18:55:55,201 INFO [17/90] Cora/cross_class_oracle/seed6 done in 0.7s — global_auc: feature=0.811, hybrid=0.692, bin0_hybrid=0.235
+2026-06-04 18:55:55,782 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.441, score_loss=0.0013
+2026-06-04 18:55:55,948 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8593, grad_mean=0.000000
+2026-06-04 18:55:56,115 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8593, grad_mean=0.000000
+2026-06-04 18:55:56,166 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8593, grad_mean=0.000000
+2026-06-04 18:55:56,166 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8593, grad_mean=0.000000
+2026-06-04 18:55:56,171 INFO [18/90] Cora/cross_class_oracle/seed7 done in 1.0s — global_auc: feature=0.818, hybrid=0.698, bin0_hybrid=0.222
+2026-06-04 18:55:56,506 INFO GraGE-FO: grad_mean=0.000004, pos_ratio=0.433, score_loss=1.4878
+2026-06-04 18:55:56,673 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8585, grad_mean=0.000004
+2026-06-04 18:55:56,838 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8585, grad_mean=0.000004
+2026-06-04 18:55:56,888 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8585, grad_mean=0.000004
+2026-06-04 18:55:56,889 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8585, grad_mean=0.000004
+2026-06-04 18:55:56,893 INFO [19/90] Cora/cross_class_oracle/seed8 done in 0.7s — global_auc: feature=0.806, hybrid=0.678, bin0_hybrid=0.268
+2026-06-04 18:55:57,239 INFO GraGE-FO: grad_mean=0.000005, pos_ratio=0.447, score_loss=0.8168
+2026-06-04 18:55:57,406 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8584, grad_mean=0.000005
+2026-06-04 18:55:57,574 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8584, grad_mean=0.000005
+2026-06-04 18:55:57,625 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8584, grad_mean=0.000005
+2026-06-04 18:55:57,626 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8584, grad_mean=0.000005
+2026-06-04 18:55:57,630 INFO [20/90] Cora/cross_class_oracle/seed9 done in 0.7s — global_auc: feature=0.806, hybrid=0.686, bin0_hybrid=0.243
+2026-06-04 18:55:58,155 INFO GraGE-FO: grad_mean=0.000003, pos_ratio=0.412, score_loss=1.3560
+2026-06-04 18:55:58,323 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000003
+2026-06-04 18:55:58,489 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000003
+2026-06-04 18:55:58,530 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000003
+2026-06-04 18:55:58,530 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000003
+2026-06-04 18:55:58,535 INFO [21/90] Cora/low_feature_similarity/seed0 done in 0.9s — global_auc: feature=0.946, hybrid=0.908, bin0_hybrid=0.500
+2026-06-04 18:55:59,259 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.413, score_loss=0.0018
+2026-06-04 18:55:59,425 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:55:59,592 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:55:59,632 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:55:59,632 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:55:59,637 INFO [22/90] Cora/low_feature_similarity/seed1 done in 1.1s — global_auc: feature=0.946, hybrid=0.908, bin0_hybrid=0.500
+2026-06-04 18:56:00,288 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.354, score_loss=0.0019
+2026-06-04 18:56:00,456 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:56:00,623 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:56:00,663 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:56:00,663 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:56:00,667 INFO [23/90] Cora/low_feature_similarity/seed2 done in 1.0s — global_auc: feature=0.946, hybrid=0.903, bin0_hybrid=0.500
+2026-06-04 18:56:01,199 INFO GraGE-FO: grad_mean=0.000005, pos_ratio=0.433, score_loss=0.8776
+2026-06-04 18:56:01,368 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000005
+2026-06-04 18:56:01,610 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000005
+2026-06-04 18:56:01,650 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000005
+2026-06-04 18:56:01,651 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000005
+2026-06-04 18:56:01,655 INFO [24/90] Cora/low_feature_similarity/seed3 done in 1.0s — global_auc: feature=0.946, hybrid=0.907, bin0_hybrid=0.500
+2026-06-04 18:56:02,286 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.425, score_loss=0.0018
+2026-06-04 18:56:02,453 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:56:02,621 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:56:02,661 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:56:02,661 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:56:02,666 INFO [25/90] Cora/low_feature_similarity/seed4 done in 1.0s — global_auc: feature=0.946, hybrid=0.895, bin0_hybrid=0.500
+2026-06-04 18:56:03,323 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.427, score_loss=0.0021
+2026-06-04 18:56:03,491 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:56:03,657 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:56:03,697 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:56:03,698 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000000
+2026-06-04 18:56:03,702 INFO [26/90] Cora/low_feature_similarity/seed5 done in 1.0s — global_auc: feature=0.946, hybrid=0.905, bin0_hybrid=0.500
+2026-06-04 18:56:04,209 INFO GraGE-FO: grad_mean=0.000007, pos_ratio=0.429, score_loss=0.7328
+2026-06-04 18:56:04,376 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000007
+2026-06-04 18:56:04,542 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000007
+2026-06-04 18:56:04,582 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000007
+2026-06-04 18:56:04,583 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000007
+2026-06-04 18:56:04,587 INFO [27/90] Cora/low_feature_similarity/seed6 done in 0.9s — global_auc: feature=0.946, hybrid=0.909, bin0_hybrid=0.500
+2026-06-04 18:56:05,111 INFO GraGE-FO: grad_mean=0.000005, pos_ratio=0.440, score_loss=0.6506
+2026-06-04 18:56:05,279 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000005
+2026-06-04 18:56:05,444 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000005
+2026-06-04 18:56:05,484 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000005
+2026-06-04 18:56:05,485 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000005
+2026-06-04 18:56:05,489 INFO [28/90] Cora/low_feature_similarity/seed7 done in 0.9s — global_auc: feature=0.946, hybrid=0.913, bin0_hybrid=0.500
+2026-06-04 18:56:05,997 INFO GraGE-FO: grad_mean=0.000002, pos_ratio=0.423, score_loss=1.5964
+2026-06-04 18:56:06,163 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000002
+2026-06-04 18:56:06,331 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000002
+2026-06-04 18:56:06,370 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000002
+2026-06-04 18:56:06,371 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000002
+2026-06-04 18:56:06,375 INFO [29/90] Cora/low_feature_similarity/seed8 done in 0.9s — global_auc: feature=0.946, hybrid=0.899, bin0_hybrid=0.500
+2026-06-04 18:56:06,908 INFO GraGE-FO: grad_mean=0.000008, pos_ratio=0.427, score_loss=0.5499
+2026-06-04 18:56:07,073 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000008
+2026-06-04 18:56:07,240 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000008
+2026-06-04 18:56:07,281 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000008
+2026-06-04 18:56:07,281 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8710, grad_mean=0.000008
+2026-06-04 18:56:07,285 INFO [30/90] Cora/low_feature_similarity/seed9 done in 0.9s — global_auc: feature=0.946, hybrid=0.903, bin0_hybrid=0.500
+2026-06-04 18:59:07,850 INFO GraGE-FO: grad_mean=-0.000000, pos_ratio=0.244, score_loss=0.0024
+2026-06-04 18:59:07,997 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8331, grad_mean=-0.000000
+2026-06-04 18:59:08,212 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8331, grad_mean=-0.000000
+2026-06-04 18:59:08,258 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8331, grad_mean=-0.000000
+2026-06-04 18:59:08,259 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8331, grad_mean=-0.000000
+2026-06-04 18:59:08,263 INFO [31/90] CiteSeer/feature_similar_cross_class/seed0 done in 181.0s — global_auc: feature=0.759, hybrid=0.601, bin0_hybrid=0.212
+2026-06-04 19:01:38,832 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.161, score_loss=0.0012
+2026-06-04 19:01:38,976 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8327, grad_mean=0.000000
+2026-06-04 19:01:39,119 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8327, grad_mean=0.000000
+2026-06-04 19:01:39,164 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8327, grad_mean=0.000000
+2026-06-04 19:01:39,164 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8327, grad_mean=0.000000
+2026-06-04 19:01:39,168 INFO [32/90] CiteSeer/feature_similar_cross_class/seed1 done in 150.9s — global_auc: feature=0.753, hybrid=0.611, bin0_hybrid=0.125
+2026-06-04 19:04:23,749 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.235, score_loss=0.0009
+2026-06-04 19:04:24,237 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8332, grad_mean=0.000000
+2026-06-04 19:04:24,378 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8332, grad_mean=0.000000
+2026-06-04 19:04:24,423 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8332, grad_mean=0.000000
+2026-06-04 19:04:24,424 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8332, grad_mean=0.000000
+2026-06-04 19:04:24,428 INFO [33/90] CiteSeer/feature_similar_cross_class/seed2 done in 165.3s — global_auc: feature=0.760, hybrid=0.612, bin0_hybrid=0.213
+2026-06-04 19:06:59,944 INFO GraGE-FO: grad_mean=0.000005, pos_ratio=0.222, score_loss=0.5394
+2026-06-04 19:07:00,087 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8330, grad_mean=0.000005
+2026-06-04 19:07:00,230 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8330, grad_mean=0.000005
+2026-06-04 19:07:00,275 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8330, grad_mean=0.000005
+2026-06-04 19:07:00,275 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8330, grad_mean=0.000005
+2026-06-04 19:07:00,279 INFO [34/90] CiteSeer/feature_similar_cross_class/seed3 done in 155.9s — global_auc: feature=0.757, hybrid=0.603, bin0_hybrid=0.188
+2026-06-04 19:09:40,509 INFO GraGE-FO: grad_mean=0.000005, pos_ratio=0.233, score_loss=1.1261
+2026-06-04 19:09:40,654 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8330, grad_mean=0.000005
+2026-06-04 19:09:40,797 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8330, grad_mean=0.000005
+2026-06-04 19:09:40,843 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8330, grad_mean=0.000005
+2026-06-04 19:09:40,843 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8330, grad_mean=0.000005
+2026-06-04 19:09:40,847 INFO [35/90] CiteSeer/feature_similar_cross_class/seed4 done in 160.6s — global_auc: feature=0.757, hybrid=0.605, bin0_hybrid=0.216
+2026-06-04 19:12:31,355 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.240, score_loss=0.0014
+2026-06-04 19:12:31,499 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8331, grad_mean=0.000000
+2026-06-04 19:12:31,642 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8331, grad_mean=0.000000
+2026-06-04 19:12:31,688 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8331, grad_mean=0.000000
+2026-06-04 19:12:31,689 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8331, grad_mean=0.000000
+2026-06-04 19:12:31,693 INFO [36/90] CiteSeer/feature_similar_cross_class/seed5 done in 170.8s — global_auc: feature=0.758, hybrid=0.600, bin0_hybrid=0.210
+2026-06-04 19:15:20,820 INFO GraGE-FO: grad_mean=0.000004, pos_ratio=0.208, score_loss=1.2270
+2026-06-04 19:15:21,654 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8330, grad_mean=0.000004
+2026-06-04 19:15:22,506 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8330, grad_mean=0.000004
+2026-06-04 19:15:22,551 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8330, grad_mean=0.000004
+2026-06-04 19:15:22,552 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8330, grad_mean=0.000004
+2026-06-04 19:15:22,556 INFO [37/90] CiteSeer/feature_similar_cross_class/seed6 done in 170.9s — global_auc: feature=0.757, hybrid=0.594, bin0_hybrid=0.157
+2026-06-04 19:18:06,389 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.209, score_loss=0.0012
+2026-06-04 19:18:06,534 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8329, grad_mean=0.000000
+2026-06-04 19:18:06,678 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8329, grad_mean=0.000000
+2026-06-04 19:18:06,723 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8329, grad_mean=0.000000
+2026-06-04 19:18:06,724 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8329, grad_mean=0.000000
+2026-06-04 19:18:06,728 INFO [38/90] CiteSeer/feature_similar_cross_class/seed7 done in 164.2s — global_auc: feature=0.756, hybrid=0.608, bin0_hybrid=0.185
+2026-06-04 19:20:40,342 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.260, score_loss=0.0014
+2026-06-04 19:20:40,488 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8331, grad_mean=0.000000
+2026-06-04 19:20:40,709 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8331, grad_mean=0.000000
+2026-06-04 19:20:40,755 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8331, grad_mean=0.000000
+2026-06-04 19:20:40,756 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8331, grad_mean=0.000000
+2026-06-04 19:20:40,760 INFO [39/90] CiteSeer/feature_similar_cross_class/seed8 done in 154.0s — global_auc: feature=0.758, hybrid=0.609, bin0_hybrid=0.222
+2026-06-04 19:23:07,400 INFO GraGE-FO: grad_mean=0.000008, pos_ratio=0.262, score_loss=0.7242
+2026-06-04 19:23:07,548 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8333, grad_mean=0.000008
+2026-06-04 19:23:07,693 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8333, grad_mean=0.000008
+2026-06-04 19:23:07,740 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8333, grad_mean=0.000008
+2026-06-04 19:23:07,740 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8333, grad_mean=0.000008
+2026-06-04 19:23:07,744 INFO [40/90] CiteSeer/feature_similar_cross_class/seed9 done in 147.0s — global_auc: feature=0.761, hybrid=0.613, bin0_hybrid=0.208
+2026-06-04 19:23:08,214 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.257, score_loss=0.0022
+2026-06-04 19:23:08,357 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8442, grad_mean=0.000000
+2026-06-04 19:23:08,500 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8442, grad_mean=0.000000
+2026-06-04 19:23:08,542 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8442, grad_mean=0.000000
+2026-06-04 19:23:08,542 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8442, grad_mean=0.000000
+2026-06-04 19:23:08,546 INFO [41/90] CiteSeer/cross_class_oracle/seed0 done in 0.8s — global_auc: feature=0.900, hybrid=0.750, bin0_hybrid=0.500
+2026-06-04 19:23:09,001 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.168, score_loss=0.0013
+2026-06-04 19:23:09,143 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8442, grad_mean=0.000000
+2026-06-04 19:23:09,283 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8442, grad_mean=0.000000
+2026-06-04 19:23:09,325 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8442, grad_mean=0.000000
+2026-06-04 19:23:09,325 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8442, grad_mean=0.000000
+2026-06-04 19:23:09,329 INFO [42/90] CiteSeer/cross_class_oracle/seed1 done in 0.8s — global_auc: feature=0.899, hybrid=0.755, bin0_hybrid=0.500
+2026-06-04 19:23:09,966 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.238, score_loss=0.0009
+2026-06-04 19:23:10,109 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8437, grad_mean=0.000000
+2026-06-04 19:23:10,250 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8437, grad_mean=0.000000
+2026-06-04 19:23:10,294 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8437, grad_mean=0.000000
+2026-06-04 19:23:10,294 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8437, grad_mean=0.000000
+2026-06-04 19:23:10,298 INFO [43/90] CiteSeer/cross_class_oracle/seed2 done in 1.0s — global_auc: feature=0.893, hybrid=0.739, bin0_hybrid=0.092
+2026-06-04 19:23:10,855 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.230, score_loss=0.0010
+2026-06-04 19:23:10,998 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8444, grad_mean=0.000000
+2026-06-04 19:23:11,139 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8444, grad_mean=0.000000
+2026-06-04 19:23:11,184 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8444, grad_mean=0.000000
+2026-06-04 19:23:11,184 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8444, grad_mean=0.000000
+2026-06-04 19:23:11,188 INFO [44/90] CiteSeer/cross_class_oracle/seed3 done in 0.9s — global_auc: feature=0.903, hybrid=0.758, bin0_hybrid=0.259
+2026-06-04 19:23:11,745 INFO GraGE-FO: grad_mean=-0.000000, pos_ratio=0.232, score_loss=0.0016
+2026-06-04 19:23:11,889 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8439, grad_mean=-0.000000
+2026-06-04 19:23:12,030 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8439, grad_mean=-0.000000
+2026-06-04 19:23:12,072 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8439, grad_mean=-0.000000
+2026-06-04 19:23:12,072 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8439, grad_mean=-0.000000
+2026-06-04 19:23:12,076 INFO [45/90] CiteSeer/cross_class_oracle/seed4 done in 0.9s — global_auc: feature=0.895, hybrid=0.748, bin0_hybrid=0.500
+2026-06-04 19:23:12,531 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.249, score_loss=0.0014
+2026-06-04 19:23:12,673 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8443, grad_mean=0.000000
+2026-06-04 19:23:12,815 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8443, grad_mean=0.000000
+2026-06-04 19:23:12,857 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8443, grad_mean=0.000000
+2026-06-04 19:23:12,858 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8443, grad_mean=0.000000
+2026-06-04 19:23:12,862 INFO [46/90] CiteSeer/cross_class_oracle/seed5 done in 0.8s — global_auc: feature=0.901, hybrid=0.750, bin0_hybrid=0.500
+2026-06-04 19:23:13,401 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.195, score_loss=0.0006
+2026-06-04 19:23:13,544 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8444, grad_mean=0.000000
+2026-06-04 19:23:13,685 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8444, grad_mean=0.000000
+2026-06-04 19:23:13,730 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8444, grad_mean=0.000000
+2026-06-04 19:23:13,730 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8444, grad_mean=0.000000
+2026-06-04 19:23:13,734 INFO [47/90] CiteSeer/cross_class_oracle/seed6 done in 0.9s — global_auc: feature=0.902, hybrid=0.757, bin0_hybrid=0.345
+2026-06-04 19:23:14,306 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.203, score_loss=0.0008
+2026-06-04 19:23:14,453 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8442, grad_mean=0.000000
+2026-06-04 19:23:14,599 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8442, grad_mean=0.000000
+2026-06-04 19:23:14,645 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8442, grad_mean=0.000000
+2026-06-04 19:23:14,646 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8442, grad_mean=0.000000
+2026-06-04 19:23:14,650 INFO [48/90] CiteSeer/cross_class_oracle/seed7 done in 0.9s — global_auc: feature=0.899, hybrid=0.750, bin0_hybrid=0.199
+2026-06-04 19:23:15,165 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.250, score_loss=0.0017
+2026-06-04 19:23:15,308 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8443, grad_mean=0.000000
+2026-06-04 19:23:15,449 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8443, grad_mean=0.000000
+2026-06-04 19:23:15,495 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8443, grad_mean=0.000000
+2026-06-04 19:23:15,495 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8443, grad_mean=0.000000
+2026-06-04 19:23:15,499 INFO [49/90] CiteSeer/cross_class_oracle/seed8 done in 0.8s — global_auc: feature=0.901, hybrid=0.759, bin0_hybrid=0.162
+2026-06-04 19:23:15,951 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.223, score_loss=0.0011
+2026-06-04 19:23:16,093 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8445, grad_mean=0.000000
+2026-06-04 19:23:16,234 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8445, grad_mean=0.000000
+2026-06-04 19:23:16,279 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8445, grad_mean=0.000000
+2026-06-04 19:23:16,279 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8445, grad_mean=0.000000
+2026-06-04 19:23:16,283 INFO [50/90] CiteSeer/cross_class_oracle/seed9 done in 0.8s — global_auc: feature=0.903, hybrid=0.775, bin0_hybrid=0.078
+2026-06-04 19:23:17,147 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.233, score_loss=0.0012
+2026-06-04 19:23:17,290 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:17,431 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:17,466 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:17,466 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:17,470 INFO [51/90] CiteSeer/low_feature_similarity/seed0 done in 1.2s — global_auc: feature=0.987, hybrid=0.892, bin0_hybrid=0.500
+2026-06-04 19:23:18,243 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.162, score_loss=0.0013
+2026-06-04 19:23:18,391 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:18,537 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:18,572 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:18,572 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:18,577 INFO [52/90] CiteSeer/low_feature_similarity/seed1 done in 1.1s — global_auc: feature=0.987, hybrid=0.900, bin0_hybrid=0.500
+2026-06-04 19:23:19,288 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.230, score_loss=0.0010
+2026-06-04 19:23:19,432 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:19,575 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:19,611 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:19,612 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:19,616 INFO [53/90] CiteSeer/low_feature_similarity/seed2 done in 1.0s — global_auc: feature=0.987, hybrid=0.884, bin0_hybrid=0.500
+2026-06-04 19:23:20,211 INFO GraGE-FO: grad_mean=0.000007, pos_ratio=0.227, score_loss=0.6980
+2026-06-04 19:23:20,354 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000007
+2026-06-04 19:23:20,498 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000007
+2026-06-04 19:23:20,534 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000007
+2026-06-04 19:23:20,534 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000007
+2026-06-04 19:23:20,538 INFO [54/90] CiteSeer/low_feature_similarity/seed3 done in 0.9s — global_auc: feature=0.987, hybrid=0.880, bin0_hybrid=0.500
+2026-06-04 19:23:21,145 INFO GraGE-FO: grad_mean=0.000004, pos_ratio=0.236, score_loss=1.3015
+2026-06-04 19:23:21,289 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000004
+2026-06-04 19:23:21,431 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000004
+2026-06-04 19:23:21,466 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000004
+2026-06-04 19:23:21,466 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000004
+2026-06-04 19:23:21,470 INFO [55/90] CiteSeer/low_feature_similarity/seed4 done in 0.9s — global_auc: feature=0.987, hybrid=0.890, bin0_hybrid=0.500
+2026-06-04 19:23:22,178 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.239, score_loss=0.0013
+2026-06-04 19:23:22,321 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:22,541 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:22,575 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:22,576 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:22,580 INFO [56/90] CiteSeer/low_feature_similarity/seed5 done in 1.1s — global_auc: feature=0.987, hybrid=0.888, bin0_hybrid=0.500
+2026-06-04 19:23:23,170 INFO GraGE-FO: grad_mean=0.000004, pos_ratio=0.217, score_loss=1.0557
+2026-06-04 19:23:23,313 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000004
+2026-06-04 19:23:23,454 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000004
+2026-06-04 19:23:23,489 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000004
+2026-06-04 19:23:23,489 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000004
+2026-06-04 19:23:23,493 INFO [57/90] CiteSeer/low_feature_similarity/seed6 done in 0.9s — global_auc: feature=0.987, hybrid=0.884, bin0_hybrid=0.500
+2026-06-04 19:23:24,240 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.195, score_loss=0.0010
+2026-06-04 19:23:24,383 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:24,526 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:24,561 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:24,561 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:24,565 INFO [58/90] CiteSeer/low_feature_similarity/seed7 done in 1.1s — global_auc: feature=0.987, hybrid=0.896, bin0_hybrid=0.500
+2026-06-04 19:23:25,434 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.259, score_loss=0.0010
+2026-06-04 19:23:25,578 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:25,719 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:25,754 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:25,754 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:25,758 INFO [59/90] CiteSeer/low_feature_similarity/seed8 done in 1.2s — global_auc: feature=0.987, hybrid=0.889, bin0_hybrid=0.500
+2026-06-04 19:23:26,461 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.234, score_loss=0.0018
+2026-06-04 19:23:26,605 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:26,747 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:26,782 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:26,782 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.8533, grad_mean=0.000000
+2026-06-04 19:23:26,786 INFO [60/90] CiteSeer/low_feature_similarity/seed9 done in 1.0s — global_auc: feature=0.987, hybrid=0.911, bin0_hybrid=0.500
+2026-06-04 19:25:33,475 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.081, score_loss=0.0101
+2026-06-04 19:25:34,854 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:25:36,308 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:25:37,118 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:25:37,118 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:25:37,151 INFO [61/90] PubMed/feature_similar_cross_class/seed0 done in 130.4s — global_auc: feature=0.773, hybrid=0.614, bin0_hybrid=0.122
+2026-06-04 19:27:52,672 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.113, score_loss=0.9008
+2026-06-04 19:27:54,137 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7608, grad_mean=0.000000
+2026-06-04 19:27:55,519 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7608, grad_mean=0.000000
+2026-06-04 19:27:56,292 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7608, grad_mean=0.000000
+2026-06-04 19:27:56,292 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7608, grad_mean=0.000000
+2026-06-04 19:27:56,326 INFO [62/90] PubMed/feature_similar_cross_class/seed1 done in 139.2s — global_auc: feature=0.774, hybrid=0.622, bin0_hybrid=0.145
+2026-06-04 19:30:36,234 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.041, score_loss=0.0008
+2026-06-04 19:30:37,673 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:30:39,199 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:30:40,030 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:30:40,030 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:30:40,066 INFO [63/90] PubMed/feature_similar_cross_class/seed2 done in 163.7s — global_auc: feature=0.773, hybrid=0.615, bin0_hybrid=0.104
+2026-06-04 19:33:33,427 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.128, score_loss=0.0011
+2026-06-04 19:33:34,933 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:33:36,445 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:33:37,281 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:33:37,281 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:33:37,316 INFO [64/90] PubMed/feature_similar_cross_class/seed3 done in 177.3s — global_auc: feature=0.774, hybrid=0.620, bin0_hybrid=0.136
+2026-06-04 19:36:35,524 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.081, score_loss=0.0009
+2026-06-04 19:36:37,050 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7609, grad_mean=0.000000
+2026-06-04 19:36:38,485 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7609, grad_mean=0.000000
+2026-06-04 19:36:39,303 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7609, grad_mean=0.000000
+2026-06-04 19:36:39,303 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7609, grad_mean=0.000000
+2026-06-04 19:36:39,339 INFO [65/90] PubMed/feature_similar_cross_class/seed4 done in 182.0s — global_auc: feature=0.775, hybrid=0.613, bin0_hybrid=0.127
+2026-06-04 19:39:07,893 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.068, score_loss=0.4073
+2026-06-04 19:39:10,144 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7604, grad_mean=0.000000
+2026-06-04 19:39:17,399 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7604, grad_mean=0.000000
+2026-06-04 19:39:18,242 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7604, grad_mean=0.000000
+2026-06-04 19:39:18,244 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7604, grad_mean=0.000000
+2026-06-04 19:39:18,277 INFO [66/90] PubMed/feature_similar_cross_class/seed5 done in 158.9s — global_auc: feature=0.771, hybrid=0.606, bin0_hybrid=0.097
+2026-06-04 19:41:52,254 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.100, score_loss=0.0665
+2026-06-04 19:41:59,256 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7608, grad_mean=0.000000
+2026-06-04 19:42:01,418 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7608, grad_mean=0.000000
+2026-06-04 19:42:02,244 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7608, grad_mean=0.000000
+2026-06-04 19:42:02,245 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7608, grad_mean=0.000000
+2026-06-04 19:42:02,278 INFO [67/90] PubMed/feature_similar_cross_class/seed6 done in 164.0s — global_auc: feature=0.774, hybrid=0.617, bin0_hybrid=0.134
+2026-06-04 19:44:37,458 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.100, score_loss=0.0852
+2026-06-04 19:44:48,827 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7606, grad_mean=0.000000
+2026-06-04 19:45:00,225 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7606, grad_mean=0.000000
+2026-06-04 19:45:01,048 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7606, grad_mean=0.000000
+2026-06-04 19:45:01,049 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7606, grad_mean=0.000000
+2026-06-04 19:45:01,082 INFO [68/90] PubMed/feature_similar_cross_class/seed7 done in 178.8s — global_auc: feature=0.772, hybrid=0.620, bin0_hybrid=0.146
+2026-06-04 19:47:38,883 INFO GraGE-FO: grad_mean=0.000001, pos_ratio=0.102, score_loss=0.2045
+2026-06-04 19:47:40,268 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7610, grad_mean=0.000001
+2026-06-04 19:47:41,742 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7610, grad_mean=0.000001
+2026-06-04 19:47:42,542 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7610, grad_mean=0.000001
+2026-06-04 19:47:42,543 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7610, grad_mean=0.000001
+2026-06-04 19:47:42,576 INFO [69/90] PubMed/feature_similar_cross_class/seed8 done in 161.5s — global_auc: feature=0.776, hybrid=0.614, bin0_hybrid=0.112
+2026-06-04 19:50:35,326 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.081, score_loss=0.5267
+2026-06-04 19:50:36,793 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:50:38,187 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:50:39,238 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:50:39,238 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7607, grad_mean=0.000000
+2026-06-04 19:50:39,271 INFO [70/90] PubMed/feature_similar_cross_class/seed9 done in 176.7s — global_auc: feature=0.773, hybrid=0.613, bin0_hybrid=0.121
+2026-06-04 19:50:45,825 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.081, score_loss=0.0015
+2026-06-04 19:50:51,885 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:50:55,403 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:50:56,195 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:50:56,195 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:50:56,228 INFO [71/90] PubMed/cross_class_oracle/seed0 done in 17.0s — global_auc: feature=0.914, hybrid=0.766, bin0_hybrid=0.155
+2026-06-04 19:50:58,427 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.116, score_loss=0.0296
+2026-06-04 19:50:59,809 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7769, grad_mean=0.000000
+2026-06-04 19:51:01,265 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7769, grad_mean=0.000000
+2026-06-04 19:51:02,084 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7769, grad_mean=0.000000
+2026-06-04 19:51:02,085 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7769, grad_mean=0.000000
+2026-06-04 19:51:02,117 INFO [72/90] PubMed/cross_class_oracle/seed1 done in 5.9s — global_auc: feature=0.914, hybrid=0.768, bin0_hybrid=0.136
+2026-06-04 19:51:04,431 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.048, score_loss=0.0007
+2026-06-04 19:51:05,895 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7769, grad_mean=0.000000
+2026-06-04 19:51:07,280 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7769, grad_mean=0.000000
+2026-06-04 19:51:08,034 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7769, grad_mean=0.000000
+2026-06-04 19:51:08,034 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7769, grad_mean=0.000000
+2026-06-04 19:51:08,067 INFO [73/90] PubMed/cross_class_oracle/seed2 done in 5.9s — global_auc: feature=0.915, hybrid=0.766, bin0_hybrid=0.098
+2026-06-04 19:51:10,301 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.116, score_loss=0.0020
+2026-06-04 19:51:11,683 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:51:13,144 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:51:13,954 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:51:13,954 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:51:13,987 INFO [74/90] PubMed/cross_class_oracle/seed3 done in 5.9s — global_auc: feature=0.914, hybrid=0.771, bin0_hybrid=0.179
+2026-06-04 19:51:16,102 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.083, score_loss=0.0223
+2026-06-04 19:51:17,575 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7766, grad_mean=0.000000
+2026-06-04 19:51:18,971 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7766, grad_mean=0.000000
+2026-06-04 19:51:19,725 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7766, grad_mean=0.000000
+2026-06-04 19:51:19,725 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7766, grad_mean=0.000000
+2026-06-04 19:51:19,758 INFO [75/90] PubMed/cross_class_oracle/seed4 done in 5.8s — global_auc: feature=0.913, hybrid=0.762, bin0_hybrid=0.122
+2026-06-04 19:51:21,915 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.069, score_loss=0.1360
+2026-06-04 19:51:23,298 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7770, grad_mean=0.000000
+2026-06-04 19:51:24,749 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7770, grad_mean=0.000000
+2026-06-04 19:51:25,526 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7770, grad_mean=0.000000
+2026-06-04 19:51:25,526 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7770, grad_mean=0.000000
+2026-06-04 19:51:25,559 INFO [76/90] PubMed/cross_class_oracle/seed5 done in 5.8s — global_auc: feature=0.916, hybrid=0.765, bin0_hybrid=0.114
+2026-06-04 19:51:27,917 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.095, score_loss=0.0011
+2026-06-04 19:51:29,285 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:51:30,743 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:51:31,561 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:51:31,561 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:51:31,594 INFO [77/90] PubMed/cross_class_oracle/seed6 done in 6.0s — global_auc: feature=0.914, hybrid=0.771, bin0_hybrid=0.153
+2026-06-04 19:51:33,724 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.096, score_loss=0.0037
+2026-06-04 19:51:35,198 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:51:36,587 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:51:37,397 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:51:37,398 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7768, grad_mean=0.000000
+2026-06-04 19:51:37,431 INFO [78/90] PubMed/cross_class_oracle/seed7 done in 5.8s — global_auc: feature=0.914, hybrid=0.763, bin0_hybrid=0.135
+2026-06-04 19:51:39,663 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.100, score_loss=0.0029
+2026-06-04 19:51:41,067 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7769, grad_mean=0.000000
+2026-06-04 19:51:42,538 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7769, grad_mean=0.000000
+2026-06-04 19:51:43,350 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7769, grad_mean=0.000000
+2026-06-04 19:51:43,350 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7769, grad_mean=0.000000
+2026-06-04 19:51:43,383 INFO [79/90] PubMed/cross_class_oracle/seed8 done in 6.0s — global_auc: feature=0.915, hybrid=0.765, bin0_hybrid=0.137
+2026-06-04 19:51:45,783 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.089, score_loss=0.0006
+2026-06-04 19:51:47,173 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7766, grad_mean=0.000000
+2026-06-04 19:51:48,649 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7766, grad_mean=0.000000
+2026-06-04 19:51:49,424 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7766, grad_mean=0.000000
+2026-06-04 19:51:49,425 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7766, grad_mean=0.000000
+2026-06-04 19:51:49,457 INFO [80/90] PubMed/cross_class_oracle/seed9 done in 6.1s — global_auc: feature=0.912, hybrid=0.759, bin0_hybrid=0.130
+2026-06-04 19:51:52,516 INFO GraGE-FO: grad_mean=0.000001, pos_ratio=0.093, score_loss=0.7161
+2026-06-04 19:51:53,983 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000001
+2026-06-04 19:51:55,356 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000001
+2026-06-04 19:51:56,090 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000001
+2026-06-04 19:51:56,091 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000001
+2026-06-04 19:51:56,124 INFO [81/90] PubMed/low_feature_similarity/seed0 done in 6.7s — global_auc: feature=0.998, hybrid=0.881, bin0_hybrid=0.500
+2026-06-04 19:51:59,330 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.125, score_loss=0.5805
+2026-06-04 19:52:00,725 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:02,191 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:02,900 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:02,901 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:02,933 INFO [82/90] PubMed/low_feature_similarity/seed1 done in 6.8s — global_auc: feature=0.998, hybrid=0.883, bin0_hybrid=0.500
+2026-06-04 19:52:06,097 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.046, score_loss=0.0209
+2026-06-04 19:52:07,565 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:08,965 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:09,695 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:09,695 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:09,728 INFO [83/90] PubMed/low_feature_similarity/seed2 done in 6.8s — global_auc: feature=0.998, hybrid=0.883, bin0_hybrid=0.500
+2026-06-04 19:52:12,942 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.121, score_loss=0.5978
+2026-06-04 19:52:14,341 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:15,816 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:16,575 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:16,576 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:16,609 INFO [84/90] PubMed/low_feature_similarity/seed3 done in 6.9s — global_auc: feature=0.998, hybrid=0.882, bin0_hybrid=0.500
+2026-06-04 19:52:19,974 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.083, score_loss=0.0016
+2026-06-04 19:52:21,382 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:22,860 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:23,607 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:23,608 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:23,641 INFO [85/90] PubMed/low_feature_similarity/seed4 done in 7.0s — global_auc: feature=0.998, hybrid=0.879, bin0_hybrid=0.500
+2026-06-04 19:52:26,867 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.073, score_loss=0.0036
+2026-06-04 19:52:28,354 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:29,755 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:30,513 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:30,513 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:30,547 INFO [86/90] PubMed/low_feature_similarity/seed5 done in 6.9s — global_auc: feature=0.998, hybrid=0.877, bin0_hybrid=0.500
+2026-06-04 19:52:33,853 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.099, score_loss=0.0030
+2026-06-04 19:52:35,247 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:36,713 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:37,433 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:37,434 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:37,467 INFO [87/90] PubMed/low_feature_similarity/seed6 done in 6.9s — global_auc: feature=0.998, hybrid=0.884, bin0_hybrid=0.500
+2026-06-04 19:52:40,786 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.104, score_loss=0.0632
+2026-06-04 19:52:42,179 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:43,658 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:44,388 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:44,389 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:44,422 INFO [88/90] PubMed/low_feature_similarity/seed7 done in 7.0s — global_auc: feature=0.998, hybrid=0.884, bin0_hybrid=0.500
+2026-06-04 19:52:47,612 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.103, score_loss=0.0162
+2026-06-04 19:52:49,088 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:50,484 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:51,236 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:51,237 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:51,270 INFO [89/90] PubMed/low_feature_similarity/seed8 done in 6.8s — global_auc: feature=0.998, hybrid=0.878, bin0_hybrid=0.500
+2026-06-04 19:52:54,425 INFO GraGE-FO: grad_mean=0.000000, pos_ratio=0.089, score_loss=0.8509
+2026-06-04 19:52:55,818 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:57,302 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:58,028 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:58,029 INFO GraGE-Hybrid (feature_pos_neg): score_mean=0.3000, feature_mean=0.7900, grad_mean=0.000000
+2026-06-04 19:52:58,063 INFO [90/90] PubMed/low_feature_similarity/seed9 done in 6.8s — global_auc: feature=0.998, hybrid=0.890, bin0_hybrid=0.500
+2026-06-04 19:52:58,063 INFO 
+All cases done in 4814.5s. 90/90 succeeded.
+2026-06-04 19:52:58,063 INFO Building tables...
+2026-06-04 19:52:58,072 INFO Building figures...
+2026-06-04 19:52:58,441 INFO Building metrics.json...
+2026-06-04 19:52:58,443 INFO Metrics saved to experiments/2026-06-04-dynamics-mechanism-diagnostics/metrics.json
+2026-06-04 19:52:58,443 INFO 
+============================================================
+2026-06-04 19:52:58,443 INFO SUMMARY
+2026-06-04 19:52:58,443 INFO ============================================================
+2026-06-04 19:52:58,443 INFO Total cases: 90
+2026-06-04 19:52:58,443 INFO Mean residual AUC (hybrid): 0.7982
+2026-06-04 19:52:58,443 INFO Mean dynamic-feature Spearman: 0.0189
+2026-06-04 19:52:58,443 INFO Feature-similar bin real vs shuffled delta: 0.0029
+2026-06-04 19:52:58,443 INFO Best signal in feature-similar bin: feature_risk
+2026-06-04 19:52:58,443 INFO Inner channel diagnostic: no clear difference
+2026-06-04 19:52:58,443 INFO Residual dynamic signal supported: False
+2026-06-04 19:52:58,443 INFO Failure modes: ['shuffle ablation shows no clear advantage in feature_similar_cross_class']
+2026-06-04 19:52:58,443 INFO ============================================================

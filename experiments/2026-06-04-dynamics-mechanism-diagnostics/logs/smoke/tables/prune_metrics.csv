@@ -1,0 +1,7 @@
+dataset,noise_type,seed,score,precision,recall,f1
+Cora,feature_similar_cross_class,0,feature_risk,0.08819241982507289,0.0764371446620341,0.08189509306260574
+Cora,feature_similar_cross_class,0,raw_grad,0.2434402332361516,0.21099178774478838,0.22605752961082912
+Cora,feature_similar_cross_class,0,pos_grad,0.2434402332361516,0.21099178774478838,0.22605752961082912
+Cora,feature_similar_cross_class,0,neg_grad,0.15706997084548105,0.1361339229311434,0.1458544839255499
+Cora,feature_similar_cross_class,0,hybrid,0.0,0.0,0.0
+Cora,feature_similar_cross_class,0,shuffled_hybrid,0.0,0.0,0.0

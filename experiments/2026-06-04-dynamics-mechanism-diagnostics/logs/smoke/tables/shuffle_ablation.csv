@@ -1,0 +1,2 @@
+dataset,noise_type,seed,real_hybrid_auc,shuffled_hybrid_auc,delta
+Cora,feature_similar_cross_class,0,0.4711576312789091,0.46410684094479593,0.007050790334113155

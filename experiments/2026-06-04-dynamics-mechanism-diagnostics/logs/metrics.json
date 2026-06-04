@@ -1,0 +1,25 @@
+{
+  "exp_id": "2026-06-04-dynamics-mechanism-diagnostics",
+  "status": "completed",
+  "residual_dynamic_signal_supported": true,
+  "feature_similar_bin_real_vs_shuffled_delta": 0.0071,
+  "best_signal_in_feature_similar_bin": "feature_risk",
+  "mean_residual_auc": 0.8915,
+  "mean_dynamic_feature_spearman": 0.0326,
+  "inner_channel_diagnostic": "no clear difference",
+  "failure_modes": [],
+  "num_cases": 1,
+  "tables": [
+    "global_signal_auc",
+    "feature_bin_auc",
+    "shuffle_ablation",
+    "residual_signal",
+    "correlation_summary",
+    "prune_metrics"
+  ],
+  "figures": [
+    "feature_bin_auc_fscc.png",
+    "shuffle_ablation_delta.png"
+  ],
+  "notes": ""
+}

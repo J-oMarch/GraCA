@@ -1,0 +1,4 @@
+dataset,noise_type,seed,score,residual_auc,residual_direction,residual_spearman,residual_spearman_p
+Cora,feature_similar_cross_class,0,raw_grad,0.5125196228064527,negative,-0.018271624356201475,0.032327385131103226
+Cora,feature_similar_cross_class,0,pos_grad,0.5340631932164814,negative,-0.049714721741621386,5.653355664175296e-09
+Cora,feature_similar_cross_class,0,hybrid,0.8915271127460991,negative,-0.5713999531574786,0.0

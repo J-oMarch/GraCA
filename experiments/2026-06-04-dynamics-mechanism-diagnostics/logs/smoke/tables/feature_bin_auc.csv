@@ -1,0 +1,17 @@
+dataset,noise_type,seed,bin,score,auc,n_edges,n_bad
+Cora,feature_similar_cross_class,0,bin_0,feature_risk,0.7425729578082879,3428,156
+Cora,feature_similar_cross_class,0,bin_0,raw_grad,0.4767745752617391,3428,156
+Cora,feature_similar_cross_class,0,bin_0,hybrid,0.21301172340292143,3428,156
+Cora,feature_similar_cross_class,0,bin_0,shuffled_hybrid,0.2305811547865338,3428,156
+Cora,feature_similar_cross_class,0,bin_1,feature_risk,0.6135446427177493,3380,792
+Cora,feature_similar_cross_class,0,bin_1,raw_grad,0.5041415897772157,3380,792
+Cora,feature_similar_cross_class,0,bin_1,hybrid,0.17498594913587184,3380,792
+Cora,feature_similar_cross_class,0,bin_1,shuffled_hybrid,0.17891628807393872,3380,792
+Cora,feature_similar_cross_class,0,bin_2,feature_risk,0.5733393257202781,3444,1554
+Cora,feature_similar_cross_class,0,bin_2,raw_grad,0.5137634232872327,3444,1554
+Cora,feature_similar_cross_class,0,bin_2,hybrid,0.17323513990180656,3444,1554
+Cora,feature_similar_cross_class,0,bin_2,shuffled_hybrid,0.16425745473364523,3444,1554
+Cora,feature_similar_cross_class,0,bin_3,feature_risk,0.08414842549098747,3470,664
+Cora,feature_similar_cross_class,0,bin_3,raw_grad,0.5219382519386169,3470,664
+Cora,feature_similar_cross_class,0,bin_3,hybrid,0.023316000996144236,3470,664
+Cora,feature_similar_cross_class,0,bin_3,shuffled_hybrid,0.021777773961133198,3470,664
