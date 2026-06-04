@@ -13,10 +13,12 @@ training-dynamics terms that promote harmful-edge pruning while protecting edges
 whose gradients indicate useful message passing. Experiments compare GraGE
 against Feature-only, similarity pruning, random matched pruning, and graph
 robustness baselines under matched budgets across citation and heterophily
-datasets. First-batch evidence shows that raw edge-gate gradients are weak as
-bad-edge detectors. A selective multi-checkpoint gate prevents dynamic-gradient
-degradation in low-feature-similarity regimes, but its gains on the target
-feature-similar cross-class setting are not statistically meaningful. The
-current paper claim is therefore not yet AAAI-ready: GraGE must either find a
-stronger training-dynamics signal or be reframed as a diagnostic study of when
-edge-gate dynamics fail relative to Feature-only pruning.
+datasets. The current evidence is primarily negative. Raw edge-gate gradients
+are weak bad-edge detectors after feature-risk control, a selective
+multi-checkpoint gate does not produce a meaningful feature-similar cross-class
+gain, and a 20-seed confirmation rerun finds that GraGE-Hybrid loses to
+Feature-only by `-2.50 pp` while MCGC loses by `-0.72 pp`. The current paper is
+therefore not AAAI-ready as a positive method paper. A viable version must either
+introduce a stronger no-leak training-dynamics channel or reframe GraGE as a
+diagnostic study of when differentiable edge-gate signals fail relative to
+static feature similarity.

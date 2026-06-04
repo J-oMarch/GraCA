@@ -98,6 +98,28 @@ is a differentiable edge gate.
    Oracle edge signals show whether useful edge-level task signal exists, but
    they do not prove the practical method works.
 
+6. The current GraGE-Hybrid/MCGC practical claim is not supported by the
+   second-batch confirmation.
+
+   `2026-06-04-fscc-confirmation-rerun` completed a matched-budget 20-seed
+   FSCC confirmation across Cora, CiteSeer, and PubMed. Feature-only was the
+   strongest overall method (`0.6116 ± 0.0496`). GraGE-Hybrid lost by
+   `-2.50 pp` (`p=0.0012`, win rate `0.10`, Cohen's d `-1.40`), and MCGC lost
+   by `-0.72 pp` (`p=0.143`, win rate `0.43`). MCGC improved Cora FSCC, but
+   Random-Matched and DegreeAwareRandom improved more on the same slice, so the
+   positive Cora result is likely a pruning budget/degree effect rather than
+   evidence of a residual training-dynamics edge signal.
+
+7. The current paper path must be method-rebuild or diagnostic reframing.
+
+   Do not keep adding small sweeps around the existing rank-normalized hybrid or
+   MCGC score. First-batch diagnostics and second-batch confirmation indicate
+   that edge-gate gradient magnitudes are near-zero, signs are near-random after
+   feature-risk control, and rank normalization can amplify noise. A new AAAI
+   attempt must either introduce a substantially different no-leak dynamics
+   channel or honestly frame GraGE as a diagnostic/falsification study relative
+   to Feature-only pruning.
+
 ## Current Implementation State
 
 Relevant directories:
@@ -163,7 +185,8 @@ Use these rules when interpreting results:
 4. If results are dataset-specific, identify the graph regime where the method
    works instead of overclaiming generality.
 5. If results do not support the claim, revise the method or reframe the paper
-   before producing more tables.
+   before producing more tables. This condition currently applies after
+   `2026-06-04-fscc-confirmation-rerun`.
 
 ## Automation Workflow
 

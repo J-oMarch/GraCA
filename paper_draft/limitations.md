@@ -25,3 +25,14 @@
 - The current selective gate chooses a median feature-similarity threshold and
   activates on about half of edges. That behavior is not yet a convincing
   feature-ambiguous regime detector.
+- The 20-seed FSCC confirmation rerun directly falsifies the current practical
+  GraGE-Hybrid claim: Feature-only is strongest overall, GraGE-Hybrid loses by
+  `-2.50 pp` with `p=0.0012` and win rate `0.10`, and MCGC loses by `-0.72 pp`
+  with win rate `0.43`.
+- The only positive MCGC confirmation slice is Cora FSCC, but Random-Matched and
+  DegreeAwareRandom improve more strongly there. This makes the result
+  insufficient as evidence for a training-dynamics residual signal.
+- Control regimes and heterophily slices currently favor Feature-only or
+  GCN-Jaccard. Any AAAI-facing version must either introduce a stronger
+  no-leak dynamics channel or honestly frame the present results as a negative
+  diagnostic study.

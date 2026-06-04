@@ -47,11 +47,12 @@ search found only regime-dependent gains.
 
 ## Current Decision
 
-The AAAI claim should shift from "edge gradients detect bad edges beyond feature
-similarity" to "training dynamics are regime-dependent and may help when static
-features are ambiguous, but must be gated by feature-regime detection." The next
-experiment should test a selective dynamics gate that falls back to Feature-only
-when feature risk is already reliable.
+The current empirical claim is not AAAI-ready. The first batch already weakened
+the residual-signal story, and the second-batch confirmation now falsifies the
+strong practical claim under matched pruning budgets. The paper should either
+introduce a materially different training-dynamics mechanism or be reframed as a
+diagnostic study explaining why differentiable edge-gate gradients are often too
+weak/noisy relative to Feature-only pruning.
 
 ## Second Batch Prepared
 
@@ -66,7 +67,7 @@ when feature risk is already reliable.
    over Cora/CiteSeer/PubMed, 20 FSCC seeds, control regimes, and a small
    heterophily slice.
 
-## Second-Batch Outcome To Date
+## Second-Batch Outcome
 
 - `2026-06-04-selective-mcgc-regime-gate` completed. The best variant was
   `Selective-MCGC-hard-q0.5-lp0.1-ln0.5`. It is the best overall validation
@@ -75,10 +76,38 @@ when feature risk is already reliable.
   However, the target `feature_similar_cross_class` delta is only `+0.09 pp`
   (`p=0.575`, win rate `0.47`), so the candidate is not selected for
   confirmation and does not satisfy the AAAI stop condition.
-- `2026-06-04-fscc-confirmation-rerun` is running after an operational rerun.
-  The first attempt only rewrote prompt files and produced placeholder metrics;
-  the prompt and runner were patched, smoke succeeded, and the primary matrix is
-  currently running.
+- `2026-06-04-fscc-confirmation-rerun` completed the direct confirmation matrix
+  after the operational rerun. On the primary FSCC target with 20 seeds across
+  Cora/CiteSeer/PubMed, Feature-only is the best overall method (`0.6116 ±
+  0.0496`). GraGE-Hybrid loses by `-2.50 pp` (`p=0.0012`, win rate `0.10`,
+  Cohen's d `-1.40`), and MCGC loses by `-0.72 pp` (`p=0.143`, win rate
+  `0.43`).
+- The only positive MCGC slice is Cora FSCC (`+1.58 pp`, `p<0.001`), but
+  Random-Matched (`+4.35 pp`) and DegreeAwareRandom (`+4.00 pp`) also beat
+  Feature-only on Cora. This makes the Cora gain look like a pruning
+  budget/degree effect rather than evidence that training dynamics add residual
+  edge information.
+- On control regimes, Feature-only and GCN-Jaccard are tied (`0.6903` vs
+  `0.6905`), while GraGE-Hybrid (`0.6716`) and MCGC (`0.6627`) lose. On the
+  heterophily slice, Feature-only again wins (`0.5155`), while GraGE-Hybrid
+  (`0.5044`) and MCGC (`0.4985`) lose.
+
+## Method Rebuild Direction
+
+Do not continue adding small sweeps around the current rank-normalized hybrid
+or MCGC score. The bottleneck is the signal itself: gradient magnitudes are
+near-zero, gradient signs are close to random after feature-risk control, and
+rank normalization turns tiny fluctuations into pruning decisions. A viable next
+method must change the information channel, for example:
+
+- score edges from validation-free prediction stability under graph
+  perturbations, then use edge-gate gradients only as a consistency constraint;
+- learn a no-leak support/score split where dynamics are estimated on one
+  graph view and applied to another;
+- replace rank-normalized gradient addition/subtraction with calibrated
+  uncertainty-aware gating that can abstain on near-zero gradients;
+- treat current GraGE as a diagnostic framework and make the paper's main claim
+  about when training-dynamics edge signals fail relative to static similarity.
 
 ## Required Reporting
 

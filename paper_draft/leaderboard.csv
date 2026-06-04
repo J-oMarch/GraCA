@@ -14,3 +14,16 @@ historical_grage_edge_gate,GraGE-FO,aggregate,all,3,0.6602,0.0541,-5.23,,,"",uns
 2026-06-04-selective-mcgc-regime-gate,Selective-MCGC-hard-q0.5-lp0.1-ln0.5,validation_fscc,feature_similar_cross_class,15,,,+0.09,0.575,0.47,"7.9s",unsupported_fscc_too_small
 2026-06-04-selective-mcgc-regime-gate,Selective-MCGC-hard-q0.5-lp0.1-ln0.5,validation_lfs,low_feature_similarity,15,,,+1.90,0.025,0.53,"7.9s",supported_lfs_regularizer
 2026-06-04-selective-mcgc-regime-gate,MCGC-cw3.0-lp0.1-ln0.5,validation_lfs,low_feature_similarity,15,,,-2.46,0.012,,"6.6s",raw_mcgc_degrades
+2026-06-04-fscc-confirmation-rerun,Feature-only,primary_fscc,feature_similar_cross_class,60,0.6116,0.0496,0,,,"",baseline_confirmed_strongest
+2026-06-04-fscc-confirmation-rerun,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,primary_fscc,feature_similar_cross_class,60,0.5866,0.0473,-2.50,0.0012,0.10,"4.3s",unsupported_significant_loss
+2026-06-04-fscc-confirmation-rerun,MCGC-cw3.0-lp0.1-ln0.5,primary_fscc,feature_similar_cross_class,60,0.6044,0.0382,-0.72,0.1430,0.43,"6.7s",unsupported_not_stable
+2026-06-04-fscc-confirmation-rerun,GCN-Jaccard,primary_fscc,feature_similar_cross_class,60,0.6081,0.0520,-0.35,,0.35,"1.7s",strong_static_baseline_near_feature_only
+2026-06-04-fscc-confirmation-rerun,DegreeAwareRandom,primary_fscc,feature_similar_cross_class,60,0.6077,0.0466,-0.38,,0.47,"1.4s",budget_degree_effect_cora_only
+2026-06-04-fscc-confirmation-rerun,Random-Matched,primary_fscc,feature_similar_cross_class,60,0.6100,0.0496,-0.16,,0.42,"2.5s",budget_control_near_feature_only
+2026-06-04-fscc-confirmation-rerun,Feature-only,controls_all,control_regimes,90,0.6903,0.0493,0,,,"",baseline_controls
+2026-06-04-fscc-confirmation-rerun,GCN-Jaccard,controls_all,control_regimes,90,0.6905,0.0496,+0.02,,,"",static_similarity_tied_controls
+2026-06-04-fscc-confirmation-rerun,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,controls_all,control_regimes,90,0.6716,0.0581,-1.88,,,"",unsupported_controls
+2026-06-04-fscc-confirmation-rerun,MCGC-cw3.0-lp0.1-ln0.5,controls_all,control_regimes,90,0.6627,0.0573,-2.96,,,"",unsupported_controls
+2026-06-04-fscc-confirmation-rerun,Feature-only,heterophily_slice,feature_similar_cross_class_and_degree_random,30,0.5155,0.1697,0,,,"",baseline_heterophily
+2026-06-04-fscc-confirmation-rerun,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,heterophily_slice,feature_similar_cross_class_and_degree_random,30,0.5044,0.1666,-1.11,,,"",unsupported_heterophily
+2026-06-04-fscc-confirmation-rerun,MCGC-cw3.0-lp0.1-ln0.5,heterophily_slice,feature_similar_cross_class_and_degree_random,30,0.4985,0.1646,-1.60,,,"",unsupported_heterophily

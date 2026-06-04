@@ -39,3 +39,21 @@ Current answer after `2026-06-04-selective-mcgc-regime-gate`:
 - A reviewer can still argue that GraGE is Feature-only plus an expensive
   regularizer unless the FSCC confirmation rerun finds a stronger multi-seed
   delta over Feature-only.
+
+Current answer after `2026-06-04-fscc-confirmation-rerun`:
+
+- The strongest reviewer concern is confirmed, not resolved. In the direct
+  matched-budget FSCC rerun, Feature-only is the strongest practical method
+  (`0.6116 ± 0.0496`). GraGE-Hybrid loses by `-2.50 pp` (`p=0.0012`, win rate
+  `0.10`, Cohen's d `-1.40`), and MCGC loses by `-0.72 pp` (`p=0.143`, win rate
+  `0.43`).
+- The Cora-only MCGC gain is not enough for the paper claim because
+  Random-Matched and DegreeAwareRandom gain more on the same slice. A reviewer
+  can reasonably attribute this to pruning budget or degree effects.
+- Control regimes and heterophily data do not rescue the method. Feature-only
+  and GCN-Jaccard tie on controls, while GraGE variants lose; Feature-only also
+  wins the heterophily slice.
+- The paper cannot claim that current edge-gate training dynamics provide useful
+  graph evolution information beyond static feature similarity. It must either
+  present a new mechanism with substantially different evidence or reframe the
+  contribution as a diagnostic/falsification study.
