@@ -1,0 +1,76 @@
+exp_id: 2026-06-05-ambiguity-stability-evidence
+title: StabilityResidual Ambiguity and Alignment Evidence
+
+main_method: StabilityResidual-v5-dp0.15-grad-frozen
+
+datasets:
+  - Cora
+  - CiteSeer
+  - PubMed
+
+noise_types:
+  primary:
+    - feature_similar_cross_class
+  controls:
+    - low_feature_similarity
+    - degree_aligned_random
+
+noise_ratio: 0.30
+seeds: 20
+prune_ratio: 0.20
+min_degree: 1
+downstream_model: GCN
+
+stability_residual:
+  num_views: 5
+  edge_dropout_rates: [0.0, 0.10, 0.15, 0.20, 0.30]
+  checkpoint_control: frozen
+  checkpoint_fractions: [0.3, 0.5, 0.7, 0.9]
+  use_gradient_confidence: true
+  gradient_abstention_threshold: 0.10
+  score_ratio: 0.30
+  alpha: 0.50
+  skip_residualization: false
+
+ambiguity_buckets:
+  source: feature_derived_only
+  forbidden_sources:
+    - labels
+    - stability
+    - bad_edge_mask
+    - oracle_labels
+    - validation_labels
+    - test_labels
+    - downstream_outcomes
+  definition: distance_to_feature_only_pruning_boundary
+  bucket_names:
+    - Low
+    - Medium
+    - High
+  high_definition: >
+    Feature-derived scores are close to the pruning decision boundary, where
+    feature similarity provides weak discrimination between likely good and bad
+    edges.
+
+p0_bucket_gated_variants:
+  - Feature-only
+  - Feature+Residual-LowOnly
+  - Feature+Residual-MediumOnly
+  - Feature+Residual-HighOnly
+  - Feature+Stability
+  - StabilityResidual-v5-dp0.15-grad-frozen
+
+p1_alignment_variants:
+  - Feature-only
+  - Feature+Confidence
+  - Feature+Stability
+  - Feature+Random Stability
+  - Feature+Shuffled Stability
+  - Feature+Permuted Stability
+
+outputs:
+  result_md: experiments/2026-06-05-ambiguity-stability-evidence/result.md
+  metrics_json: experiments/2026-06-05-ambiguity-stability-evidence/metrics.json
+  failure_analysis_md: experiments/2026-06-05-ambiguity-stability-evidence/failure_analysis.md
+  logs_dir: experiments/2026-06-05-ambiguity-stability-evidence/logs
+
