@@ -51,3 +51,15 @@
 - Heterophily validation, residualization ablation, dropout-schedule
   sensitivity, and stronger graph-structure-learning baselines are still needed
   before claiming AAAI-final readiness.
+- The 20-seed ablation/confirmation strengthens the homophilic citation claim:
+  FSCC `+1.59 pp` (`p<0.001`, win rate `0.83`), LFS `+0.55 pp`, and DAR
+  `+0.81 pp`. However, heterophily validation and GSL baseline comparison remain
+  open.
+- Residualization is theoretically useful but not empirically decisive. Raw
+  stability is slightly better than residualized stability in the 5-seed
+  ablation, with a nonsignificant `+0.14 pp` difference. The paper should not
+  imply residualization is the source of the gain.
+- Shuffled residual is somewhat competitive (`+0.87 pp`). This is a reviewer
+  risk: part of the improvement may come from score diversification. The paper
+  must emphasize the larger 20-seed confirmation and gradient-confidence
+  ablations rather than relying only on residual-vs-shuffled separation.

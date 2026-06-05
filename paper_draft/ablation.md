@@ -1,5 +1,28 @@
 # Ablation Plan
 
+## Completed StabilityResidual Ablations
+
+`2026-06-04-stability-ablation-confirmation` completed the core ablations and a
+20-seed confirmation.
+
+- 20-seed FSCC confirmation: StabilityResidual-frozen beats Feature-only by
+  `+1.59 pp` (`p<0.001`, win rate `0.83`, Cohen's d `0.70`).
+- Control regimes: LFS `+0.55 pp` and DAR `+0.81 pp`; no material degradation.
+- Raw vs residualized stability: raw `+1.25 pp`, residualized `+1.11 pp`,
+  raw-vs-residualized difference `+0.14 pp` (`p=0.772`). Residualization is
+  primarily for the feature-residual paper claim, not a large accuracy gain.
+- Shuffled residual: `+0.87 pp`, competitive enough to report as a risk but
+  weaker than real residual.
+- Gradient confidence: no-gradient `+1.29 pp`, shuffled-gradient `+1.43 pp`,
+  frozen-gradient `+1.79 pp`, real-gradient `+1.95 pp`. Gradient confidence is
+  useful as an auxiliary mechanism, but prediction stability remains the primary
+  signal.
+- Dropout schedules: all tested schedules beat Feature-only; wider schedule
+  `[0, 0.10, 0.15, 0.20, 0.30]` is strongest.
+- Views: 3, 5, and 7 views all work; 3/5 are stronger than 7.
+
+## Remaining Ablations
+
 Required ablations:
 
 - Feature prior only: `Feature-only = 1 - cosine(x_u, x_v)`.

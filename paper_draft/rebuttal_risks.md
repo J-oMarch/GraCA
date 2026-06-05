@@ -78,3 +78,22 @@ Current answer after `2026-06-04-stability-channel-rebuild`:
   raw-vs-residual stability ablation, dropout schedule/number-of-views
   sensitivity, comparison to LDS/IDGL/ProGNN-style GSL baselines, and a clear
   explanation of why validation early stopping is not used for edge scoring.
+
+Current answer after `2026-06-04-stability-ablation-confirmation`:
+
+- The homophilic citation claim now has stronger evidence: 20-seed FSCC
+  confirmation gives `+1.59 pp` over Feature-only (`p<0.001`, win rate `0.83`,
+  Cohen's d `0.70`), with LFS `+0.55 pp` and DAR `+0.81 pp`.
+- StabilityResidual is the only method in the confirm20 matrix that beats
+  Feature-only on FSCC. GCN-Jaccard nearly ties Feature-only overall but does
+  not beat it; MCGC and GraGE-Hybrid remain negative.
+- Residualization ablation is nuanced. Raw stability and residualized stability
+  are nearly tied, so residualization should be motivated as a diagnostic and
+  theoretical device for the "beyond feature similarity" claim, not as a large
+  performance improvement.
+- Gradient confidence has a defensible auxiliary role: real gradient is best,
+  frozen is close, shuffled and no-gradient are weaker but still positive. This
+  supports the wording "edge-gate confidence regularizes prediction stability",
+  not "edge gradients alone solve graph evolution."
+- Remaining high-risk gaps are heterophily behavior and direct comparison to
+  graph structure learning baselines.

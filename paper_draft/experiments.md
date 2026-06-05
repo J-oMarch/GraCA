@@ -147,9 +147,45 @@ train-dynamics-derived edge signal that is residual to feature similarity and
 improves matched-budget graph evolution in feature-ambiguous homophilic regimes.
 ```
 
-The claim still needs heterophily validation, residualization ablation, dropout
-schedule sensitivity, and comparison to graph structure learning baselines
-before the stop condition for an AAAI-ready final package is fully satisfied.
+## Fourth-Batch Outcome To Date
+
+- `2026-06-04-stability-ablation-confirmation` completed the core paper-facing
+  ablation and 20-seed confirmation. On the 20-seed confirmation over
+  Cora/CiteSeer/PubMed and FSCC/LFS/DAR, StabilityResidual-frozen has overall
+  mean `0.6806` vs Feature-only `0.6708`.
+- The primary FSCC claim strengthens to `+1.59 pp` over Feature-only
+  (`p<0.001`, win rate `0.83`, Cohen's d `0.70`). StabilityResidual is the only
+  method that beats Feature-only on FSCC; GCN-Jaccard, MCGC, GraGE-Hybrid,
+  Random-Matched, and DegreeAwareRandom all lose or tie.
+- Control regimes pass: LFS `+0.55 pp` (`p=0.144`, no degradation) and DAR
+  `+0.81 pp` (`p<0.001`, win rate `0.72`).
+- Per-dataset FSCC: Cora `+3.19 pp` (`20/20` wins), PubMed `+1.05 pp`
+  (`p=0.002`, win rate `0.80`), CiteSeer `+0.52 pp` (`p=0.353`, win rate
+  `0.70`). CiteSeer remains the weakest dataset but positive.
+- Ablations show raw and residualized stability are nearly tied: raw
+  `+1.25 pp`, residualized `+1.11 pp`, raw-vs-residualized difference
+  `+0.14 pp` (`p=0.772`). Residualization is mainly a principled paper device
+  for the "beyond feature similarity" claim, not a large accuracy driver.
+- Gradient confidence is auxiliary but useful: no-gradient `+1.29 pp`, shuffled
+  gradient `+1.43 pp`, frozen gradient `+1.79 pp`, real gradient `+1.95 pp` in
+  the 5-seed FSCC ablation. The main signal remains prediction stability.
+- Dropout schedule and view-count sensitivity are acceptable. All tested
+  dropout schedules beat Feature-only; 3 and 5 views are both strong, while 7
+  views is weaker.
+
+## Current Stop-Condition Assessment
+
+The homophilic citation portion now satisfies the main statistical stop
+condition: mean improvement over Feature-only is above `0.5 pp`, multi-seed
+stability is strong, ablations and failure analysis exist, and theory explains
+the residual and abstention mechanisms. The final AAAI package still needs:
+
+- heterophily/regime validation from
+  `2026-06-04-stability-heterophily-regime`;
+- stronger positioning against graph structure learning baselines such as LDS,
+  IDGL, and ProGNN, at least as discussion or feasible baselines;
+- paper drafting around the narrower claim: prediction stability is the
+  supported training-dynamics signal; raw edge-gate gradients are not.
 
 ## Required Reporting
 

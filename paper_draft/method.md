@@ -158,6 +158,12 @@ score(e) = R_f(e) + alpha Z_e             otherwise.
 ```
 
 `C_e` is derived from edge-gate gradient consistency/magnitude across
-checkpoints, but validation shows the prediction-stability residual is the main
-source of improvement. Gradient confidence should be described as an auxiliary
-abstention or regularization mechanism, not as the primary signal.
+checkpoints, but validation shows prediction stability is the main source of
+improvement. Gradient confidence should be described as an auxiliary abstention
+or regularization mechanism, not as the primary signal.
+
+The 20-seed ablation confirms this division of labor. Raw and residualized
+stability both improve over Feature-only; residualization is retained because it
+supports the feature-residual claim, not because it alone creates the accuracy
+gain. Real edge-gate confidence improves over no-gradient scoring, while frozen
+and shuffled controls show that gradient confidence is useful but secondary.

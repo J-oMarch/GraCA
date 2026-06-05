@@ -36,3 +36,15 @@ historical_grage_edge_gate,GraGE-FO,aggregate,all,3,0.6602,0.0541,-5.23,,,"",uns
 2026-06-04-stability-channel-rebuild,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,validation_all,fscc_lfs_dar,90,0.6549,0.0721,-1.21,,,"3.6s",unsupported_vs_feature_only
 2026-06-04-stability-channel-rebuild,StabilityResidual-v5-shuffled-stability,search_fscc,feature_similar_cross_class,10,0.5998,0.0620,+1.90,0.1456,0.50,"",control_not_significant
 2026-06-04-stability-channel-rebuild,StabilityResidual-v5-dp0.15-grad-shuffled,search_fscc,feature_similar_cross_class,10,0.5989,0.0363,+1.81,0.0066,0.90,"",gradient_signal_not_primary
+2026-06-04-stability-ablation-confirmation,Feature-only,confirm20_all,fscc_lfs_dar,180,0.6708,0.0660,0,,,"2.3s",baseline
+2026-06-04-stability-ablation-confirmation,StabilityResidual-v5-dp0.15-grad-frozen,confirm20_all,fscc_lfs_dar,180,0.6806,0.0669,+0.98,,,"9.2s",supported_overall_confirm20
+2026-06-04-stability-ablation-confirmation,StabilityResidual-v5-dp0.15-grad-frozen,confirm20_fscc,feature_similar_cross_class,60,0.6806,,+1.59,0.000001,0.83,"9.2s",supported_fscc_confirm20
+2026-06-04-stability-ablation-confirmation,StabilityResidual-v5-dp0.15-grad-frozen,confirm20_lfs,low_feature_similarity,60,,,+0.55,0.144,0.50,"9.2s",no_material_degradation
+2026-06-04-stability-ablation-confirmation,StabilityResidual-v5-dp0.15-grad-frozen,confirm20_dar,degree_aligned_random,60,,,+0.81,0.000001,0.72,"9.2s",supported_dar_no_degradation
+2026-06-04-stability-ablation-confirmation,GCN-Jaccard,confirm20_all,fscc_lfs_dar,180,0.6706,0.0676,-0.02,,,"2.8s",static_baseline_tied_not_better
+2026-06-04-stability-ablation-confirmation,MCGC-cw3.0-lp0.1-ln0.5,confirm20_all,fscc_lfs_dar,180,0.6544,0.0609,-1.64,,,"6.2s",unsupported_vs_feature_only
+2026-06-04-stability-ablation-confirmation,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,confirm20_all,fscc_lfs_dar,180,0.6525,0.0717,-1.85,,,"3.9s",unsupported_vs_feature_only
+2026-06-04-stability-ablation-confirmation,StabilityResidual-raw-v5-dp0.15-nograd,ablation_fscc,feature_similar_cross_class,15,0.6217,0.0508,+1.25,0.030,0.73,"",raw_stability_works
+2026-06-04-stability-ablation-confirmation,StabilityResidual-residualized-v5-dp0.15-nograd,ablation_fscc,feature_similar_cross_class,15,0.6203,0.0461,+1.11,0.057,0.80,"",residualized_stability_works
+2026-06-04-stability-ablation-confirmation,StabilityResidual-shuffled-residual-v5,ablation_fscc,feature_similar_cross_class,15,0.6178,0.0478,+0.87,0.064,0.80,"",shuffled_residual_competitive_risk
+2026-06-04-stability-ablation-confirmation,StabilityResidual-v5-dp0.15-grad-real,ablation_fscc,feature_similar_cross_class,15,0.6287,0.0469,+1.95,0.000001,0.87,"",real_gradient_confidence_auxiliary_best

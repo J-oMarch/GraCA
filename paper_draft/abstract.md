@@ -14,10 +14,12 @@ dynamic channel around prediction stability under graph perturbations.
 StabilityResidual-GraGE trains multiple stochastic graph views, converts
 prediction instability into edge scores, residualizes the signal against feature
 cosine, and uses edge-gate gradient confidence only as an abstention/regularizing
-constraint. In a 10-seed validation across Cora, CiteSeer, and PubMed,
-StabilityResidual-GraGE beats Feature-only by `+2.00 pp` on
-feature-similar cross-class noise (`p=0.0001`, win rate `0.87`) with no material
-degradation on low-feature-similarity or degree-aligned-random controls. The
-current paper path is viable again, but the claim must be precise: prediction
-stability is the supported residual training-dynamics signal, while raw
-edge-gate gradients remain auxiliary rather than the main source of gains.
+constraint. In a 20-seed confirmation across Cora, CiteSeer, and PubMed,
+StabilityResidual-GraGE beats Feature-only by `+1.59 pp` on
+feature-similar cross-class noise (`p<0.001`, win rate `0.83`, Cohen's d `0.70`)
+with no material degradation on low-feature-similarity or degree-aligned-random
+controls. Ablations show that raw and residualized stability both work, shuffled
+residuals are weaker but still a risk, and edge-gate gradient confidence adds
+auxiliary value rather than serving as the primary signal. The current paper path
+is viable, but the claim must be precise: prediction stability is the supported
+training-dynamics signal, while raw edge-gate gradients remain auxiliary.
