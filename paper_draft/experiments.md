@@ -179,13 +179,16 @@ The homophilic citation portion now satisfies the main statistical stop
 condition: mean improvement over Feature-only is above `0.5 pp`, multi-seed
 stability is strong, ablations and failure analysis exist, and theory explains
 the residual and abstention mechanisms. Heterophily validation is complete and
-negative, so the paper must be regime-limited rather than universal. The final
-AAAI package still needs:
+negative, so the paper must be regime-limited rather than universal. GSL proxy
+positioning is complete enough for an honest non-superiority claim.
+`2026-06-05-ambiguity-stability-evidence` now completes the P0 ambiguity and P1
+alignment gates. The work should move from evidence expansion to paper assembly:
 
-- stronger positioning against graph structure learning baselines such as LDS,
-  IDGL, and ProGNN, at least as discussion or feasible baselines;
-- paper drafting around the narrower claim: prediction stability is the
-  supported training-dynamics signal; raw edge-gate gradients are not.
+- final paper drafting around the narrower claim;
+- figure/table construction for the main confirmation, P0 buckets, P1 controls,
+  heterophily boundary, and GSL positioning;
+- final reviewer-risk audit for confidence control, CiteSeer weakness, runtime,
+  and GSL proxy limitations.
 
 ## Heterophily Boundary
 
@@ -225,16 +228,42 @@ AAAI package still needs:
   Claim it is competitive with GSL-inspired proxies and clearly mark full
   LDS/IDGL/ProGNN reproductions as camera-ready risk or future work.
 
+## P0/P1 Evidence
+
+- `2026-06-05-ambiguity-stability-evidence` completes the two remaining
+  reviewer-critical checks. It ran 2160 rows over Cora/CiteSeer/PubMed,
+  FSCC/LFS/DAR, 20 seeds, and P0/P1 method variants.
+- P0 defines Low/Medium/High ambiguity buckets using feature-derived signals
+  only, centered on distance to the Feature-only pruning decision boundary.
+  Labels and `bad_edge_mask` are used only after bucket assignment for AUC,
+  precision/recall/F1, pruning overlap, and changed-prune diagnostics.
+- On FSCC, StabilityResidual beats Feature-only by `+2.06 pp`
+  (`p=6.68e-10`, Wilcoxon `p=1.19e-8`, win rate `0.85`, Cohen's d `0.95`).
+  High-only residual activation gives `+1.68 pp` (`p<1e-5`, win rate `0.80`)
+  and explains `81.4%` of the full gain. Medium-only is weak (`+0.55 pp`), and
+  Low-only is negative (`-0.09 pp`). This supports the ambiguity-region story
+  rather than a uniform perturbation story.
+- Bucket diagnostics show the practical edge-quality mechanism. In the
+  High-Ambiguity bucket, Feature-only has F1 `0.3425`, while StabilityResidual
+  has F1 `0.4990`; SR-only changed prunes have `68.9%` bad-edge rate.
+- P1 compares Feature-only, Feature+Confidence, Feature+Stability,
+  Feature+Random Stability, Feature+Shuffled Stability, and Feature+Permuted
+  Stability. Aligned Feature+Stability beats random by `+1.73 pp`, shuffled by
+  `+1.78 pp`, and node-permuted by `+1.63 pp` with `p<1e-8` and win rates
+  `0.83-0.87`. Confidence is closer (`+0.31 pp`, `p=0.198`) and should be
+  reported as a related uncertainty control, but shuffled and permuted controls
+  are not competitive.
+
 ## Current Camera-Ready Risk
 
-The method now has a viable AAAI story, but the comparison claim must be
+The method now has a viable AAAI story, but the comparison claim must remain
 disciplined:
 
 ```text
 StabilityResidual improves over Feature-only and static/pruning baselines on
-homophilic feature-ambiguous citation graphs, is competitive with GSL-inspired
-proxies, fails on heterophily, and is not yet proven superior to full GSL
-methods.
+homophilic feature-ambiguous citation graphs, with gains concentrated near the
+feature-derived ambiguity boundary. It is competitive with GSL-inspired proxies,
+fails on heterophily, and is not proven superior to full GSL methods.
 ```
 
 ## Required Reporting

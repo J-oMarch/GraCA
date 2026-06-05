@@ -13,14 +13,14 @@ engineering metrics.
 Target paper direction:
 
 ```text
-GraGE: Training-Dynamics-Guided Graph Evolution via Differentiable Edge Gates
+Training-Dynamics-Guided Edge Disambiguation in Feature-Ambiguous Homophilic Graphs
 ```
 
 The core paper question is:
 
 ```text
-Can training-dynamics-derived edge signals provide useful graph evolution
-information beyond static feature similarity?
+Can training-dynamics-derived prediction-stability signals provide useful
+edge-quality information beyond static feature similarity?
 ```
 
 ## Research Direction
@@ -50,9 +50,9 @@ prediction stability, and generalization signals.
 The main hypothesis to test is:
 
 ```text
-Edge-level training dynamics, especially differentiable edge-gate gradients or
-hypergradients, contain information that static feature-similarity pruning does
-not capture.
+Prediction stability under stochastic graph perturbations contains
+edge-quality information complementary to static feature similarity in
+homophilic feature-ambiguous citation regimes.
 ```
 
 The central mathematical object is:
@@ -171,6 +171,21 @@ is a differentiable edge gate.
    GSL-inspired proxies"; full LDS/IDGL/ProGNN reproductions remain a
    camera-ready risk.
 
+12. P0/P1 ambiguity and alignment evidence is complete and supportive.
+
+   `2026-06-05-ambiguity-stability-evidence` ran 2160 rows over Cora, CiteSeer,
+   PubMed, FSCC/LFS/DAR, 20 seeds, and P0/P1 variants. P0 buckets are defined
+   from feature-derived signals only, using distance to the Feature-only pruning
+   decision boundary. On FSCC, StabilityResidual beats Feature-only by
+   `+2.06 pp` (`p=6.68e-10`, Wilcoxon `p=1.19e-8`, win rate `0.85`, Cohen's
+   d `0.95`). High-only residual activation gives `+1.68 pp` and explains
+   `81.4%` of the full gain; SR-only changed prunes in the High-Ambiguity bucket
+   have `68.9%` bad-edge rate. P1 shows aligned stability beats random,
+   shuffled, and node-permuted stability by `+1.63` to `+1.78 pp` with
+   `p<1e-8`. Confidence is closer (`+0.31 pp`, `p=0.198`) and should be
+   discussed as a related uncertainty control, but shuffled/permuted controls
+   are not competitive in the full matrix.
+
 ## Current Implementation State
 
 Relevant directories:
@@ -229,7 +244,9 @@ Use these rules when interpreting results:
 1. If GraGE/hybrid consistently beats Feature-only with statistical support,
    the AAAI paper direction remains viable. This condition is met by
    StabilityResidual-GraGE on homophilic citation FSCC (20-seed confirmation:
-   +1.59 pp, p<0.001, win rate 0.83). Residualization ablation and sensitivity
+   +1.59 pp, p<0.001, win rate 0.83) and by the P0/P1 evidence experiment
+   (+2.06 pp FSCC, high-ambiguity gain share 81.4%, aligned stability beating
+   shuffled/permuted controls). Residualization ablation and sensitivity
    analysis are complete. Heterophily validation is negative, so the claim must
    be regime-limited. GSL proxy comparison is complete and shows
    competitiveness but not superiority; full official GSL reproductions remain

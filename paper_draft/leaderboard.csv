@@ -1,11 +1,11 @@
 exp_id,method,dataset,noise_type,seeds,mean_acc,std,delta_vs_feature_only_pp,p_value,win_rate,runtime,claim_supported
-historical_grage_hybrid,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,aggregate,all,9,0.6791,,0.40,,,"",provisional
-historical_grage_hybrid,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,aggregate,feature_similar_cross_class,9,0.6256,,1.70,0.0129,,"",provisional
+historical_grage_hybrid,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,aggregate,all,9,0.6791,,0.40,,,"",historical_superseded_by_confirm20
+historical_grage_hybrid,GraGE-Hybrid-FO-posneg-lp0.1-ln0.5,aggregate,feature_similar_cross_class,9,0.6256,,1.70,0.0129,,"",historical_superseded_by_confirm20
 historical_grage_edge_gate,GraGE-FO,aggregate,all,3,0.6602,0.0541,-5.23,,,"",unsupported
 2026-06-04-fscc-hybrid-confirmation,NA,aggregate,NA,NA,,,,,,"",failed_missing_metrics
 2026-06-04-dynamics-mechanism-diagnostics,raw_grad,aggregate,feature_similar_cross_class,30,NA,NA,NA,NA,NA,"",unsupported_near_random_auc_0.4947
 2026-06-04-dynamics-mechanism-diagnostics,hybrid,aggregate,feature_similar_cross_class,30,NA,NA,NA,NA,NA,"",unsupported_hybrid_auc_0.5659_vs_feature_risk_0.7142
-2026-06-04-adaptive-grage-search,MCGC-cw3.0-lp0.1-ln0.5,search_feature_similar_cross_class,feature_similar_cross_class,6,0.5947,,1.483,0.0402,0.8333,"",search_supported_validation_failed
+2026-06-04-adaptive-grage-search,MCGC-cw3.0-lp0.1-ln0.5,search_feature_similar_cross_class,feature_similar_cross_class,6,0.5947,,1.483,0.0402,0.8333,"",historical_search_supported_validation_failed
 2026-06-04-adaptive-grage-search,Feature-only,validation_all,all,45,0.6711,0.0681,0,,,"",baseline
 2026-06-04-adaptive-grage-search,MCGC-cw3.0-lp0.1-ln0.5,validation_all,all,45,0.6568,0.0618,-1.426,,,"",unsupported_overall_vs_feature_only
 2026-06-04-adaptive-grage-search,MCGC-cw3.0-lp0.1-ln0.5,validation_low_feature_similarity,low_feature_similarity,15,,,-2.66,,,"",validation_constraint_failed
@@ -63,3 +63,14 @@ historical_grage_edge_gate,GraGE-FO,aggregate,all,3,0.6602,0.0541,-5.23,,,"",uns
 2026-06-04-stability-gsl-baseline-audit,ProGNN-Proxy,gsl_proxy_fscc,feature_similar_cross_class,30,0.6280,0.0670,+1.73,0.0042,0.73,"3.8s",competitive_proxy
 2026-06-04-stability-gsl-baseline-audit,IDGL-Proxy,gsl_proxy_fscc,feature_similar_cross_class,30,0.6146,0.0310,+0.39,0.6094,0.60,"5.1s",weak_proxy_overall_strong_citeseer
 2026-06-04-stability-gsl-baseline-audit,StabilityResidual-vs-LDS-Proxy,gsl_proxy_fscc,feature_similar_cross_class,30,,,-0.85,0.0404,0.37,"",not_superior_to_best_proxy
+2026-06-05-ambiguity-stability-evidence,StabilityResidual-v5-dp0.15-grad-frozen,p0_fscc,feature_similar_cross_class,60,0.6315,0.0514,+2.06,0.000000000668,0.85,"",supported_p0_full_vs_feature_only
+2026-06-05-ambiguity-stability-evidence,Feature+Residual-HighOnly,p0_fscc,feature_similar_cross_class,60,0.6277,0.0479,+1.68,0.00001,0.80,"",supported_high_ambiguity_gain_share_0.814
+2026-06-05-ambiguity-stability-evidence,Feature+Residual-MediumOnly,p0_fscc,feature_similar_cross_class,60,0.6164,0.0487,+0.55,0.1115,0.47,"",weak_medium_bucket
+2026-06-05-ambiguity-stability-evidence,Feature+Residual-LowOnly,p0_fscc,feature_similar_cross_class,60,0.6100,0.0505,-0.09,0.3765,0.45,"",low_bucket_no_gain
+2026-06-05-ambiguity-stability-evidence,Feature+Stability,p1_fscc,feature_similar_cross_class,60,0.6331,0.0492,+2.17,0.000000000202,0.87,"",supported_aligned_stability
+2026-06-05-ambiguity-stability-evidence,Feature+Confidence,p1_fscc,feature_similar_cross_class,60,0.6300,0.0513,+1.86,,,"",confidence_control_close
+2026-06-05-ambiguity-stability-evidence,Feature+Random Stability,p1_fscc,feature_similar_cross_class,60,0.6158,0.0463,+0.43,,,"",random_control_beaten_by_aligned_stability
+2026-06-05-ambiguity-stability-evidence,Feature+Shuffled Stability,p1_fscc,feature_similar_cross_class,60,0.6153,0.0484,+0.39,,,"",shuffled_control_not_competitive_full
+2026-06-05-ambiguity-stability-evidence,Feature+Permuted Stability,p1_fscc,feature_similar_cross_class,60,0.6168,0.0461,+0.54,,,"",permuted_control_not_competitive_full
+2026-06-05-ambiguity-stability-evidence,Feature+Stability-vs-Shuffled,p1_fscc_alignment,feature_similar_cross_class,60,,,+1.78,0.0000000000823,0.85,"",alignment_destruction_passed
+2026-06-05-ambiguity-stability-evidence,Feature+Stability-vs-Permuted,p1_fscc_alignment,feature_similar_cross_class,60,,,+1.63,0.000000002023,0.83,"",node_alignment_passed

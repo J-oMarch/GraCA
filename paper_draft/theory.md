@@ -1,146 +1,118 @@
 # Theory Draft
 
-## Setup
+The theory supports a narrow ranking claim. It does not prove universal graph
+learning, heterophily success, or optimal graph structure.
 
-For graph `G = (V, E, X)`, let `M in [0, 1]^|E|` be edge gates and let
-`A(M)` be the gated adjacency used by a differentiable GNN `f_theta`. GraGE
-defines:
+## Definition: Feature Ambiguity Region
 
-```text
-theta*(M) = argmin_theta L_train(theta, M)
-S_e(M)    = d L_score(theta*(M), M) / d m_e
-```
-
-The practical algorithm uses either a first-order approximation with fixed
-`theta` or an unrolled approximation through `K` support-gradient steps.
-
-## Proposition 1: First-Order Gate Pruning Direction
-
-Assume `L_score(theta, M)` is differentiable in `m_e` at `M = 1`. For a small
-gate reduction `epsilon > 0` on edge `e`, holding `theta` fixed:
+Let `R_f(e)` be a feature-derived edge-risk score, such as ranked
+`1 - cosine(x_u, x_v)`. For a matched pruning budget, let `tau_f` be the
+Feature-only decision boundary or its feature-only quantile approximation. The
+feature ambiguity region is
 
 ```text
-L_score(theta, M - epsilon e_e)
-= L_score(theta, M) - epsilon S_e^FO + O(epsilon^2)
+A_delta = { e in E : |R_f(e) - tau_f| <= delta }.
 ```
 
-Therefore, if `S_e^FO > 0`, decreasing the gate reduces the score loss to first
-order; if `S_e^FO < 0`, decreasing the gate increases the score loss to first
-order.
+This region is defined only from feature-derived quantities. Labels, stability,
+bad-edge masks, oracle labels, validation/test labels, and downstream outcomes
+are not used to define it.
 
-Proof sketch: Apply the first-order Taylor expansion of `L_score` with respect
-to the coordinate `m_e`.
+## Definition: Stability Residual
 
-## Proposition 2: Unrolled Gate Score Approximates Bilevel Sensitivity
-
-Let `theta_K(M)` be produced by `K` differentiable support-gradient updates. If
-the update map is differentiable in `(theta, M)`, then:
-
-```text
-d L_score(theta_K(M), M) / d m_e
-= partial L_score / partial m_e
-  + (partial L_score / partial theta_K)
-    (d theta_K / d m_e)
-```
-
-This is the exact hypergradient for the truncated inner problem and a
-finite-step approximation to the ideal bilevel sensitivity as `theta_K(M)`
-approaches `theta*(M)`.
-
-Proof sketch: Repeatedly apply the chain rule through the differentiable inner
-updates. The approximation error depends on optimization error after `K` steps
-and on smoothness of the inner objective.
-
-## Proposition 3: Selective Gate Conserves Feature-Only Ranking Off-Regime
-
-Let the selective score be:
-
-```text
-score(e)= R_f(e) + A_e D_e
-```
-
-where `D_e` is any bounded training-dynamics term, such as the MCGC positive and
-negative gradient contribution. If `A_e = 0` for all edges in a subset `B`, then
-the selective score restricted to `B` has exactly the same ordering as
-Feature-only:
-
-```text
-score(e) = R_f(e),  for all e in B.
-```
-
-Therefore, a hard gate that turns off dynamics in feature-clear regimes cannot
-change the pruning order inside that off-regime. For a soft gate with
-`0 <= A_e <= eta` on `B` and `|D_e| <= c`, the score perturbation is bounded by
-`eta c`; any pairwise Feature-only margin larger than `2 eta c` is order
-preserving.
-
-Proof sketch: The hard-gate case follows by substitution. For the soft-gate
-case, each edge score changes by at most `eta c`, so the pairwise score
-difference changes by at most `2 eta c`.
-
-## Paper Claim To Validate
-
-The theory only justifies edge-gate gradients as local sensitivity signals. The
-empirical paper claim requires showing that these sensitivities provide residual
-information beyond feature similarity and improve downstream accuracy under
-matched pruning budgets.
-
-After the first and second batches, raw edge-gate gradients are not sufficient as
-the main empirical signal. The current viable claim uses prediction stability as
-the primary training-dynamics signal and edge-gate gradients only as auxiliary
-confidence.
-
-## Proposition 4: Stability Residual Removes Linear Feature-Risk Component
-
-Let `R_T in R^|E|` be a rank-normalized prediction-stability edge score and
-`R_f in R^|E|` be rank-normalized feature risk. Define:
+Let `R_T(e)` be a rank-normalized prediction-stability edge score computed from
+training-only stochastic graph views. The linear projection of `R_T` onto
+feature risk is removed by
 
 ```text
 beta = <R_T, R_f> / <R_f, R_f>
-Z    = R_T - beta R_f.
+Z(e) = R_T(e) - beta R_f(e).
 ```
 
-Then `Z` is orthogonal to the linear feature-risk direction:
+The practical method rank-normalizes this residual before combining it with the
+feature prior:
+
+```text
+score(e) = R_f(e) + alpha R(Z(e)).
+```
+
+## Proposition 1: Residualization Removes the Linear Feature-Risk Component
+
+Before the final rank transform, the stability residual is orthogonal to the
+feature-risk direction:
 
 ```text
 <Z, R_f> = 0.
 ```
 
-Therefore, any nonzero downstream contribution of `Z` cannot be explained by
-the linear component of feature-risk ranking alone. The practical method
-rank-normalizes `Z` after residualization, so exact orthogonality may not be
-preserved after the final rank transform, but the residualization step removes
-the feature-correlated component before score combination.
-
 Proof sketch: Substitute the definition of `Z`:
 
 ```text
 <Z, R_f> = <R_T, R_f> - beta <R_f, R_f>
-         = <R_T, R_f> - <R_T, R_f> = 0.
+         = <R_T, R_f> - <R_T, R_f>
+         = 0.
 ```
 
-## Proposition 5: Confidence Abstention Bounds Damage From Weak Dynamics
+The final rank transform may not preserve exact orthogonality, but the
+residualization step removes the linear feature-risk component before the score
+combination.
 
-Let the StabilityResidual score be:
+## Proposition 2: Aligned Residuals Improve Pairwise Ranking in Ambiguity Regions
+
+Consider two edges `e_bad` and `e_good` inside `A_delta`, where the downstream
+edge-quality target ranks `e_bad` as more harmful than `e_good`. Suppose the
+feature prior is ambiguous on this pair:
 
 ```text
-score(e) = R_f(e) + A_e alpha Z_e,
+|R_f(e_bad) - R_f(e_good)| <= gamma.
 ```
 
-where `A_e in {0,1}` is a confidence gate and `|Z_e| <= 1`. If `A_e=0`, the
-method exactly falls back to Feature-only on edge `e`. If `0 <= A_e <= eta` in a
-soft-gated variant, the score perturbation is bounded by `eta alpha`; any pair
-of edges whose Feature-only score margin exceeds `2 eta alpha` keeps the same
-relative order.
+If the stability residual is aligned with residual edge quality by margin
 
-Proof sketch: The hard-gate case follows by substitution. For the soft-gate
-case, each edge score changes by at most `eta alpha`, so any pairwise difference
-changes by at most `2 eta alpha`.
+```text
+R(Z(e_bad)) - R(Z(e_good)) > gamma / alpha,
+```
 
-## Updated Paper Claim To Validate
+then the combined score ranks the harmful edge above the good edge:
 
-The current experiments support the narrower claim that prediction stability
-under graph perturbations provides an edge-level residual signal beyond feature
-similarity on homophilic citation graphs. Before final paper claims, the method
-still needs heterophily validation, residualization ablations, and sensitivity
-analysis for dropout schedules and number of views.
+```text
+score(e_bad) > score(e_good).
+```
+
+Proof sketch: Expand the combined score difference:
+
+```text
+score(e_bad) - score(e_good)
+= R_f(e_bad) - R_f(e_good)
+  + alpha (R(Z(e_bad)) - R(Z(e_good))).
+```
+
+The feature term can hurt by at most `gamma` in the ambiguous region. The assumed
+positive residual margin exceeds that possible feature disadvantage, so the
+combined score is positive and the pairwise ranking improves.
+
+## Proposition 3: Confidence Abstention Preserves Feature-Only Decisions Off Signal
+
+Let
+
+```text
+score(e) = R_f(e) + A_e alpha R(Z(e)),
+```
+
+where `A_e in {0,1}` is an abstention gate. If `A_e=0`, the method exactly
+falls back to Feature-only on edge `e`. For a soft gate with `0 <= A_e <= eta`
+and `|R(Z(e))| <= 1`, any pairwise Feature-only margin larger than
+`2 eta alpha` keeps its ordering.
+
+Proof sketch: The hard-gate case follows by substitution. In the soft-gate
+case, each edge receives a perturbation bounded by `eta alpha`, so a pairwise
+score difference changes by at most `2 eta alpha`.
+
+## Paper Claim
+
+The propositions justify only a conditional mechanism: if prediction-stability
+residuals are aligned with residual edge quality in feature-defined ambiguity
+regions, adding them to Feature-only can improve edge ranking there while
+abstention can preserve Feature-only behavior off signal. The empirical paper
+must verify that this alignment occurs on homophilic citation regimes and fails
+honestly where it does not.

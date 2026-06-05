@@ -1,31 +1,32 @@
 # Abstract Draft
 
-Graph neural networks rely on an input graph whose edges are often noisy,
-incomplete, or misaligned with the downstream task. Existing graph cleaning and
-structure learning methods frequently rely on static feature similarity or
-topological priors, which are strong but can fail when harmful edges connect
-feature-similar nodes. We study whether training dynamics expose edge-level
-signals that are not captured by static similarity. GraGE treats graph structure
-as an evolvable object and scores edges using train-internal dynamics. Early
-edge-gate gradient variants were negative: raw gradients are weak bad-edge
-detectors after feature-risk control, and a 20-seed confirmation rerun finds
-that GraGE-Hybrid loses to Feature-only by `-2.50 pp`. We therefore rebuild the
-dynamic channel around prediction stability under graph perturbations.
-StabilityResidual-GraGE trains multiple stochastic graph views, converts
-prediction instability into edge scores, residualizes the signal against feature
-cosine, and uses edge-gate gradient confidence only as an abstention/regularizing
-constraint. In a 20-seed confirmation across Cora, CiteSeer, and PubMed,
-StabilityResidual-GraGE beats Feature-only by `+1.59 pp` on
-feature-similar cross-class noise (`p<0.001`, win rate `0.83`, Cohen's d `0.70`)
-with no material degradation on low-feature-similarity or degree-aligned-random
-controls. Ablations show that raw and residualized stability both work, shuffled
-residuals are weaker but still a risk, and edge-gate gradient confidence adds
-auxiliary value rather than serving as the primary signal. The current paper path
-is viable, but the claim must be precise: prediction stability is the supported
-training-dynamics signal, while raw edge-gate gradients remain auxiliary.
-Heterophily experiments on Texas, Wisconsin, and Actor are negative, so the
-claim is restricted to homophilic, feature-ambiguous citation regimes. A
-GSL-baseline audit shows that StabilityResidual is competitive with
-GSL-inspired proxies but not clearly superior: an LDS-inspired proxy beats it by
-`+0.85 pp` overall, with the advantage concentrated on Cora's pruning-budget
-effect.
+Feature-similarity pruning is a strong baseline for noisy homophilic citation
+graphs, but it becomes ambiguous near the feature-derived pruning boundary:
+static features alone may weakly discriminate likely good and bad edges. We
+study whether prediction stability under training-time graph perturbations
+provides complementary edge-quality evidence in this regime. StabilityResidual-
+GraGE trains multiple stochastic graph views using training labels only,
+converts node prediction instability into edge scores, residualizes the signal
+against Feature-only risk, and combines the residual with the feature prior
+under a matched pruning budget. Edge-gate gradients are retained as local
+sensitivity motivation and optional confidence/abstention, not as the main
+empirical signal.
+
+The current evidence supports a narrow claim. In a 20-seed confirmation across
+Cora, CiteSeer, and PubMed with feature-similar cross-class noise,
+`StabilityResidual-v5-dp0.15-grad-frozen` improves over Feature-only by
+`+1.59 pp` (`p<0.001`, win rate `0.83`, Cohen's d `0.70`) without material
+degradation on low-feature-similarity or degree-aligned-random controls.
+A paper-facing ambiguity analysis further improves over Feature-only by
+`+2.06 pp` on the same FSCC matrix, with `81.4%` of the full gain reproduced by
+activating the residual only in the High-Ambiguity bucket. StabilityResidual-only
+changed prunes in that bucket have `68.9%` bad-edge rate. Alignment controls
+show that aligned stability beats random, shuffled, and node-permuted stability
+by `+1.63` to `+1.78 pp`; confidence is closer but still below aligned
+stability. Negative results are explicit: raw edge-gate gradient routes,
+GraGE-Hybrid, MCGC, and Selective-MCGC are not viable main methods; heterophily
+experiments on Texas, Wisconsin, and Actor fail; and an LDS-inspired proxy beats
+StabilityResidual in the current GSL audit. The paper therefore positions
+prediction stability as complementary edge evidence for homophilic,
+feature-ambiguous citation regimes, not as universal graph structure learning or
+GSL superiority.

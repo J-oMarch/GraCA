@@ -1,129 +1,79 @@
 # Rebuttal Risks
 
-High-risk reviewer questions:
+## High-Risk Reviewer Questions
 
-- Is GraGE just feature-similarity pruning with extra noise?
+- Is StabilityResidual just Feature-only pruning with expensive score
+  diversification?
+- Are gains concentrated in feature-defined ambiguity regions, or do they come
+  from random perturbation of the pruning set?
+- Does aligned prediction stability beat confidence, random stability, shuffled
+  stability, and node-permuted stability controls?
+- Are oracle labels, validation labels, test labels, or `bad_edge_mask` leaked
+  into edge scoring or ambiguity-bucket definitions?
 - Does the method beat Feature-only under matched pruning budgets and many
   seeds?
-- Are oracle labels, validation labels, test labels, or `bad_edge_mask` leaked
-  into edge scoring?
-- Are improvements statistically meaningful, or are they cherry-picked from a
-  small seed sweep?
-- Do edge-gate gradients provide residual information after controlling for
-  feature cosine?
-- First-batch answer: not for bad-edge detection. Full diagnostics found raw
-  gradient AUC near random and real-vs-shuffled hybrid deltas around `0.003`.
-- Are gains caused by the inner training schedule rather than graph evolution?
 - Does the method work outside homophilic citation graphs?
-- Why should raw edge gradients be considered novel given GNN explanation work?
+- How should the method be positioned against LDS, IDGL, ProGNN, and broader
+  graph structure learning?
+- Is the successful signal prediction stability rather than edge-gate gradients?
 
-Evidence needed:
+## Current Evidence
 
-- Paired statistics, win rates, effect sizes, and confidence intervals vs
-  Feature-only.
-- Feature-bin and residual diagnostics.
-- Shuffled/frozen dynamic controls.
-- Heterophily failure analysis.
-- Clear theorem-style local sensitivity claim with proof sketch.
-- A new selective-dynamics experiment showing that MCGC-style signal is used
-  only in feature-ambiguous regimes and falls back to Feature-only elsewhere.
-
-Current answer after `2026-06-04-selective-mcgc-regime-gate`:
-
-- The selective gate does not yet answer the strongest reviewer concern. FSCC
-  improvement is `+0.09 pp`, not significant (`p=0.575`), with win rate `0.47`.
-- The gate does answer a narrower failure-mode question: raw MCGC degrades LFS
-  by `-2.46 pp`, while selective MCGC improves LFS by `+1.90 pp`. This supports
-  "gating prevents dynamic-gradient noise from hurting" more than "training
-  dynamics add residual edge information."
-- A reviewer can still argue that GraGE is Feature-only plus an expensive
-  regularizer unless the FSCC confirmation rerun finds a stronger multi-seed
-  delta over Feature-only.
-
-Current answer after `2026-06-04-fscc-confirmation-rerun`:
-
-- The strongest reviewer concern is confirmed, not resolved. In the direct
-  matched-budget FSCC rerun, Feature-only is the strongest practical method
-  (`0.6116 ± 0.0496`). GraGE-Hybrid loses by `-2.50 pp` (`p=0.0012`, win rate
-  `0.10`, Cohen's d `-1.40`), and MCGC loses by `-0.72 pp` (`p=0.143`, win rate
-  `0.43`).
-- The Cora-only MCGC gain is not enough for the paper claim because
-  Random-Matched and DegreeAwareRandom gain more on the same slice. A reviewer
-  can reasonably attribute this to pruning budget or degree effects.
-- Control regimes and heterophily data do not rescue the method. Feature-only
-  and GCN-Jaccard tie on controls, while GraGE variants lose; Feature-only also
-  wins the heterophily slice.
-- The paper cannot claim that current edge-gate training dynamics provide useful
-  graph evolution information beyond static feature similarity. It must either
-  present a new mechanism with substantially different evidence or reframe the
-  contribution as a diagnostic/falsification study.
-
-Current answer after `2026-06-04-stability-channel-rebuild`:
-
-- The positive paper path is reopened, but with a different mechanism.
-  StabilityResidual-GraGE beats Feature-only on FSCC by `+2.00 pp` (`p=0.0001`,
-  win rate `0.87`) across Cora/CiteSeer/PubMed with no material LFS/DAR
+- Matched-budget 20-seed confirmation supports the homophilic citation FSCC
+  claim: StabilityResidual-frozen beats Feature-only by `+1.59 pp`
+  (`p<0.001`, win rate `0.83`, Cohen's d `0.70`), with no material LFS/DAR
   degradation.
-- The strongest rebuttal risk changes from "GraGE loses to Feature-only" to
-  "the successful method is prediction-stability graph augmentation, not
-  edge-gate gradients." This is a fair concern: no-gradient variants are close,
-  and the selected candidate uses a frozen-gradient control. The paper should
-  state that prediction stability is the main training-dynamics signal, with
-  edge-gate gradients serving as auxiliary confidence/abstention.
-- The residual evidence is paper-facing: projection ratio `<0.005`,
-  residual-feature-similarity correlation `<0.01`, and residual AUC around
-  `0.65`. This directly answers the feature-only collapse risk better than the
-  earlier hybrid and MCGC experiments.
-- Remaining reviewer demands before final submission: heterophily validation,
-  raw-vs-residual stability ablation, dropout schedule/number-of-views
-  sensitivity, comparison to LDS/IDGL/ProGNN-style GSL baselines, and a clear
-  explanation of why validation early stopping is not used for edge scoring.
+- Feature-only remains a strong baseline and must be foregrounded, not
+  downplayed.
+- Raw edge-gate gradients, GraGE-Hybrid, MCGC, and Selective-MCGC are not viable
+  main methods. They remain historical negative evidence or auxiliary
+  local-sensitivity analysis.
+- Prediction stability is the supported training-dynamics channel. Gradient
+  confidence has an auxiliary role, but no-gradient and frozen-gradient controls
+  show it is not the dominant source of improvement.
+- Heterophily is a confirmed failure boundary. StabilityResidual loses to
+  Feature-only on Texas/Wisconsin/Actor by `-1.14 pp` overall and by `-2.89 pp`
+  on heterophily FSCC.
+- GSL positioning is competitive, not superior. LDS-Proxy beats
+  StabilityResidual by `+0.85 pp` overall in the current proxy audit.
+- P0 ambiguity evidence is supportive. On FSCC, High-only residual activation
+  recovers `81.4%` of the full StabilityResidual gain, while Medium-only is weak
+  and Low-only is negative. SR-only changed prunes in the High-Ambiguity bucket
+  have `68.9%` bad-edge rate.
+- P1 alignment evidence is supportive. Aligned stability beats random,
+  shuffled, and node-permuted stability by `+1.63` to `+1.78 pp` with
+  `p<1e-8`; shuffled and permuted controls are not competitive in the full
+  matrix.
 
-Current answer after `2026-06-04-stability-ablation-confirmation`:
+## Current Open Risks
 
-- The homophilic citation claim now has stronger evidence: 20-seed FSCC
-  confirmation gives `+1.59 pp` over Feature-only (`p<0.001`, win rate `0.83`,
-  Cohen's d `0.70`), with LFS `+0.55 pp` and DAR `+0.81 pp`.
-- StabilityResidual is the only method in the confirm20 matrix that beats
-  Feature-only on FSCC. GCN-Jaccard nearly ties Feature-only overall but does
-  not beat it; MCGC and GraGE-Hybrid remain negative.
-- Residualization ablation is nuanced. Raw stability and residualized stability
-  are nearly tied, so residualization should be motivated as a diagnostic and
-  theoretical device for the "beyond feature similarity" claim, not as a large
-  performance improvement.
-- Gradient confidence has a defensible auxiliary role: real gradient is best,
-  frozen is close, shuffled and no-gradient are weaker but still positive. This
-  supports the wording "edge-gate confidence regularizes prediction stability",
-  not "edge gradients alone solve graph evolution."
-- Remaining high-risk gaps are heterophily behavior and direct comparison to
-  graph structure learning baselines.
+- P0 is supportive but still attributional. The paper can say the gain is
+  concentrated in feature-defined ambiguity regions, but should not overstate
+  this as a complete causal decomposition.
+- Feature+Confidence is close to aligned stability (`+0.31 pp` lower,
+  `p=0.198`). A reviewer may argue that the signal is uncertainty-like. The
+  response is that aligned stability decisively beats distribution-preserving
+  alignment destruction controls, while confidence remains a strong related
+  ablation.
+- CiteSeer is positive but weak individually, so per-dataset claims must avoid
+  implying uniform significance.
+- Full LDS/IDGL/ProGNN are not reproduced. The paper must say
+  "GSL-inspired proxies" unless full official baselines are added later.
 
-Current answer after `2026-06-04-stability-heterophily-regime`:
+## Rebuttal Stance
 
-- Heterophily behavior is now known and negative. StabilityResidual loses to
-  Feature-only by `-1.14 pp` overall (`p=0.0133`, win rate `0.31`) on
-  Texas/Wisconsin/Actor, and `-2.89 pp` on heterophily FSCC.
-- This does not invalidate the homophilic citation result, but it blocks any
-  universal graph-evolution claim. The paper must explicitly state the regime:
-  homophilic citation graphs with feature-ambiguous harmful edges.
-- A likely reviewer objection is "the method fails exactly where heterophily
-  matters." The response is to position heterophily as a boundary condition and
-  future work for regime detection/fallback, not to overclaim robustness.
-- Feature-only being best on heterophily reinforces the paper's central honesty:
-  static feature similarity is a strong baseline and should be used when the
-  graph regime is feature-clear or heterophilic.
-
-Current answer after `2026-06-04-stability-gsl-baseline-audit`:
-
-- StabilityResidual remains positive vs Feature-only in the GSL audit
-  (`+1.91 pp`, `p=0.0003`, win rate `0.77`), but it does not beat the best
-  GSL-inspired proxy. LDS-Proxy beats StabilityResidual by `+0.85 pp`
-  (`p=0.040`).
-- The LDS-Proxy advantage is mostly Cora-specific, where Random-Matched also
-  gains heavily. The paper can discuss this as a budget/degree effect, but it
-  cannot claim superiority over GSL.
-- Full LDS, IDGL, and ProGNN are not reproduced. The paper must say
-  "GSL-inspired proxies" unless full official baselines are run.
-- Revised rebuttal stance: StabilityResidual is a competitive, interpretable
-  training-dynamics alternative to GSL-style graph learning in the homophilic
-  feature-ambiguous regime, not a universal winner.
+- If asked whether this is general graph structure learning: no. The paper is
+  about training-dynamics-guided edge disambiguation in homophilic,
+  feature-ambiguous citation regimes.
+- If asked whether it beats GSL: no superiority claim. It improves over
+  Feature-only and is competitive with GSL-inspired proxies, while LDS-Proxy is
+  stronger in the current audit.
+- If asked about heterophily: heterophily is a reported failure boundary, not a
+  hidden negative result.
+- If asked about edge-gate gradients: raw gradients failed as a main signal;
+  they motivate local sensitivity and confidence/abstention only.
+- For P0/P1: claim aligned prediction stability provides complementary
+  edge-quality evidence specifically in feature-defined ambiguity regions, while
+  noting that confidence is a close uncertainty control.
+- For any future negative extension: record the failure in limitations and
+  narrow the claim rather than launching a new method search.
