@@ -1,0 +1,30 @@
+## Experiment Complete: GSL Baseline Audit
+
+### Key Findings
+
+**StabilityResidual still beats Feature-only** by +1.91 pp (p=0.0003, win rate 0.77, d=0.77) — consistent with the prior 20-seed confirmation.
+
+**However, LDS-Proxy is competitive.** It beats StabilityResidual by +0.85 pp overall (p=0.04). But this is almost entirely a **Cora-specific budget/degree effect** — on Cora, even Random-Matched gains +4.55 pp over Feature-only. On CiteSeer and PubMed, LDS-Proxy and StabilityResidual are statistically tied (−0.19 pp and +0.03 pp).
+
+### Results Summary
+
+| Method | Mean Acc | Δ vs FO (pp) | p-value |
+|--------|----------|-------------|---------|
+| LDS-Proxy | 0.6383 | +2.76 | 0.0003 |
+| **StabilityResidual** | **0.6298** | **+1.91** | **0.0003** |
+| ProGNN-Proxy | 0.6280 | +1.73 | 0.004 |
+| IDGL-Proxy | 0.6146 | +0.39 | 0.61 |
+| Feature-only | 0.6107 | — | — |
+
+### Paper Implications
+
+- The claim must be **narrowed**: StabilityResidual is "competitive with GSL-inspired baselines" rather than "beats all GSL baselines."
+- The Cora budget effect needs to be reported honestly.
+- Full LDS/IDGL/ProGNN reproduction remains as the highest-priority next step before camera-ready.
+
+### Output Files
+
+- `experiments/2026-06-04-stability-gsl-baseline-audit/result.md`
+- `experiments/2026-06-04-stability-gsl-baseline-audit/metrics.json`
+- `experiments/2026-06-04-stability-gsl-baseline-audit/failure_analysis.md`
+- `experiments/2026-06-04-stability-gsl-baseline-audit/logs/gsl/` (240 runs)
