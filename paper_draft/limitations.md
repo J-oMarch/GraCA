@@ -68,3 +68,8 @@
   and by `-2.89 pp` on the heterophily FSCC slice. Feature-only is the best
   method there. The method should abstain or fall back in low-homophily regimes;
   current results do not support broader heterophily claims.
+- GSL comparison is not a superiority result. LDS-Proxy beats StabilityResidual
+  by `+0.85 pp` overall (`p=0.040`) in the GSL audit, although the advantage is
+  concentrated on Cora and likely entangled with pruning budget/degree effects.
+  Full LDS/IDGL/ProGNN reproductions are still needed before any comprehensive
+  GSL comparison claim.

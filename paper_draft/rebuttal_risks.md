@@ -112,3 +112,18 @@ Current answer after `2026-06-04-stability-heterophily-regime`:
 - Feature-only being best on heterophily reinforces the paper's central honesty:
   static feature similarity is a strong baseline and should be used when the
   graph regime is feature-clear or heterophilic.
+
+Current answer after `2026-06-04-stability-gsl-baseline-audit`:
+
+- StabilityResidual remains positive vs Feature-only in the GSL audit
+  (`+1.91 pp`, `p=0.0003`, win rate `0.77`), but it does not beat the best
+  GSL-inspired proxy. LDS-Proxy beats StabilityResidual by `+0.85 pp`
+  (`p=0.040`).
+- The LDS-Proxy advantage is mostly Cora-specific, where Random-Matched also
+  gains heavily. The paper can discuss this as a budget/degree effect, but it
+  cannot claim superiority over GSL.
+- Full LDS, IDGL, and ProGNN are not reproduced. The paper must say
+  "GSL-inspired proxies" unless full official baselines are run.
+- Revised rebuttal stance: StabilityResidual is a competitive, interpretable
+  training-dynamics alternative to GSL-style graph learning in the homophilic
+  feature-ambiguous regime, not a universal winner.

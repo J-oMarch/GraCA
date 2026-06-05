@@ -57,3 +57,9 @@ historical_grage_edge_gate,GraGE-FO,aggregate,all,3,0.6602,0.0541,-5.23,,,"",uns
 2026-06-04-stability-heterophily-regime,StabilityResidual-v5-dp0.15-grad-frozen,heterophily_texas,all,40,,,-1.35,0.2227,0.38,"",unsupported_texas
 2026-06-04-stability-heterophily-regime,StabilityResidual-v5-dp0.15-grad-frozen,heterophily_wisconsin,all,40,,,-1.27,0.1270,0.35,"",unsupported_wisconsin
 2026-06-04-stability-heterophily-regime,StabilityResidual-v5-dp0.15-grad-frozen,heterophily_actor,all,40,,,-0.80,0.000001,0.20,"",unsupported_actor
+2026-06-04-stability-gsl-baseline-audit,Feature-only,gsl_proxy_fscc,feature_similar_cross_class,30,0.6107,0.0479,0,,,"2.3s",baseline
+2026-06-04-stability-gsl-baseline-audit,LDS-Proxy,gsl_proxy_fscc,feature_similar_cross_class,30,0.6383,0.0572,+2.76,0.0003,0.73,"8.5s",best_proxy_cora_budget_effect
+2026-06-04-stability-gsl-baseline-audit,StabilityResidual-frozen,gsl_proxy_fscc,feature_similar_cross_class,30,0.6298,0.0522,+1.91,0.0003,0.77,"9.2s",supported_vs_feature_only_competitive_proxy
+2026-06-04-stability-gsl-baseline-audit,ProGNN-Proxy,gsl_proxy_fscc,feature_similar_cross_class,30,0.6280,0.0670,+1.73,0.0042,0.73,"3.8s",competitive_proxy
+2026-06-04-stability-gsl-baseline-audit,IDGL-Proxy,gsl_proxy_fscc,feature_similar_cross_class,30,0.6146,0.0310,+0.39,0.6094,0.60,"5.1s",weak_proxy_overall_strong_citeseer
+2026-06-04-stability-gsl-baseline-audit,StabilityResidual-vs-LDS-Proxy,gsl_proxy_fscc,feature_similar_cross_class,30,,,-0.85,0.0404,0.37,"",not_superior_to_best_proxy

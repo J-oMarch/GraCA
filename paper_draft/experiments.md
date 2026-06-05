@@ -207,6 +207,36 @@ AAAI package still needs:
   should be reported as a failure mode and motivation for future regime
   detection/fallback.
 
+## GSL Baseline Audit
+
+- `2026-06-04-stability-gsl-baseline-audit` implemented runnable GSL-inspired
+  proxies for IDGL, ProGNN, and LDS, plus a feasibility analysis for full
+  reproductions. These are proxies, not exact reproductions of the published
+  methods.
+- StabilityResidual remains supported vs Feature-only on the audit matrix:
+  `+1.91 pp` (`p=0.0003`, win rate `0.77`, Cohen's d `0.77`).
+- LDS-Proxy is the best proxy overall: `0.6383` mean accuracy, `+2.76 pp` vs
+  Feature-only. It beats StabilityResidual by `+0.85 pp` (`p=0.040`, win rate
+  `0.63`).
+- This LDS advantage is concentrated on Cora, where Random-Matched also gains
+  `+4.55 pp` over Feature-only. On CiteSeer and PubMed, LDS-Proxy and
+  StabilityResidual are statistically tied.
+- Paper-facing consequence: do not claim StabilityResidual beats GSL baselines.
+  Claim it is competitive with GSL-inspired proxies and clearly mark full
+  LDS/IDGL/ProGNN reproductions as camera-ready risk or future work.
+
+## Current Camera-Ready Risk
+
+The method now has a viable AAAI story, but the comparison claim must be
+disciplined:
+
+```text
+StabilityResidual improves over Feature-only and static/pruning baselines on
+homophilic feature-ambiguous citation graphs, is competitive with GSL-inspired
+proxies, fails on heterophily, and is not yet proven superior to full GSL
+methods.
+```
+
 ## Required Reporting
 
 Every experiment must report mean, standard deviation, paired delta vs

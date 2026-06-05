@@ -160,6 +160,17 @@ is a differentiable edge gate.
    homophilic, feature-ambiguous citation regimes, with heterophily reported as
    a failure mode and motivation for future regime detection/fallback.
 
+11. GSL baseline positioning is competitive, not superior.
+
+   `2026-06-04-stability-gsl-baseline-audit` implemented IDGL/ProGNN/LDS-inspired
+   proxies. StabilityResidual remains positive vs Feature-only (`+1.91 pp`,
+   `p=0.0003`, win rate `0.77`), but LDS-Proxy is the best proxy and beats
+   StabilityResidual by `+0.85 pp` (`p=0.040`). The advantage is concentrated on
+   Cora and entangled with a strong pruning budget/degree effect. Do not claim
+   StabilityResidual beats GSL baselines. Use wording like "competitive with
+   GSL-inspired proxies"; full LDS/IDGL/ProGNN reproductions remain a
+   camera-ready risk.
+
 ## Current Implementation State
 
 Relevant directories:
@@ -220,7 +231,9 @@ Use these rules when interpreting results:
    StabilityResidual-GraGE on homophilic citation FSCC (20-seed confirmation:
    +1.59 pp, p<0.001, win rate 0.83). Residualization ablation and sensitivity
    analysis are complete. Heterophily validation is negative, so the claim must
-   be regime-limited. GSL baseline comparison remains as a next step.
+   be regime-limited. GSL proxy comparison is complete and shows
+   competitiveness but not superiority; full official GSL reproductions remain
+   a camera-ready risk.
 2. If GraGE only beats Random-Matched but not Feature-only, the method needs a
    stronger technical contribution before paper writing.
 3. If edge-gate/hypergradient signals have poor bad-edge detection but accuracy

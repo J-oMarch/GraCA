@@ -24,4 +24,8 @@ auxiliary value rather than serving as the primary signal. The current paper pat
 is viable, but the claim must be precise: prediction stability is the supported
 training-dynamics signal, while raw edge-gate gradients remain auxiliary.
 Heterophily experiments on Texas, Wisconsin, and Actor are negative, so the
-claim is restricted to homophilic, feature-ambiguous citation regimes.
+claim is restricted to homophilic, feature-ambiguous citation regimes. A
+GSL-baseline audit shows that StabilityResidual is competitive with
+GSL-inspired proxies but not clearly superior: an LDS-inspired proxy beats it by
+`+0.85 pp` overall, with the advantage concentrated on Cora's pruning-budget
+effect.
