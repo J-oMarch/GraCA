@@ -97,3 +97,18 @@ Current answer after `2026-06-04-stability-ablation-confirmation`:
   not "edge gradients alone solve graph evolution."
 - Remaining high-risk gaps are heterophily behavior and direct comparison to
   graph structure learning baselines.
+
+Current answer after `2026-06-04-stability-heterophily-regime`:
+
+- Heterophily behavior is now known and negative. StabilityResidual loses to
+  Feature-only by `-1.14 pp` overall (`p=0.0133`, win rate `0.31`) on
+  Texas/Wisconsin/Actor, and `-2.89 pp` on heterophily FSCC.
+- This does not invalidate the homophilic citation result, but it blocks any
+  universal graph-evolution claim. The paper must explicitly state the regime:
+  homophilic citation graphs with feature-ambiguous harmful edges.
+- A likely reviewer objection is "the method fails exactly where heterophily
+  matters." The response is to position heterophily as a boundary condition and
+  future work for regime detection/fallback, not to overclaim robustness.
+- Feature-only being best on heterophily reinforces the paper's central honesty:
+  static feature similarity is a strong baseline and should be used when the
+  graph regime is feature-clear or heterophilic.

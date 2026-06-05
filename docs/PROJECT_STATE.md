@@ -150,6 +150,16 @@ is a differentiable edge gate.
    theory and possible confidence/abstention, but the selected candidate and
    controls show they are not the dominant empirical driver.
 
+10. Heterophily is a confirmed boundary condition.
+
+   `2026-06-04-stability-heterophily-regime` tested Texas, Wisconsin, and Actor
+   with 10 seeds and four regimes. StabilityResidual loses to Feature-only by
+   `-1.14 pp` overall (`p=0.0133`, win rate `0.31`) and by `-2.89 pp` on the
+   heterophily FSCC slice. Feature-only is the strongest method; all tested
+   GraGE/static/random alternatives lose. The paper claim must be restricted to
+   homophilic, feature-ambiguous citation regimes, with heterophily reported as
+   a failure mode and motivation for future regime detection/fallback.
+
 ## Current Implementation State
 
 Relevant directories:
@@ -209,8 +219,8 @@ Use these rules when interpreting results:
    the AAAI paper direction remains viable. This condition is met by
    StabilityResidual-GraGE on homophilic citation FSCC (20-seed confirmation:
    +1.59 pp, p<0.001, win rate 0.83). Residualization ablation and sensitivity
-   analysis are complete. Heterophily validation and GSL baseline comparison
-   remain as next steps.
+   analysis are complete. Heterophily validation is negative, so the claim must
+   be regime-limited. GSL baseline comparison remains as a next step.
 2. If GraGE only beats Random-Matched but not Feature-only, the method needs a
    stronger technical contribution before paper writing.
 3. If edge-gate/hypergradient signals have poor bad-edge detection but accuracy

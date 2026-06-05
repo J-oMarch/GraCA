@@ -178,14 +178,34 @@ improves matched-budget graph evolution in feature-ambiguous homophilic regimes.
 The homophilic citation portion now satisfies the main statistical stop
 condition: mean improvement over Feature-only is above `0.5 pp`, multi-seed
 stability is strong, ablations and failure analysis exist, and theory explains
-the residual and abstention mechanisms. The final AAAI package still needs:
+the residual and abstention mechanisms. Heterophily validation is complete and
+negative, so the paper must be regime-limited rather than universal. The final
+AAAI package still needs:
 
-- heterophily/regime validation from
-  `2026-06-04-stability-heterophily-regime`;
 - stronger positioning against graph structure learning baselines such as LDS,
   IDGL, and ProGNN, at least as discussion or feasible baselines;
 - paper drafting around the narrower claim: prediction stability is the
   supported training-dynamics signal; raw edge-gate gradients are not.
+
+## Heterophily Boundary
+
+- `2026-06-04-stability-heterophily-regime` completed 840 runs over Texas,
+  Wisconsin, Actor, four regimes, and 10 seeds. The broader heterophily claim is
+  not supported.
+- Feature-only is the best heterophily method (`0.4975 ± 0.1557`). StabilityResidual
+  loses by `-1.14 pp` overall (`p=0.0133`, win rate `0.31`), and every other
+  tested method also loses to Feature-only.
+- StabilityResidual loses on all three datasets: Texas `-1.35 pp`, Wisconsin
+  `-1.27 pp`, Actor `-0.80 pp`. The heterophily FSCC slice is especially
+  negative: `-2.89 pp` (`p=0.0035`, win rate `0.17`).
+- Diagnostics explain the boundary: edge homophily is very low (`0.087` Texas,
+  `0.192` Wisconsin, `0.218` Actor), feature similarity is low (`0.17-0.35`),
+  feature risk is already informative on Texas/Wisconsin, and residual AUC is
+  near random (`~0.52`).
+- Paper-facing consequence: do not claim universal graph evolution. The
+  supported claim is homophilic, feature-ambiguous citation regimes; heterophily
+  should be reported as a failure mode and motivation for future regime
+  detection/fallback.
 
 ## Required Reporting
 

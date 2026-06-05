@@ -63,3 +63,8 @@
   risk: part of the improvement may come from score diversification. The paper
   must emphasize the larger 20-seed confirmation and gradient-confidence
   ablations rather than relying only on residual-vs-shuffled separation.
+- Heterophily is a confirmed failure mode. On Texas/Wisconsin/Actor,
+  StabilityResidual loses by `-1.14 pp` overall (`p=0.0133`, win rate `0.31`)
+  and by `-2.89 pp` on the heterophily FSCC slice. Feature-only is the best
+  method there. The method should abstain or fall back in low-homophily regimes;
+  current results do not support broader heterophily claims.

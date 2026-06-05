@@ -23,3 +23,5 @@ residuals are weaker but still a risk, and edge-gate gradient confidence adds
 auxiliary value rather than serving as the primary signal. The current paper path
 is viable, but the claim must be precise: prediction stability is the supported
 training-dynamics signal, while raw edge-gate gradients remain auxiliary.
+Heterophily experiments on Texas, Wisconsin, and Actor are negative, so the
+claim is restricted to homophilic, feature-ambiguous citation regimes.
