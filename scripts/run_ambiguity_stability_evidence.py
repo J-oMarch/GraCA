@@ -494,10 +494,309 @@ def get_p1_methods():
         {"name": "Feature-only", "type": "feature_only"},
         {"name": "Feature+Confidence", "type": "feature_plus_confidence"},
         {"name": "Feature+Stability", "type": "feature_plus_stability"},
-        {"name": "Feature+Random-Stability", "type": "feature_plus_random_stability"},
-        {"name": "Feature+Shuffled-Stability", "type": "feature_plus_shuffled_stability"},
-        {"name": "Feature+Permuted-Stability", "type": "feature_plus_permuted_stability"},
+        {"name": "Feature+Random Stability", "type": "feature_plus_random_stability"},
+        {"name": "Feature+Shuffled Stability", "type": "feature_plus_shuffled_stability"},
+        {"name": "Feature+Permuted Stability", "type": "feature_plus_permuted_stability"},
     ]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Output contract helpers
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+EXP_ID = "2026-06-05-ambiguity-stability-evidence"
+
+
+def _paired_delta(df, method, baseline="Feature-only", phase=None, noise_type=None):
+    """Return paired delta statistics for method vs baseline.
+
+    Pairing is by dataset/noise_type/seed. This intentionally avoids using
+    validation/test labels for scoring; labels have already only entered
+    downstream evaluation.
+    """
+    subset = df.copy()
+    if phase is not None:
+        subset = subset[subset["phase"] == phase]
+    if noise_type is not None:
+        subset = subset[subset["noise_type"] == noise_type]
+
+    cand = subset[subset["method"] == method].set_index(["dataset", "noise_type", "seed"])
+    base = subset[subset["method"] == baseline].set_index(["dataset", "noise_type", "seed"])
+    common = cand.index.intersection(base.index)
+    if len(common) == 0:
+        return {
+            "n": 0,
+            "method_mean": None,
+            "baseline_mean": None,
+            "delta_pp": None,
+            "p_value": None,
+            "win_rate": None,
+            "cohens_d": None,
+        }
+
+    x = cand.loc[common, "test_acc"].astype(float).values
+    y = base.loc[common, "test_acc"].astype(float).values
+    diff = x - y
+    delta_pp = float(diff.mean() * 100.0)
+    win_rate = float((diff > 0).mean())
+    p_value = None
+    try:
+        from scipy import stats
+        p_value = float(stats.ttest_rel(x, y).pvalue)
+    except Exception:
+        p_value = None
+
+    diff_std = float(diff.std(ddof=1)) if len(diff) > 1 else 0.0
+    cohens_d = float(diff.mean() / diff_std) if diff_std > 1e-12 else 0.0
+    return {
+        "n": int(len(common)),
+        "method_mean": float(x.mean()),
+        "baseline_mean": float(y.mean()),
+        "delta_pp": delta_pp,
+        "p_value": p_value,
+        "win_rate": win_rate,
+        "cohens_d": cohens_d,
+    }
+
+
+def _method_summary(df, phase=None, noise_type=None):
+    subset = df.copy()
+    if phase is not None:
+        subset = subset[subset["phase"] == phase]
+    if noise_type is not None:
+        subset = subset[subset["noise_type"] == noise_type]
+    if subset.empty:
+        return pd.DataFrame()
+    return (
+        subset.groupby(["phase", "method"])["test_acc"]
+        .agg(["mean", "std", "count"])
+        .sort_values("mean", ascending=False)
+        .reset_index()
+    )
+
+
+def _high_bucket_gain_share(df):
+    """Approximate P0 gain contribution from High-only residual activation."""
+    full = _paired_delta(
+        df, "StabilityResidual-v5-dp0.15-grad-frozen",
+        phase="P0", noise_type="feature_similar_cross_class",
+    )
+    high = _paired_delta(
+        df, "Feature+Residual-HighOnly",
+        phase="P0", noise_type="feature_similar_cross_class",
+    )
+    if full["delta_pp"] is None or high["delta_pp"] is None or abs(full["delta_pp"]) < 1e-12:
+        return None
+    return float(high["delta_pp"] / full["delta_pp"])
+
+
+def _high_bucket_changed_prune_enrichment(df):
+    """Mean bad-edge enrichment for SR-only changed prunes in high bucket.
+
+    Bucket 2 is High-Ambiguity by construction after compute_ambiguity_buckets.
+    """
+    subset = df[
+        (df["phase"] == "P0")
+        & (df["noise_type"] == "feature_similar_cross_class")
+        & (df["method"] == "StabilityResidual-v5-dp0.15-grad-frozen")
+    ]
+    if subset.empty or "b2_sr_only_bad_rate" not in subset.columns:
+        return None
+    vals = subset["b2_sr_only_bad_rate"].dropna().astype(float)
+    if vals.empty:
+        return None
+    return float(vals.mean())
+
+
+def write_output_contract(df, output_dir, mode):
+    """Write result.md, metrics.json, failure_analysis.md, and summary tables."""
+    exp_dir = Path("experiments") / EXP_ID
+    exp_dir.mkdir(parents=True, exist_ok=True)
+    logs_dir = exp_dir / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+
+    # Persist compact summaries in logs/ as paper-table inputs.
+    summary_all = _method_summary(df)
+    summary_fscc = _method_summary(df, noise_type="feature_similar_cross_class")
+    summary_all.to_csv(logs_dir / f"{mode}_method_summary_all.csv", index=False)
+    summary_fscc.to_csv(logs_dir / f"{mode}_method_summary_fscc.csv", index=False)
+
+    fscc_main = _paired_delta(
+        df, "StabilityResidual-v5-dp0.15-grad-frozen",
+        phase="P0", noise_type="feature_similar_cross_class",
+    )
+    p1_stability = _paired_delta(
+        df, "Feature+Stability", phase="P1", noise_type="feature_similar_cross_class",
+    )
+    p1_conf = _paired_delta(
+        df, "Feature+Stability", baseline="Feature+Confidence",
+        phase="P1", noise_type="feature_similar_cross_class",
+    )
+    p1_random = _paired_delta(
+        df, "Feature+Stability", baseline="Feature+Random Stability",
+        phase="P1", noise_type="feature_similar_cross_class",
+    )
+    p1_shuffled = _paired_delta(
+        df, "Feature+Stability", baseline="Feature+Shuffled Stability",
+        phase="P1", noise_type="feature_similar_cross_class",
+    )
+    p1_permuted = _paired_delta(
+        df, "Feature+Stability", baseline="Feature+Permuted Stability",
+        phase="P1", noise_type="feature_similar_cross_class",
+    )
+
+    high_gain_share = _high_bucket_gain_share(df)
+    high_enrichment = _high_bucket_changed_prune_enrichment(df)
+
+    control_deltas = [
+        p1_conf["delta_pp"],
+        p1_random["delta_pp"],
+        p1_shuffled["delta_pp"],
+        p1_permuted["delta_pp"],
+    ]
+    p1_alignment_supported = all(v is not None and v > 0 for v in control_deltas)
+    p0_supported = (
+        high_gain_share is not None
+        and high_gain_share > 0.5
+        and fscc_main["delta_pp"] is not None
+        and fscc_main["delta_pp"] > 0
+    )
+
+    shuffled_competitive = (
+        p1_shuffled["delta_pp"] is not None and p1_shuffled["delta_pp"] <= 0.25
+    )
+    permuted_competitive = (
+        p1_permuted["delta_pp"] is not None and p1_permuted["delta_pp"] <= 0.25
+    )
+
+    failure_modes = []
+    if not p0_supported:
+        failure_modes.append("P0 high-ambiguity contribution is weak or unverified")
+    if not p1_alignment_supported:
+        failure_modes.append("P1 aligned stability does not beat all controls")
+    if shuffled_competitive:
+        failure_modes.append("Shuffled stability remains competitive")
+    if permuted_competitive:
+        failure_modes.append("Permuted stability remains competitive")
+
+    metrics = {
+        "exp_id": EXP_ID,
+        "status": "completed" if mode == "full" else "smoke_completed",
+        "primary_claim_supported": bool(p0_supported and p1_alignment_supported),
+        "p0_ambiguity_claim_supported": bool(p0_supported),
+        "p1_alignment_claim_supported": bool(p1_alignment_supported),
+        "best_method": "StabilityResidual-v5-dp0.15-grad-frozen",
+        "fscc_delta_vs_feature_only_pp": fscc_main["delta_pp"],
+        "fscc_p_value": fscc_main["p_value"],
+        "fscc_win_rate": fscc_main["win_rate"],
+        "high_ambiguity_gain_share": high_gain_share,
+        "high_ambiguity_changed_prune_enrichment": high_enrichment,
+        "feature_stability_vs_confidence_delta_pp": p1_conf["delta_pp"],
+        "feature_stability_vs_random_delta_pp": p1_random["delta_pp"],
+        "feature_stability_vs_shuffled_delta_pp": p1_shuffled["delta_pp"],
+        "feature_stability_vs_permuted_delta_pp": p1_permuted["delta_pp"],
+        "permuted_control_competitive": bool(permuted_competitive),
+        "shuffled_control_competitive": bool(shuffled_competitive),
+        "num_result_rows": int(len(df)),
+        "claim_recommendation": (
+            "support_current_claim"
+            if p0_supported and p1_alignment_supported
+            else "shrink_or_withhold_claim_until_controls_pass"
+        ),
+        "failure_modes": failure_modes,
+    }
+
+    with open(exp_dir / "metrics.json", "w") as f:
+        json.dump(metrics, f, indent=2)
+
+    def fmt_stat(stat):
+        if stat["delta_pp"] is None:
+            return "n/a"
+        p = "n/a" if stat["p_value"] is None else f"{stat['p_value']:.4g}"
+        return (
+            f"{stat['delta_pp']:+.2f} pp, p={p}, "
+            f"win={stat['win_rate']:.2f}, d={stat['cohens_d']:.2f}, n={stat['n']}"
+        )
+
+    result_md = f"""# Ambiguity and Stability Evidence Result
+
+## Executive Summary
+
+- Mode: `{mode}`.
+- Rows: `{len(df)}`.
+- Primary FSCC StabilityResidual vs Feature-only: {fmt_stat(fscc_main)}.
+- P0 high-ambiguity gain share: `{high_gain_share}`.
+- P1 Feature+Stability vs Feature+Confidence: {fmt_stat(p1_conf)}.
+- P1 Feature+Stability vs Feature+Random Stability: {fmt_stat(p1_random)}.
+- P1 Feature+Stability vs Feature+Shuffled Stability: {fmt_stat(p1_shuffled)}.
+- P1 Feature+Stability vs Feature+Permuted Stability: {fmt_stat(p1_permuted)}.
+
+## P0 Leakage Audit
+
+Low/Medium/High ambiguity buckets are defined only from Feature-only risk and
+distance to the Feature-only pruning decision boundary. Labels and
+`bad_edge_mask` are used only after bucket assignment for diagnostics.
+
+Bucket convention:
+
+- `0`: Low ambiguity, farthest from the feature-only pruning boundary.
+- `1`: Medium ambiguity.
+- `2`: High ambiguity, closest to the feature-only pruning boundary.
+
+## P0 Contribution
+
+The High-only gain share is `{high_gain_share}`. Interpret this as the fraction
+of the full StabilityResidual FSCC gain reproduced when the residual is active
+only in the High-Ambiguity bucket. This is an attribution heuristic, not a causal
+proof.
+
+## P1 Alignment
+
+Aligned stability is considered supported only if Feature+Stability beats
+confidence, random, shuffled, and node-permuted stability controls on the paired
+FSCC matrix.
+
+## Decision Answers
+
+1. Supports current claim: `{bool(p0_supported and p1_alignment_supported)}`.
+2. Strengthens AAAI story: `{bool(p0_supported or p1_alignment_supported)}`.
+3. Reduces reviewer risk: `{bool(p0_supported and p1_alignment_supported)}`.
+4. New failure evidence: `{bool(failure_modes)}`.
+5. Claim needs shrinkage: `{not bool(p0_supported and p1_alignment_supported)}`.
+
+## Output Tables
+
+- `{logs_dir / f'{mode}_method_summary_all.csv'}`
+- `{logs_dir / f'{mode}_method_summary_fscc.csv'}`
+- raw results under `{output_dir}/results.csv`
+"""
+    (exp_dir / "result.md").write_text(result_md)
+
+    failure_md = f"""# Failure Analysis: Ambiguity and Stability Evidence
+
+## Failure Modes
+
+{os.linesep.join(f'- {m}' for m in failure_modes) if failure_modes else '- None under the configured decision rules.'}
+
+## Reviewer-Risk Interpretation
+
+- If High-only residual activation does not explain most of the full gain, the
+  ambiguity-region claim must be weakened.
+- If shuffled or node-permuted stability is competitive, the paper cannot claim
+  that correct prediction-stability alignment is the sole driver.
+- If confidence is competitive, the stability claim should be reframed as
+  uncertainty evidence rather than stability-specific edge evidence.
+
+## Required Paper Updates
+
+Negative or mixed outcomes must be reflected in:
+
+- `paper_draft/limitations.md`
+- `paper_draft/rebuttal_risks.md`
+- `paper_draft/readiness_audit.md`
+"""
+    (exp_dir / "failure_analysis.md").write_text(failure_md)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -756,6 +1055,8 @@ def main():
         summary_path = os.path.join(output_dir, "summary.csv")
         df.groupby(["phase", "method"])["test_acc"].agg(["mean", "std", "count"]).to_csv(summary_path)
         logger.info(f"\nSummary saved to {summary_path}")
+        write_output_contract(df, output_dir, args.mode)
+        logger.info("Output contract written for %s", EXP_ID)
 
 
 if __name__ == "__main__":

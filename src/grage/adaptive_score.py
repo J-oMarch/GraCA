@@ -1194,9 +1194,19 @@ def compute_ambiguity_buckets(
     quantiles = torch.linspace(0, 1, num_buckets + 1, device=feature_risk.device)
     thresholds = torch.quantile(distance, quantiles)
 
-    bucket_labels = torch.zeros(feature_risk.shape[0], dtype=torch.long, device=feature_risk.device)
+    # First assign distance buckets in ascending ambiguity order:
+    # raw bucket 0 = closest to boundary, raw bucket num_buckets-1 = farthest.
+    raw_bucket_labels = torch.zeros(
+        feature_risk.shape[0], dtype=torch.long, device=feature_risk.device
+    )
     for i in range(1, num_buckets):
-        bucket_labels[distance >= thresholds[i]] = i
+        raw_bucket_labels[distance >= thresholds[i]] = i
+
+    # Public bucket convention used by the paper/runner:
+    #   0 = Low ambiguity    (farthest from boundary)
+    #   1 = Medium ambiguity
+    #   2 = High ambiguity   (closest to boundary)
+    bucket_labels = (num_buckets - 1) - raw_bucket_labels
 
     return {
         "bucket_labels": bucket_labels,
