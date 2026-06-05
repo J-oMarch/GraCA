@@ -1,47 +1,32 @@
-Here's a summary of what's been done:
+## Experiment Complete: `2026-06-04-stability-heterophily-regime`
 
-## Experiment: `2026-06-04-stability-heterophily-regime`
+### Result: Heterophily Claim NOT Supported
 
-### Code Changes Made
+StabilityResidual-GraGE **loses** to Feature-only on all three heterophily datasets:
 
-**`scripts/run_adaptive_grage_search.py`** — three additions:
+| Dataset | Delta vs FO (pp) | p-value | Win Rate |
+|---------|----------------:|--------:|---------:|
+| Texas | −1.35 | 0.223 | 0.38 |
+| Wisconsin | −1.27 | 0.127 | 0.35 |
+| Actor | −0.80 | <0.001 | 0.20 |
+| **Overall** | **−1.14** | **0.013** | **0.31** |
 
-1. **Clean noise handling** in `run_experiment_matrix()` (line ~910): when `noise_type == "clean"`, skips `inject_noise()` and uses the original graph edges with an all-false `bad_edge_mask`. This lets us test on the pristine heterophily graph without noise injection.
+Every other method (GCN-Jaccard, MCGC, GraGE-Hybrid, Random-Matched, DegreeAwareRandom) also loses to Feature-only on these datasets.
 
-2. **`get_heterophily_methods()`** (line ~1408): returns 6 method configs + Random-Matched (handled inline):
-   - Feature-only
-   - GCN-Jaccard
-   - DegreeAwareRandom
-   - MCGC-cw3.0-lp0.1-ln0.5
-   - GraGE-Hybrid-FO-posneg-lp0.1-ln0.5
-   - StabilityResidual-v5-dp0.15-grad-frozen (selected candidate)
+### Root Causes
 
-3. **`run_heterophily()`** (line ~1452): runs the matrix over:
-   - Datasets: Texas, Wisconsin, Actor
-   - Noise types: `feature_similar_cross_class`, `low_feature_similarity`, `degree_aligned_random`, `clean`
-   - 10 seeds per dataset
-   - `stability_heterophily` mode added to argparser and main dispatch
+1. **Features already informative**: Feature-risk AUC = 0.62–0.68 on Texas/Wisconsin, so feature-only pruning is well-calibrated
+2. **No ambiguous edge regime**: Feature similarity = 0.17–0.35 (edges connect dissimilar nodes), so the "stability helps where features are ambiguous" mechanism doesn't apply
+3. **Residual signal near random**: Residual AUC ≈ 0.52 — stability adds no bad-edge detection power on heterophily graphs
 
-### Matrix Size
+### Paper Recommendation
 
-3 datasets × 4 noise types × 10 seeds × 7 methods = **840 total runs**
+**Restrict the claim to homophilic, feature-ambiguous citation regimes.** Use this experiment as honest boundary evidence.
 
-Texas/Wisconsin are small (~183/251 nodes), so those will be fast. Actor (7600 nodes, 53k edges) with StabilityResidual (5 GCN views) will be the bottleneck — roughly 3-5 min per StabilityResidual run on Actor.
+### Output Contract
 
-### Status
-
-- `prompt.md` — already exists ✓
-- Code changes — compile clean ✓
-- Tests — cannot run locally (no pytest/torch on this machine), will validate on remote server
-
-### Next Step
-
-The experiment is ready to submit. Per `AGENTS.md`, I'll wait for your explicit approval:
-
-```
-bash scripts/submit_exp_tmux.sh 2026-06-04-stability-heterophily-regime
-```
-
-This will commit, push, pull on remote, and run in tmux session `graca_claude` window `exp_2026-06-04-stability-heterophily-regime`.
-
-Would you like me to submit it?
+All files written:
+- `experiments/2026-06-04-stability-heterophily-regime/result.md` — full report with tables
+- `experiments/2026-06-04-stability-heterophily-regime/metrics.json` — structured metrics
+- `experiments/2026-06-04-stability-heterophily-regime/failure_analysis.md` — root cause analysis
+- `experiments/2026-06-04-stability-heterophily-regime/logs/heterophily/results.csv` — 840 raw result rows

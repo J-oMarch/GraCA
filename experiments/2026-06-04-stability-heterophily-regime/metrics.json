@@ -1,5 +1,21 @@
 {
   "exp_id": "2026-06-04-stability-heterophily-regime",
-  "status": "missing_metrics",
-  "claude_exit_status": 0
+  "status": "completed",
+  "primary_claim_supported": false,
+  "heterophily_claim_supported": false,
+  "best_method": "Feature-only",
+  "overall_delta_vs_feature_only_pp": -1.14,
+  "overall_p_value": 0.0133,
+  "overall_win_rate": 0.31,
+  "fscc_delta_vs_feature_only_pp": null,
+  "worst_dataset_delta_pp": -1.35,
+  "failure_modes": [
+    "heterophily_incompatible",
+    "features_already_informative",
+    "no_ambiguous_edge_regime",
+    "residual_signal_near_random"
+  ],
+  "regime_recommendation": "restrict_to_homophilic_feature_ambiguous",
+  "num_result_rows": 840,
+  "runtime_summary": "0.4h total (840 experiments), StabilityResidual 4.1s/run (3.6x FO)"
 }
