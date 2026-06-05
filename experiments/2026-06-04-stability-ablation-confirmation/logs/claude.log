@@ -1,0 +1,32 @@
+All deliverables are complete. Here's the summary:
+
+## Experiment Complete: 2026-06-04-stability-ablation-confirmation
+
+### What was done:
+
+1. **Code changes** (already committed in `62832d2`):
+   - `src/grage/adaptive_score.py` — Added `skip_residualization` parameter for raw stability ablation, plus raw stability AUC and feature risk AUC diagnostics
+   - `src/grage/stats.py` — New module with `paired_stats()`, `cohens_d()`, `win_rate()`, `paired_t_test()`, `wilcoxon_test()`, `compute_residual_diagnostics()`
+   - `scripts/run_adaptive_grage_search.py` — Added `stability_ablation` and `stability_confirm20` modes with all ablation variants and 6 baseline methods
+   - `tests/test_adaptive_score.py` — Added 7 new tests (all 31 pass)
+
+2. **Ablation experiment** (5 seeds, 3 datasets, 14 methods, 225 runs):
+   - Raw vs residualized stability: nearly identical (+0.14 pp difference, p=0.77)
+   - Shuffled residual control: +0.87 pp (lower than real signal)
+   - Gradient confidence: real gradient best (+1.95 pp), frozen close (+1.79 pp)
+   - Dropout schedules: all work, wider range best
+   - Views: 3-7 all work, 5 is balanced
+
+3. **20-seed confirmation** (20 seeds, 3 datasets, 3 noise types, 7 methods, 1260 runs):
+   - **FSCC: +1.59 pp** (p<0.001, win rate 0.83, Cohen's d=0.70) ✓
+   - LFS: +0.55 pp (no degradation) ✓
+   - DAR: +0.81 pp (p<0.001) ✓
+   - Cora: +3.19 pp (100% wins), PubMed: +1.05 pp, CiteSeer: +0.52 pp
+
+### Decision: **All 6 rules pass. Claim is supported.**
+
+Output files:
+- `experiments/2026-06-04-stability-ablation-confirmation/result.md`
+- `experiments/2026-06-04-stability-ablation-confirmation/metrics.json`
+- `experiments/2026-06-04-stability-ablation-confirmation/failure_analysis.md`
+- `experiments/2026-06-04-stability-ablation-confirmation/logs/`
