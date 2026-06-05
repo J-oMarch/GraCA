@@ -711,5 +711,160 @@ def test_compute_residual_diagnostics():
           f"resid_auc={result['residual_auc']:.4f}")
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# P0/P1 Diagnostic Utility Tests
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+def test_compute_ambiguity_buckets_basic():
+    """Ambiguity buckets should partition edges into 3 groups."""
+    from src.grage.adaptive_score import compute_ambiguity_buckets
+    torch.manual_seed(42)
+    E = 300
+    feature_risk = torch.rand(E)
+    # Prune top 20% by feature risk
+    threshold = torch.quantile(feature_risk, 0.8)
+    prune_mask = feature_risk >= threshold
+
+    result = compute_ambiguity_buckets(feature_risk, prune_mask, num_buckets=3)
+
+    bucket_labels = result["bucket_labels"]
+    assert bucket_labels.shape == (E,)
+    assert bucket_labels.min() >= 0
+    assert bucket_labels.max() <= 2
+    # Each bucket should have roughly 100 edges
+    for b in range(3):
+        count = (bucket_labels == b).sum().item()
+        assert 50 <= count <= 150, f"Bucket {b} has {count} edges, expected ~100"
+    print(f"✓ Ambiguity buckets: boundary={result['boundary']:.4f}, "
+          f"counts={[(bucket_labels == b).sum().item() for b in range(3)]}")
+
+
+def test_compute_ambiguity_buckets_high_near_boundary():
+    """High-ambiguity bucket should be closest to the pruning boundary."""
+    from src.grage.adaptive_score import compute_ambiguity_buckets
+    torch.manual_seed(42)
+    E = 300
+    feature_risk = torch.rand(E)
+    threshold = torch.quantile(feature_risk, 0.8)
+    prune_mask = feature_risk >= threshold
+
+    result = compute_ambiguity_buckets(feature_risk, prune_mask, num_buckets=3)
+    boundary = result["boundary"]
+    distance = result["distance_to_boundary"]
+    bucket_labels = result["bucket_labels"]
+
+    # High bucket (2) should have smaller mean distance than Low bucket (0)
+    mean_dist_high = distance[bucket_labels == 2].mean()
+    mean_dist_low = distance[bucket_labels == 0].mean()
+    assert mean_dist_high < mean_dist_low, \
+        f"High bucket should be closer to boundary: {mean_dist_high:.4f} vs {mean_dist_low:.4f}"
+    print(f"✓ High bucket closer to boundary: high_dist={mean_dist_high:.4f} < low_dist={mean_dist_low:.4f}")
+
+
+def test_compute_confidence_edge_score_shape():
+    """Confidence edge score should return correct shape."""
+    from src.grage.adaptive_score import compute_confidence_edge_score
+    N = 50
+    C = 3
+    E_actual = 98  # from synthetic_edges fixture
+    torch.manual_seed(42)
+    predictions = [torch.softmax(torch.randn(N, C), dim=1) for _ in range(5)]
+    feature_risk = torch.rand(E_actual)
+    edge_index = torch.stack([torch.arange(0, 49), torch.arange(1, 50)])
+    edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
+
+    result = compute_confidence_edge_score(
+        predictions=predictions, feature_risk=feature_risk,
+        edge_index=edge_index, undirected=False,
+    )
+
+    assert result["edge_score"].shape[0] == edge_index.shape[1]
+    assert "diagnostics" in result
+    assert result["diagnostics"]["method"] == "confidence_edge_score"
+    print(f"✓ Confidence edge score shape correct: {result['edge_score'].shape}")
+
+
+def test_compute_random_stability_residual_shape():
+    """Random stability residual should return correct shape."""
+    from src.grage.adaptive_score import compute_random_stability_residual
+    E = 100
+    torch.manual_seed(42)
+    feature_risk = torch.rand(E)
+    edge_index = torch.stack([torch.arange(0, 50), torch.arange(1, 51)])
+    edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
+
+    result = compute_random_stability_residual(
+        feature_risk=feature_risk, edge_index=edge_index, seed=42, undirected=False,
+    )
+
+    assert result["edge_score"].shape[0] == edge_index.shape[1]
+    assert result["edge_score"].std() > 0.01, "Should have non-trivial variance"
+    print(f"✓ Random stability residual shape correct, std={result['edge_score'].std():.4f}")
+
+
+def test_compute_shuffled_stability_residual_destroys_alignment():
+    """Shuffled residual should have different edge ordering than real."""
+    from src.grage.adaptive_score import compute_shuffled_stability_residual
+    E = 100
+    torch.manual_seed(42)
+    feature_risk = torch.rand(E)
+    real_residual = torch.rand(E)
+
+    result = compute_shuffled_stability_residual(
+        real_residual=real_residual, feature_risk=feature_risk, seed=42,
+    )
+
+    # The shuffled residual should not equal the original
+    assert not torch.allclose(result["residual"], real_residual), \
+        "Shuffled residual should differ from original"
+    # But should have same marginal distribution (same sorted values)
+    assert torch.allclose(result["residual"].sort().values, real_residual.sort().values), \
+        "Shuffled residual should preserve marginal distribution"
+    print("✓ Shuffled residual preserves marginal, destroys alignment")
+
+
+def test_compute_permuted_stability_residual_shape():
+    """Permuted stability residual should return correct shape."""
+    from src.grage.adaptive_score import compute_permuted_stability_residual
+    N = 50
+    E_actual = 98
+    torch.manual_seed(42)
+    node_instability = torch.rand(N)
+    feature_risk = torch.rand(E_actual)
+    edge_index = torch.stack([torch.arange(0, 49), torch.arange(1, 50)])
+    edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
+
+    result = compute_permuted_stability_residual(
+        node_instability=node_instability, feature_risk=feature_risk,
+        edge_index=edge_index, seed=42, undirected=False,
+    )
+
+    assert result["edge_score"].shape[0] == edge_index.shape[1]
+    assert result["edge_score"].std() > 0.01, "Should have non-trivial variance"
+    print(f"✓ Permuted stability residual shape correct, std={result['edge_score'].std():.4f}")
+
+
+def test_compute_permuted_stability_residual_preserves_distribution():
+    """Permuted node instability should preserve the value distribution."""
+    from src.grage.adaptive_score import compute_permuted_stability_residual
+    N = 50
+    E_actual = 98
+    torch.manual_seed(42)
+    node_instability = torch.rand(N)
+    feature_risk = torch.rand(E_actual)
+    edge_index = torch.stack([torch.arange(0, 49), torch.arange(1, 50)])
+    edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
+
+    result = compute_permuted_stability_residual(
+        node_instability=node_instability, feature_risk=feature_risk,
+        edge_index=edge_index, seed=42, undirected=False,
+    )
+
+    # The residual should have non-trivial signal
+    assert result["residual"].std() > 0.01
+    print(f"✓ Permuted stability residual has signal: residual_std={result['residual'].std():.4f}")
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

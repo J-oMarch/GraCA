@@ -1144,3 +1144,310 @@ def compute_stability_residual_score(
         "node_stability": node_stability,
         "diagnostics": diagnostics,
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P0/P1 Diagnostic Utilities
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+def compute_ambiguity_buckets(
+    feature_risk: torch.Tensor,
+    prune_mask: torch.Tensor,
+    num_buckets: int = 3,
+) -> Dict[str, torch.Tensor]:
+    """Bucket edges by distance to the feature-only pruning decision boundary.
+
+    The decision boundary is approximated as the median feature-risk score among
+    pruned edges (the threshold where Feature-only decides to prune). Edges are
+    bucketed by absolute distance to this boundary:
+      - Bucket 0 (Low):  farthest third from boundary (feature risk is clear)
+      - Bucket 1 (Medium): middle third
+      - Bucket 2 (High): closest third to boundary (feature risk is ambiguous)
+
+    This is a no-label, feature-only bucket definition. The boundary is derived
+    from the pruning mask (which edges Feature-only chose to prune), not from
+    labels or bad-edge masks.
+
+    Args:
+        feature_risk: [E] 1 - cosine similarity for each edge.
+        prune_mask: [E] boolean mask, True = pruned by Feature-only.
+        num_buckets: number of buckets (default 3).
+
+    Returns:
+        dict with:
+            bucket_labels: [E] long tensor in {0, 1, ..., num_buckets-1}.
+            boundary: float, the approximated decision boundary.
+            distance_to_boundary: [E] absolute distance to boundary.
+    """
+    # Approximate decision boundary: median feature risk among pruned edges
+    if prune_mask.any():
+        boundary = float(feature_risk[prune_mask].median())
+    else:
+        # Fallback: use overall median
+        boundary = float(feature_risk.median())
+
+    # Distance to boundary
+    distance = (feature_risk - boundary).abs()
+
+    # Bucket by quantiles of distance
+    quantiles = torch.linspace(0, 1, num_buckets + 1, device=feature_risk.device)
+    thresholds = torch.quantile(distance, quantiles)
+
+    bucket_labels = torch.zeros(feature_risk.shape[0], dtype=torch.long, device=feature_risk.device)
+    for i in range(1, num_buckets):
+        bucket_labels[distance >= thresholds[i]] = i
+
+    return {
+        "bucket_labels": bucket_labels,
+        "boundary": boundary,
+        "distance_to_boundary": distance,
+    }
+
+
+def compute_confidence_edge_score(
+    predictions: List[torch.Tensor],
+    feature_risk: torch.Tensor,
+    edge_index: torch.Tensor,
+    feature_similarity: Optional[torch.Tensor] = None,
+    undirected: bool = True,
+    device: Optional[torch.device] = None,
+) -> Dict[str, torch.Tensor]:
+    """Compute edge score from node confidence (max probability) instead of instability.
+
+    This is the P1 Feature+Confidence control. It replaces node instability with
+    node confidence (1 - mean max-probability across views), then converts to
+    edge scores through the same endpoint disagreement + interaction pipeline.
+
+    Args:
+        predictions: list of [N, C] softmax tensors from multi-view training.
+        feature_risk: [E] 1 - cosine similarity.
+        edge_index: [2, E] edge indices.
+        feature_similarity: [E] optional cosine similarity.
+        undirected: average scores for undirected pairs.
+        device: torch device.
+
+    Returns:
+        dict with edge_score [E] and diagnostics.
+    """
+    if device is None:
+        device = edge_index.device
+
+    stacked = torch.stack(predictions, dim=0)  # [V, N, C]
+
+    # Node confidence: mean max-probability across views
+    per_view_conf = stacked.max(dim=2).values  # [V, N]
+    node_confidence = per_view_conf.mean(dim=0)  # [N]
+
+    # Convert to "uncertainty" = 1 - confidence (higher = less certain)
+    node_uncertainty = 1.0 - node_confidence
+
+    # Use same pipeline as stability_to_edge_score but with uncertainty
+    raw_edge_score = stability_to_edge_score(
+        edge_index=edge_index,
+        node_instability=node_uncertainty,
+        feature_similarity=feature_similarity,
+        undirected=undirected,
+        device=device,
+    )
+
+    # Residualize against feature risk
+    residual_result = residualize_stability_score(
+        stability_score=raw_edge_score,
+        feature_risk=feature_risk,
+        feature_similarity=feature_similarity,
+        edge_index=edge_index,
+    )
+
+    edge_score = residual_result["residualized_score"]
+    edge_score = edge_score.clamp(-2, 5)
+
+    diagnostics = {
+        "method": "confidence_edge_score",
+        "node_confidence_mean": float(node_confidence.mean()),
+        "node_uncertainty_mean": float(node_uncertainty.mean()),
+        "projection_ratio": residual_result["projection_ratio"],
+    }
+
+    return {
+        "edge_score": edge_score,
+        "residual": residual_result["residual"],
+        "diagnostics": diagnostics,
+    }
+
+
+def compute_random_stability_residual(
+    feature_risk: torch.Tensor,
+    edge_index: torch.Tensor,
+    feature_similarity: Optional[torch.Tensor] = None,
+    seed: int = 42,
+    undirected: bool = True,
+    device: Optional[torch.device] = None,
+) -> Dict[str, torch.Tensor]:
+    """Generate a random stability residual control.
+
+    Creates a random residual with the same shape and rank-normalization
+    pipeline as the real stability residual, but with no alignment to
+    actual node stability. This tests whether the residualization and
+    combination pipeline itself provides benefit.
+
+    Args:
+        feature_risk: [E] 1 - cosine similarity.
+        edge_index: [2, E] edge indices.
+        feature_similarity: [E] optional cosine similarity.
+        seed: random seed for reproducibility.
+        undirected: average scores for undirected pairs.
+        device: torch device.
+
+    Returns:
+        dict with edge_score [E] and diagnostics.
+    """
+    if device is None:
+        device = edge_index.device
+
+    E = feature_risk.shape[0]
+
+    # Generate random stability scores
+    generator = torch.Generator(device=device)
+    generator.manual_seed(seed)
+    random_stability = torch.rand(E, device=device, generator=generator)
+
+    # Residualize against feature risk (same pipeline)
+    residual_result = residualize_stability_score(
+        stability_score=random_stability,
+        feature_risk=feature_risk,
+        feature_similarity=feature_similarity,
+        edge_index=edge_index,
+    )
+
+    edge_score = residual_result["residualized_score"]
+    edge_score = edge_score.clamp(-2, 5)
+
+    diagnostics = {
+        "method": "random_stability_residual",
+        "projection_ratio": residual_result["projection_ratio"],
+    }
+
+    return {
+        "edge_score": edge_score,
+        "residual": residual_result["residual"],
+        "diagnostics": diagnostics,
+    }
+
+
+def compute_shuffled_stability_residual(
+    real_residual: torch.Tensor,
+    feature_risk: torch.Tensor,
+    seed: int = 42,
+    device: Optional[torch.device] = None,
+) -> Dict[str, torch.Tensor]:
+    """Shuffle the real edge-level stability residual.
+
+    Preserves the marginal distribution of the residual but destroys
+    edge-level alignment. The feature risk base is kept intact.
+
+    Args:
+        real_residual: [E] real stability residual from compute_stability_residual_score.
+        feature_risk: [E] 1 - cosine similarity.
+        seed: random seed for reproducibility.
+        device: torch device.
+
+    Returns:
+        dict with edge_score [E] and diagnostics.
+    """
+    if device is None:
+        device = feature_risk.device
+
+    # Shuffle residual across edges
+    generator = torch.Generator(device=device)
+    generator.manual_seed(seed)
+    perm = torch.randperm(real_residual.numel(), device=device, generator=generator)
+    shuffled_residual = real_residual[perm]
+
+    # Combine: R(feature_risk) + alpha * shuffled_residual
+    R_feature = rank_normalize(feature_risk)
+    alpha = 0.5
+    edge_score = R_feature + alpha * shuffled_residual
+    edge_score = edge_score.clamp(-2, 5)
+
+    diagnostics = {
+        "method": "shuffled_stability_residual",
+        "alpha": alpha,
+    }
+
+    return {
+        "edge_score": edge_score,
+        "residual": shuffled_residual,
+        "diagnostics": diagnostics,
+    }
+
+
+def compute_permuted_stability_residual(
+    node_instability: torch.Tensor,
+    feature_risk: torch.Tensor,
+    edge_index: torch.Tensor,
+    feature_similarity: Optional[torch.Tensor] = None,
+    seed: int = 42,
+    undirected: bool = True,
+    device: Optional[torch.device] = None,
+) -> Dict[str, torch.Tensor]:
+    """Permute node-to-stability assignment before converting to edge scores.
+
+    Preserves the real node-stability value distribution but randomly permutes
+    which node gets which stability value. This is the alignment destruction
+    test: it checks whether gains depend on the correct node-stability alignment,
+    not merely the residual value distribution.
+
+    Args:
+        node_instability: [N] real node instability from compute_node_stability.
+        feature_risk: [E] 1 - cosine similarity.
+        edge_index: [2, E] edge indices.
+        feature_similarity: [E] optional cosine similarity.
+        seed: random seed for reproducibility.
+        undirected: average scores for undirected pairs.
+        device: torch device.
+
+    Returns:
+        dict with edge_score [E] and diagnostics.
+    """
+    if device is None:
+        device = edge_index.device
+
+    N = node_instability.shape[0]
+
+    # Permute node-to-stability assignment
+    generator = torch.Generator(device=device)
+    generator.manual_seed(seed)
+    perm = torch.randperm(N, device=device, generator=generator)
+    permuted_instability = node_instability[perm]
+
+    # Convert to edge score using same pipeline
+    raw_edge_score = stability_to_edge_score(
+        edge_index=edge_index,
+        node_instability=permuted_instability,
+        feature_similarity=feature_similarity,
+        undirected=undirected,
+        device=device,
+    )
+
+    # Residualize against feature risk
+    residual_result = residualize_stability_score(
+        stability_score=raw_edge_score,
+        feature_risk=feature_risk,
+        feature_similarity=feature_similarity,
+        edge_index=edge_index,
+    )
+
+    edge_score = residual_result["residualized_score"]
+    edge_score = edge_score.clamp(-2, 5)
+
+    diagnostics = {
+        "method": "permuted_stability_residual",
+        "projection_ratio": residual_result["projection_ratio"],
+    }
+
+    return {
+        "edge_score": edge_score,
+        "residual": residual_result["residual"],
+        "diagnostics": diagnostics,
+    }
