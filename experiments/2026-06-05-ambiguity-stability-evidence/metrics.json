@@ -1,0 +1,23 @@
+{
+  "exp_id": "2026-06-05-ambiguity-stability-evidence",
+  "status": "completed",
+  "primary_claim_supported": true,
+  "p0_ambiguity_claim_supported": true,
+  "p1_alignment_claim_supported": true,
+  "best_method": "StabilityResidual-v5-dp0.15-grad-frozen",
+  "fscc_delta_vs_feature_only_pp": 2.058333333333333,
+  "fscc_p_value": 6.681664916905272e-10,
+  "fscc_wilcoxon_p": 1.1907400607476405e-08,
+  "fscc_win_rate": 0.85,
+  "high_ambiguity_gain_share": 0.8137651821862352,
+  "high_ambiguity_changed_prune_enrichment": 0.6891140993162431,
+  "feature_stability_vs_confidence_delta_pp": 0.31166666666666637,
+  "feature_stability_vs_random_delta_pp": 1.7333333333333318,
+  "feature_stability_vs_shuffled_delta_pp": 1.7783333333333313,
+  "feature_stability_vs_permuted_delta_pp": 1.6299999999999992,
+  "permuted_control_competitive": false,
+  "shuffled_control_competitive": false,
+  "num_result_rows": 2160,
+  "claim_recommendation": "support_current_claim",
+  "failure_modes": []
+}

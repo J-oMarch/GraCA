@@ -558,6 +558,7 @@ def _paired_delta(df, method, baseline="Feature-only", phase=None, noise_type=No
             "baseline_mean": None,
             "delta_pp": None,
             "p_value": None,
+            "wilcoxon_p": None,
             "win_rate": None,
             "cohens_d": None,
         }

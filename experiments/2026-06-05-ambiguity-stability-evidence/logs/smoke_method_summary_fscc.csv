@@ -1,0 +1,13 @@
+phase,method,mean,std,count
+P1,Feature+Permuted Stability,0.646,,1
+P0,Feature+Residual-MediumOnly,0.644,,1
+P1,Feature+Confidence,0.643,,1
+P1,Feature+Shuffled Stability,0.627,,1
+P0,Feature+Stability,0.623,,1
+P0,StabilityResidual-v5-dp0.15-grad-frozen,0.623,,1
+P1,Feature+Stability,0.622,,1
+P1,Feature+Random Stability,0.617,,1
+P1,Feature-only,0.61,,1
+P0,Feature+Residual-HighOnly,0.608,,1
+P0,Feature-only,0.606,,1
+P0,Feature+Residual-LowOnly,0.605,,1

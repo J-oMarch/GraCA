@@ -1,0 +1,47 @@
+The experiment completed successfully. All 2160 experiments across 3 datasets × 3 noise types × 20 seeds × 12 methods. Here's the summary:
+
+## Key Results
+
+### P0: Ambiguity Contribution — **SUPPORTED**
+
+| Bucket-gated Variant | Δ vs FO (pp) | p-value | Win Rate | Cohen's d |
+|---|---|---|---|---|
+| StabilityResidual (full) | **+2.06** | **<1e-9** | **0.85** | **0.95** |
+| **High-Only** | **+1.68** | **<1e-5** | **0.80** | **0.79** |
+| Medium-Only | +0.55 | 0.11 | 0.47 | 0.21 |
+| Low-Only | −0.09 | 0.38 | 0.45 | −0.12 |
+
+**High-ambiguity gain share: 81.4%** — the gain is overwhelmingly concentrated in the High-Ambiguity bucket, not random diversification.
+
+**Changed-prune enrichment**: SR-only pruned edges in the High bucket have 68.9% bad-edge rate, confirming StabilityResidual corrects Feature-only's mistakes where features are ambiguous.
+
+### P1: Alignment Destruction — **SUPPORTED**
+
+| Comparison | Δ (pp) | p-value | Win Rate | Cohen's d |
+|---|---|---|---|---|
+| Stability vs Confidence | +0.31 | 0.20 | 0.53 | 0.17 |
+| Stability vs Random | **+1.73** | **<1e-9** | **0.87** | **0.93** |
+| Stability vs Shuffled | **+1.78** | **<1e-10** | **0.85** | **1.02** |
+| Stability vs Permuted | **+1.63** | **<1e-9** | **0.83** | **0.91** |
+
+All alignment-destruction controls are decisively beaten. Neither shuffled nor permuted stability is competitive.
+
+### Decision
+
+1. ✅ Supports current claim
+2. ✅ Strengthens AAAI story
+3. ✅ Reduces reviewer risk
+4. ✅ No new failure evidence
+5. ✅ No claim shrinkage needed
+
+### Bugs Fixed
+
+1. **`src/grage/adaptive_score.py:1430`**: Added `node_instability.to(device)` in `compute_permuted_stability_residual` to fix CPU/GPU device mismatch.
+2. **`scripts/run_ambiguity_stability_evidence.py:562`**: Added missing `wilcoxon_p` key to `_paired_delta` error return dict.
+
+### Output Files
+
+- `experiments/2026-06-05-ambiguity-stability-evidence/result.md`
+- `experiments/2026-06-05-ambiguity-stability-evidence/metrics.json`
+- `experiments/2026-06-05-ambiguity-stability-evidence/failure_analysis.md`
+- `experiments/2026-06-05-ambiguity-stability-evidence/logs/full/results.csv`

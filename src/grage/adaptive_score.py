@@ -1426,6 +1426,9 @@ def compute_permuted_stability_residual(
 
     N = node_instability.shape[0]
 
+    # Ensure node_instability is on the target device
+    node_instability = node_instability.to(device)
+
     # Permute node-to-stability assignment
     generator = torch.Generator(device=device)
     generator.manual_seed(seed)
