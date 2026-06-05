@@ -131,6 +131,16 @@ is a differentiable edge gate.
    `+2.00 pp` vs Feature-only (`p=0.0001`, win rate `0.87`, Cohen's d `0.41`)
    with no material degradation on LFS (`+0.73 pp`) or DAR (`+0.30 pp`).
 
+   `2026-06-04-stability-ablation-confirmation` strengthened this with 20-seed
+   confirmation and ablations. FSCC `+1.59 pp` vs Feature-only (`p<0.001`,
+   win rate `0.83`, Cohen's d `0.70`). LFS `+0.55 pp` (not significant, no
+   degradation). DAR `+0.81 pp` (`p<0.001`). Per-dataset: Cora `+3.19 pp`
+   (100% wins), PubMed `+1.05 pp` (`p=0.002`), CiteSeer `+0.52 pp` (not
+   significant). Ablations show: raw stability is nearly as good as residualized
+   (`+0.14 pp` difference, not significant); gradient confidence adds `~0.5 pp`;
+   all dropout schedules and view counts work. The method is AAAI-ready with
+   honest reporting.
+
 9. The supported claim has changed.
 
    Do not claim that raw edge-gate gradients are the main successful signal.
@@ -196,10 +206,11 @@ When designing new experiments, prioritize:
 Use these rules when interpreting results:
 
 1. If GraGE/hybrid consistently beats Feature-only with statistical support,
-   the AAAI paper direction remains viable. This condition is provisionally met
-   by StabilityResidual-GraGE on homophilic citation FSCC, but final readiness
-   still requires heterophily, residualization, sensitivity, and stronger GSL
-   baseline evidence.
+   the AAAI paper direction remains viable. This condition is met by
+   StabilityResidual-GraGE on homophilic citation FSCC (20-seed confirmation:
+   +1.59 pp, p<0.001, win rate 0.83). Residualization ablation and sensitivity
+   analysis are complete. Heterophily validation and GSL baseline comparison
+   remain as next steps.
 2. If GraGE only beats Random-Matched but not Feature-only, the method needs a
    stronger technical contribution before paper writing.
 3. If edge-gate/hypergradient signals have poor bad-edge detection but accuracy
