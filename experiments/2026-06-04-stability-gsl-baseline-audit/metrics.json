@@ -1,0 +1,28 @@
+{
+  "exp_id": "2026-06-04-stability-gsl-baseline-audit",
+  "status": "completed",
+  "runnable_gsl_baselines": [
+    "IDGL-Proxy",
+    "ProGNN-Proxy",
+    "LDS-Proxy"
+  ],
+  "blocked_gsl_baselines": [
+    "Full-LDS",
+    "Full-IDGL",
+    "Full-ProGNN"
+  ],
+  "primary_claim_supported": true,
+  "best_method": "LDS-Proxy",
+  "stability_vs_best_gsl_delta_pp": -0.85,
+  "stability_vs_best_gsl_p_value": 0.0404,
+  "stability_vs_fo_delta_pp": 1.91,
+  "stability_vs_fo_p_value": 0.0003,
+  "num_result_rows": 240,
+  "claim_wording_recommendation": "StabilityResidual is competitive with GSL-inspired baselines. LDS-Proxy shows competitive results with a Cora-specific advantage driven by pruning budget effects. The paper should report GSL proxy comparisons honestly and position StabilityResidual as a training-dynamics-based alternative.",
+  "next_implementation_steps": [
+    "Run full LDS reproduction from official repository",
+    "Run full IDGL reproduction from official repository",
+    "Investigate Cora pruning budget/degree effect",
+    "Consider narrowing claim to competitive-with-GSL if full LDS wins"
+  ]
+}
