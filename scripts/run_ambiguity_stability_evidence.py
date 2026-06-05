@@ -332,7 +332,7 @@ def run_single_p0_experiment(
         edge_index=noisy_edge_index, bad_edge_mask=bad_edge_mask,
         feature_prune_mask=feature_prune_mask, stability_prune_mask=prune_mask,
         stability_residual_score=edge_scores,
-        raw_stability_score=stability_result.get("edge_score", edge_scores),
+        raw_stability_score=stability_result.get("raw_edge_score", edge_scores),
         residual=stability_result.get("residual", edge_scores),
         bucket_labels=bucket_labels, num_buckets=3, device=device,
     )
@@ -384,6 +384,7 @@ def run_single_p1_experiment(
     start_time = time.time()
     method_name = method_config["name"]
     method_type = method_config["type"]
+    signal_diagnostics = {}
 
     if method_type == "feature_only":
         edge_scores = feature_risk.clone()
@@ -395,9 +396,11 @@ def run_single_p1_experiment(
             undirected=True, device=device,
         )
         edge_scores = conf_result["edge_score"]
+        signal_diagnostics = conf_result.get("diagnostics", {})
 
     elif method_type == "feature_plus_stability":
         edge_scores = stability_result["edge_score"].clone()
+        signal_diagnostics = stability_result.get("diagnostics", {})
 
     elif method_type == "feature_plus_random_stability":
         rand_result = compute_random_stability_residual(
@@ -406,6 +409,7 @@ def run_single_p1_experiment(
             undirected=True, device=device,
         )
         edge_scores = rand_result["edge_score"]
+        signal_diagnostics = rand_result.get("diagnostics", {})
 
     elif method_type == "feature_plus_shuffled_stability":
         shuf_result = compute_shuffled_stability_residual(
@@ -413,6 +417,7 @@ def run_single_p1_experiment(
             feature_risk=feature_risk, seed=seed + 7919, device=device,
         )
         edge_scores = shuf_result["edge_score"]
+        signal_diagnostics = shuf_result.get("diagnostics", {})
 
     elif method_type == "feature_plus_permuted_stability":
         perm_result = compute_permuted_stability_residual(
@@ -422,6 +427,7 @@ def run_single_p1_experiment(
             undirected=True, device=device,
         )
         edge_scores = perm_result["edge_score"]
+        signal_diagnostics = perm_result.get("diagnostics", {})
 
     else:
         raise ValueError(f"Unknown P1 method type: {method_type}")
@@ -467,6 +473,16 @@ def run_single_p1_experiment(
         "num_edges_after": graph_stats["num_edges_after"],
         "runtime": runtime,
     }
+    for key in [
+        "projection_ratio",
+        "projection_beta",
+        "residual_feature_sim_corr",
+        "alpha",
+        "abstention_fraction",
+        "gradient_confidence_mean",
+    ]:
+        if key in signal_diagnostics:
+            result[key] = signal_diagnostics[key]
 
     return result
 
@@ -515,6 +531,17 @@ def _paired_delta(df, method, baseline="Feature-only", phase=None, noise_type=No
     validation/test labels for scoring; labels have already only entered
     downstream evaluation.
     """
+    if df.empty or "method" not in df.columns:
+        return {
+            "n": 0,
+            "method_mean": None,
+            "baseline_mean": None,
+            "delta_pp": None,
+            "p_value": None,
+            "wilcoxon_p": None,
+            "win_rate": None,
+            "cohens_d": None,
+        }
     subset = df.copy()
     if phase is not None:
         subset = subset[subset["phase"] == phase]
@@ -541,11 +568,15 @@ def _paired_delta(df, method, baseline="Feature-only", phase=None, noise_type=No
     delta_pp = float(diff.mean() * 100.0)
     win_rate = float((diff > 0).mean())
     p_value = None
+    wilcoxon_p = None
     try:
         from scipy import stats
         p_value = float(stats.ttest_rel(x, y).pvalue)
+        if len(diff) > 0 and np.any(np.abs(diff) > 1e-12):
+            wilcoxon_p = float(stats.wilcoxon(diff).pvalue)
     except Exception:
         p_value = None
+        wilcoxon_p = None
 
     diff_std = float(diff.std(ddof=1)) if len(diff) > 1 else 0.0
     cohens_d = float(diff.mean() / diff_std) if diff_std > 1e-12 else 0.0
@@ -555,12 +586,15 @@ def _paired_delta(df, method, baseline="Feature-only", phase=None, noise_type=No
         "baseline_mean": float(y.mean()),
         "delta_pp": delta_pp,
         "p_value": p_value,
+        "wilcoxon_p": wilcoxon_p,
         "win_rate": win_rate,
         "cohens_d": cohens_d,
     }
 
 
 def _method_summary(df, phase=None, noise_type=None):
+    if df.empty or "phase" not in df.columns or "method" not in df.columns:
+        return pd.DataFrame()
     subset = df.copy()
     if phase is not None:
         subset = subset[subset["phase"] == phase]
@@ -596,6 +630,9 @@ def _high_bucket_changed_prune_enrichment(df):
 
     Bucket 2 is High-Ambiguity by construction after compute_ambiguity_buckets.
     """
+    required = {"phase", "noise_type", "method"}
+    if df.empty or not required.issubset(df.columns):
+        return None
     subset = df[
         (df["phase"] == "P0")
         & (df["noise_type"] == "feature_similar_cross_class")
@@ -607,6 +644,91 @@ def _high_bucket_changed_prune_enrichment(df):
     if vals.empty:
         return None
     return float(vals.mean())
+
+
+def _markdown_table(frame, columns, float_digits=4):
+    """Render a compact markdown table from selected columns."""
+    if frame.empty:
+        return "_No rows available._"
+
+    rows = []
+    rows.append("| " + " | ".join(columns) + " |")
+    rows.append("| " + " | ".join(["---"] * len(columns)) + " |")
+    for _, row in frame[columns].iterrows():
+        vals = []
+        for col in columns:
+            val = row[col]
+            if pd.isna(val):
+                vals.append("")
+            elif isinstance(val, (float, np.floating)):
+                vals.append(f"{float(val):.{float_digits}f}")
+            else:
+                vals.append(str(val))
+        rows.append("| " + " | ".join(vals) + " |")
+    return "\n".join(rows)
+
+
+def _paired_stats_table(stats_by_name):
+    rows = []
+    for name, stat in stats_by_name:
+        rows.append({
+            "comparison": name,
+            "delta_pp": stat["delta_pp"],
+            "paired_t_p": stat["p_value"],
+            "wilcoxon_p": stat["wilcoxon_p"],
+            "win_rate": stat["win_rate"],
+            "cohens_d": stat["cohens_d"],
+            "n": stat["n"],
+        })
+    return _markdown_table(
+        pd.DataFrame(rows),
+        ["comparison", "delta_pp", "paired_t_p", "wilcoxon_p", "win_rate", "cohens_d", "n"],
+    )
+
+
+def _bucket_summary(df):
+    required = {"phase", "noise_type", "method"}
+    if df.empty or not required.issubset(df.columns):
+        subset = pd.DataFrame()
+    else:
+        subset = df[
+            (df["phase"] == "P0")
+            & (df["noise_type"] == "feature_similar_cross_class")
+            & (df["method"] == "StabilityResidual-v5-dp0.15-grad-frozen")
+        ]
+    if subset.empty:
+        return pd.DataFrame()
+
+    rows = []
+    names = {0: "Low", 1: "Medium", 2: "High"}
+    for bucket_id, bucket_name in names.items():
+        prefix = f"b{bucket_id}_"
+        cols = [
+            "count",
+            "bad_count",
+            "fo_precision",
+            "fo_recall",
+            "fo_f1",
+            "sr_precision",
+            "sr_recall",
+            "sr_f1",
+            "feature_risk_auc",
+            "raw_stability_auc",
+            "residual_auc",
+            "sr_only_bad_rate",
+        ]
+        row = {"bucket": bucket_name}
+        present = False
+        for col in cols:
+            full_col = prefix + col
+            if full_col in subset.columns:
+                row[col] = float(subset[full_col].dropna().mean()) if not subset[full_col].dropna().empty else np.nan
+                present = True
+            else:
+                row[col] = np.nan
+        if present:
+            rows.append(row)
+    return pd.DataFrame(rows)
 
 
 def write_output_contract(df, output_dir, mode):
@@ -682,13 +804,18 @@ def write_output_contract(df, output_dir, mode):
 
     metrics = {
         "exp_id": EXP_ID,
-        "status": "completed" if mode == "full" else "smoke_completed",
+        "status": (
+            "failed_empty_results"
+            if df.empty
+            else ("completed" if mode == "full" else "smoke_completed")
+        ),
         "primary_claim_supported": bool(p0_supported and p1_alignment_supported),
         "p0_ambiguity_claim_supported": bool(p0_supported),
         "p1_alignment_claim_supported": bool(p1_alignment_supported),
         "best_method": "StabilityResidual-v5-dp0.15-grad-frozen",
         "fscc_delta_vs_feature_only_pp": fscc_main["delta_pp"],
         "fscc_p_value": fscc_main["p_value"],
+        "fscc_wilcoxon_p": fscc_main["wilcoxon_p"],
         "fscc_win_rate": fscc_main["win_rate"],
         "high_ambiguity_gain_share": high_gain_share,
         "high_ambiguity_changed_prune_enrichment": high_enrichment,
@@ -714,10 +841,60 @@ def write_output_contract(df, output_dir, mode):
         if stat["delta_pp"] is None:
             return "n/a"
         p = "n/a" if stat["p_value"] is None else f"{stat['p_value']:.4g}"
+        w = "n/a" if stat["wilcoxon_p"] is None else f"{stat['wilcoxon_p']:.4g}"
         return (
-            f"{stat['delta_pp']:+.2f} pp, p={p}, "
+            f"{stat['delta_pp']:+.2f} pp, paired-t p={p}, Wilcoxon p={w}, "
             f"win={stat['win_rate']:.2f}, d={stat['cohens_d']:.2f}, n={stat['n']}"
         )
+
+    p0_summary_md = _markdown_table(
+        _method_summary(df, phase="P0", noise_type="feature_similar_cross_class"),
+        ["phase", "method", "mean", "std", "count"],
+    )
+    p1_summary_md = _markdown_table(
+        _method_summary(df, phase="P1", noise_type="feature_similar_cross_class"),
+        ["phase", "method", "mean", "std", "count"],
+    )
+    p0_paired_md = _paired_stats_table([
+        ("StabilityResidual vs Feature-only", fscc_main),
+        ("HighOnly vs Feature-only", _paired_delta(
+            df, "Feature+Residual-HighOnly",
+            phase="P0", noise_type="feature_similar_cross_class",
+        )),
+        ("MediumOnly vs Feature-only", _paired_delta(
+            df, "Feature+Residual-MediumOnly",
+            phase="P0", noise_type="feature_similar_cross_class",
+        )),
+        ("LowOnly vs Feature-only", _paired_delta(
+            df, "Feature+Residual-LowOnly",
+            phase="P0", noise_type="feature_similar_cross_class",
+        )),
+    ])
+    p1_paired_md = _paired_stats_table([
+        ("Stability vs Feature-only", p1_stability),
+        ("Stability vs Confidence", p1_conf),
+        ("Stability vs Random", p1_random),
+        ("Stability vs Shuffled", p1_shuffled),
+        ("Stability vs Permuted", p1_permuted),
+    ])
+    bucket_md = _markdown_table(
+        _bucket_summary(df),
+        [
+            "bucket",
+            "count",
+            "bad_count",
+            "fo_precision",
+            "fo_recall",
+            "fo_f1",
+            "sr_precision",
+            "sr_recall",
+            "sr_f1",
+            "feature_risk_auc",
+            "raw_stability_auc",
+            "residual_auc",
+            "sr_only_bad_rate",
+        ],
+    )
 
     result_md = f"""# Ambiguity and Stability Evidence Result
 
@@ -751,11 +928,31 @@ of the full StabilityResidual FSCC gain reproduced when the residual is active
 only in the High-Ambiguity bucket. This is an attribution heuristic, not a causal
 proof.
 
+### P0 FSCC Method Summary
+
+{p0_summary_md}
+
+### P0 Paired Statistics
+
+{p0_paired_md}
+
+### P0 Bucket Diagnostics
+
+{bucket_md}
+
 ## P1 Alignment
 
 Aligned stability is considered supported only if Feature+Stability beats
 confidence, random, shuffled, and node-permuted stability controls on the paired
 FSCC matrix.
+
+### P1 FSCC Method Summary
+
+{p1_summary_md}
+
+### P1 Paired Statistics
+
+{p1_paired_md}
 
 ## Decision Answers
 
@@ -1055,8 +1252,12 @@ def main():
         summary_path = os.path.join(output_dir, "summary.csv")
         df.groupby(["phase", "method"])["test_acc"].agg(["mean", "std", "count"]).to_csv(summary_path)
         logger.info(f"\nSummary saved to {summary_path}")
-        write_output_contract(df, output_dir, args.mode)
-        logger.info("Output contract written for %s", EXP_ID)
+    else:
+        logger.error("No result rows were produced; writing failure output contract.")
+        df = pd.DataFrame()
+
+    write_output_contract(df, output_dir, args.mode)
+    logger.info("Output contract written for %s", EXP_ID)
 
 
 if __name__ == "__main__":

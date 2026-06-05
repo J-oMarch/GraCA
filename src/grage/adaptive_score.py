@@ -1141,6 +1141,7 @@ def compute_stability_residual_score(
     return {
         "edge_score": edge_score,
         "residual": residual,
+        "raw_edge_score": raw_edge_score,
         "node_stability": node_stability,
         "diagnostics": diagnostics,
     }
