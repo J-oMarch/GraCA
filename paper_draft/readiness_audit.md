@@ -84,3 +84,12 @@ the next step is paper drafting, figure/table construction, and final
 submission-risk review. Coauthor-CS, Coauthor-Physics, and ogbn-arxiv should
 only be considered if they strengthen the same narrow claim without expanding
 the scope.
+
+
+## Runtime Profile
+
+- Runtime ratio: **4.28x** Feature-only.
+- Extra overhead: **5.00s**.
+- Accuracy delta: **4.5 pp**.
+- Claim: accuracy-cost tradeoff, not efficiency superiority.
+- Component breakdown: see `paper_draft/runtime_table.md`.

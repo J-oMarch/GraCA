@@ -1,5 +1,22 @@
 {
   "exp_id": "2026-06-05-runtime-profile",
-  "status": "missing_metrics",
-  "claude_exit_status": 0
+  "status": "completed",
+  "runtime_ratio": 4.22,
+  "extra_overhead": 6.14,
+  "accuracy_delta_pp": 1.69,
+  "feature_only_total_mean_s": 1.9059871037801106,
+  "feature_only_total_std_s": 1.4145242062269838,
+  "stability_residual_total_mean_s": 8.042261505126953,
+  "stability_residual_total_std_s": 5.555876736918135,
+  "feature_only_test_acc_mean": 0.6089333333333333,
+  "feature_only_test_acc_std": 0.04766620046392061,
+  "stability_residual_test_acc_mean": 0.6258,
+  "stability_residual_test_acc_std": 0.05031500770148009,
+  "stability_probe_train_time": 0.24608496030171711,
+  "stability_gradient_time": 3.108845059076945,
+  "stability_score_time": 2.8803075313568116,
+  "stability_downstream_train_time": 0.31263659795125326,
+  "stability_inference_eval_time": 0.0,
+  "num_result_rows": 30,
+  "claim_recommendation": "accuracy-cost tradeoff, not efficiency superiority"
 }
