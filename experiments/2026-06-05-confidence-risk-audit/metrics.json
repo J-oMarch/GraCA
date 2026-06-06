@@ -1,0 +1,33 @@
+{
+  "exp_id": "2026-06-05-confidence-risk-audit",
+  "status": "completed",
+  "confidence_risk_reduced": true,
+  "stability_not_confidence_only": true,
+  "stability_vs_confidence_delta_pp": 0.31,
+  "matched_bad_edge_rate_delta": 0.07259502045811407,
+  "same_confidence_bucket_auc_delta": 0.028960605522441406,
+  "high_ambiguity_confidence_bucket_auc_delta": 0.03167007013568819,
+  "residual_stability_auc_after_confidence_control": 0.0023695738756630558,
+  "global_auc": {
+    "feature_risk": 0.753537998566904,
+    "confidence": 0.797938421255989,
+    "raw_stability": 0.6028374674345326,
+    "residualized_stability": 0.5991035805824578,
+    "stability_residual_final": 0.8026877621374415
+  },
+  "partial_correlation": {
+    "status": "ok",
+    "full_model_auc": 0.7985546513594547,
+    "reduced_model_auc": 0.7961850774837916,
+    "auc_improvement_from_residual": 0.0023695738756630558,
+    "residual_coef_standardized": 0.2120757860758232,
+    "residual_coef_per_unit": 0.734636622801587,
+    "n_edges": 703990,
+    "n_bad": 162450
+  },
+  "claim_recommendation": "support_stability_beyond_confidence",
+  "failure_modes": [],
+  "num_edges": 703990,
+  "num_datasets": 3,
+  "num_seeds": 10
+}

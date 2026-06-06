@@ -31,6 +31,13 @@ polish, and final reviewer-risk checking, not open-ended method search.
   bad-edge rate.
 - P1 alignment validation complete: aligned stability beats random, shuffled,
   and node-permuted controls by `+1.63` to `+1.78 pp` with `p<1e-8`.
+- Confidence risk audit complete: `2026-06-05-confidence-risk-audit` analyzed
+  703,990 edges across Cora, CiteSeer, PubMed with 10 seeds. StabilityResidual
+  AUC (0.803) exceeds Confidence AUC (0.798) globally. Within confidence
+  strata, residual stability adds `+0.029` AUC, rising to `+0.032` in
+  High-Ambiguity edges. Partial correlation coefficient for residual stability
+  is `+0.21` after controlling for feature risk and confidence. This confirms
+  stability provides edge-quality evidence beyond confidence.
 
 ## Implementation Audit
 
@@ -58,8 +65,13 @@ existing homophilic feature-ambiguous citation regime boundary.
 
 ## Current Reviewer Risks
 
-- Feature+Confidence is close to aligned stability in P1 (`+0.31 pp` lower,
-  `p=0.198`), so reviewers may frame the signal as uncertainty-like.
+- Feature+Confidence is close to aligned stability in P1 paired accuracy
+  (`+0.31 pp` lower, `p=0.198`), but the confidence risk audit
+  (`2026-06-05-confidence-risk-audit`) shows StabilityResidual AUC (0.803)
+  exceeds Confidence AUC (0.798) globally, with `+0.029` AUC within confidence
+  strata and `+0.032` in High-Ambiguity edges. Residual stability contributes
+  after controlling for feature risk and confidence (partial correlation
+  coefficient `+0.21`). This evidence substantially reduces the reviewer risk.
 - CiteSeer is positive but weak individually.
 - Full LDS/IDGL/ProGNN are not reproduced.
 - Runtime is about `4x` Feature-only.

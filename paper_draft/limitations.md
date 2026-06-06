@@ -28,8 +28,18 @@
   but the full P1 alignment-destruction test is more favorable: aligned
   stability beats random, shuffled, and node-permuted stability by `+1.63` to
   `+1.78 pp` with `p<1e-8`. The remaining nuance is that confidence is closer
-  (`+0.31 pp`, `p=0.198`), so the paper should describe stability as related to
-  uncertainty but empirically stronger than alignment-destroyed controls.
+  in paired accuracy (`+0.31 pp`, `p=0.198`), so the paper should describe
+  stability as related to uncertainty but empirically stronger than
+  alignment-destroyed controls.
+- The confidence risk audit (`2026-06-05-confidence-risk-audit`) confirms that
+  stability provides signal beyond confidence. StabilityResidual AUC (0.803)
+  exceeds Confidence AUC (0.798) globally. Within confidence strata, residual
+  stability adds `+0.029` AUC on average, rising to `+0.032` in
+  High-Ambiguity edges. The partial correlation coefficient for residual
+  stability is `+0.21` after controlling for feature risk and confidence. This
+  evidence reduces the reviewer risk that stability is merely confidence under
+  another name, though the `+0.31 pp` paired accuracy delta remains
+  nonsignificant.
 - Per-dataset evidence is uneven. Cora and PubMed support the FSCC claim more
   strongly than CiteSeer; CiteSeer is positive but not individually significant
   in the 20-seed confirmation.

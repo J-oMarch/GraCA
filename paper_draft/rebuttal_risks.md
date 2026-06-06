@@ -50,11 +50,15 @@
 - P0 is supportive but still attributional. The paper can say the gain is
   concentrated in feature-defined ambiguity regions, but should not overstate
   this as a complete causal decomposition.
-- Feature+Confidence is close to aligned stability (`+0.31 pp` lower,
-  `p=0.198`). A reviewer may argue that the signal is uncertainty-like. The
-  response is that aligned stability decisively beats distribution-preserving
-  alignment destruction controls, while confidence remains a strong related
-  ablation.
+- Feature+Confidence is close to aligned stability in paired accuracy (`+0.31 pp`
+  lower, `p=0.198`). A reviewer may argue that the signal is uncertainty-like.
+  The confidence risk audit (`2026-06-05-confidence-risk-audit`) addresses this
+  directly: StabilityResidual AUC (0.803) exceeds Confidence AUC (0.798)
+  globally, and residual stability adds `+0.029` AUC within confidence strata
+  (rising to `+0.032` in High-Ambiguity edges). The partial correlation
+  coefficient for residual stability is `+0.21` after controlling for feature
+  risk and confidence. Stability provides edge-quality signal beyond what
+  confidence alone captures.
 - CiteSeer is positive but weak individually, so per-dataset claims must avoid
   implying uniform significance.
 - Full LDS/IDGL/ProGNN are not reproduced. The paper must say

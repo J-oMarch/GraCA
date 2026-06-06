@@ -1,0 +1,59 @@
+## Confidence Risk Audit — Complete
+
+### Key Results
+
+**703,990 edges analyzed** across Cora, CiteSeer, PubMed with 10 seeds.
+
+**1. Is Stability Distinguishable from Confidence?** ✅ Yes
+
+| Score | Global AUC |
+| --- | --- |
+| Feature Risk | 0.7535 |
+| Confidence | 0.7979 |
+| **StabilityResidual** | **0.8027** |
+
+StabilityResidual beats Confidence by **+0.0047 AUC** globally.
+
+**2. Does the Distinction Hold in High-Ambiguity FSCC Edges?** ✅ Yes
+
+Within confidence strata, residual stability adds:
+- **+0.029 AUC** on average across all edges
+- **+0.032 AUC** specifically in High-Ambiguity edges
+
+**3. Confidence-Bucket AUC**
+
+| Confidence Bucket | SR AUC − Conf AUC |
+| --- | --- |
+| 0 (lowest) | +0.0005 |
+| 1 | +0.0329 |
+| 2 | +0.0399 |
+| 3 | +0.0359 |
+| 4 (highest) | +0.0357 |
+
+StabilityResidual outperforms Confidence in every bucket.
+
+**4. Partial Correlation**
+
+After controlling for feature risk and confidence:
+- Residual stability coefficient: **+0.212**
+- AUC improvement from adding residual: **+0.002**
+
+**5. Claim Recommendation**: `support_stability_beyond_confidence`
+
+No failure modes detected.
+
+### Output Files
+
+- `experiments/2026-06-05-confidence-risk-audit/result.md`
+- `experiments/2026-06-05-confidence-risk-audit/metrics.json`
+- `experiments/2026-06-05-confidence-risk-audit/logs/full/edge_diagnostics.csv` (703,990 rows)
+- `experiments/2026-06-05-confidence-risk-audit/logs/full/confidence_bucket_summary.csv`
+- `experiments/2026-06-05-confidence-risk-audit/logs/full/auc_summary.csv`
+- `experiments/2026-06-05-confidence-risk-audit/logs/full/matched_analysis.csv`
+
+### Paper-Facing Updates
+
+Updated:
+- `paper_draft/rebuttal_risks.md` — confidence risk now addressed with AUC evidence
+- `paper_draft/limitations.md` — added confidence risk audit findings
+- `paper_draft/readiness_audit.md` — added as completed evidence, reduced reviewer risk
