@@ -1,0 +1,53 @@
+Here's the status:
+
+## Runtime Profiler: Script Ready, Execution Blocked
+
+### What's Done
+
+**`scripts/run_runtime_profile.py`** — complete and compiles cleanly (`python3 -m py_compile` passes). It profiles:
+
+| Component | Feature-only | StabilityResidual |
+|---|---|---|
+| Feature scoring | ✅ timed | ✅ timed |
+| Probe/model-view training | — | ✅ timed |
+| Gradient confidence | — | ✅ timed |
+| Stability scoring | — | ✅ timed |
+| Pruning | ✅ timed | ✅ timed |
+| Downstream retraining | ✅ timed | ✅ timed |
+| Inference/evaluation | ✅ timed | ✅ timed |
+
+The script automatically:
+- Writes `result.md`, `metrics.json`, `runtime_profile.csv`, `runtime_summary.csv`
+- Updates `paper_draft/runtime_table.md`, `paper_draft/reviewer_risk_audit.md`, `paper_draft/readiness_audit.md`, `paper_draft/aaai_readiness_score.md`
+
+### What's Blocked
+
+This machine has **no `torch`/`torch_geometric`** and **SSH to the remote server is denied** (permission denied on `ssh -p 15600 jyh@59.72.109.245`).
+
+### To Run
+
+Either:
+
+1. **On the remote server** (standard workflow):
+   ```bash
+   # Commit and push the new script first
+   git add scripts/run_runtime_profile.py
+   git commit -m "add runtime profiler for StabilityResidual"
+   git push
+
+   # Then on the server:
+   python scripts/run_runtime_profile.py --mode smoke \
+     --output_dir experiments/2026-06-05-runtime-profile/logs/smoke
+
+   python scripts/run_runtime_profile.py --mode full \
+     --output_dir experiments/2026-06-05-runtime-profile/logs/full
+   ```
+
+2. **Via tmux submit** (if SSH becomes available):
+   ```bash
+   bash scripts/submit_exp_tmux.sh 2026-06-05-runtime-profile
+   ```
+
+3. **Set up local conda env** `GRACA` with `torch`, `torch_geometric`, and run locally.
+
+Would you like me to commit the script, or do you have SSH access from another terminal?
