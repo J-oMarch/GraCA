@@ -1,0 +1,33 @@
+exp_id: 2026-06-05-confidence-risk-audit
+purpose: reviewer_risk_reduction
+main_method: StabilityResidual-v5-dp0.15-grad-frozen
+allowed_claim: >
+  Prediction stability provides complementary edge-quality evidence beyond
+  feature similarity in homophilic feature-ambiguous citation regimes.
+forbidden:
+  - restart_grage_hybrid
+  - restart_mcgc
+  - new_main_method_search
+  - heterophily_success_claim
+  - gsl_superiority_claim
+datasets:
+  - Cora
+  - CiteSeer
+  - PubMed
+noise_type: feature_similar_cross_class
+seeds: 20
+diagnostics:
+  - confidence_matched_analysis
+  - same_confidence_bucket_analysis
+  - edge_quality_auc_analysis
+  - high_ambiguity_confidence_control
+leakage_policy:
+  practical_scores_use: training_labels_only
+  diagnostic_only:
+    - bad_edge_mask
+    - validation_labels
+    - test_labels
+output_contract:
+  result: experiments/2026-06-05-confidence-risk-audit/result.md
+  metrics: experiments/2026-06-05-confidence-risk-audit/metrics.json
+  logs: experiments/2026-06-05-confidence-risk-audit/logs/
