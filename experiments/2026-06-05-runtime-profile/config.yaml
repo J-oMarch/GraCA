@@ -1,0 +1,20 @@
+exp_id: 2026-06-05-runtime-profile
+purpose: runtime_and_efficiency_reporting
+main_method: StabilityResidual-v5-dp0.15-grad-frozen
+baseline: Feature-only
+scope:
+  datasets:
+    - Cora
+    - CiteSeer
+    - PubMed
+  noise_type: feature_similar_cross_class
+  full_seeds: 5
+forbidden:
+  - method_search
+  - hyperparameter_tuning
+  - new_main_method
+  - efficiency_superiority_claim
+outputs:
+  result: experiments/2026-06-05-runtime-profile/result.md
+  metrics: experiments/2026-06-05-runtime-profile/metrics.json
+  logs: experiments/2026-06-05-runtime-profile/logs/
